@@ -1,6 +1,6 @@
 <?php
 
-namespace Gogol\Invoices\Providers;
+namespace Admin\Core\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
+        dd('wowooo!');
     }
 
     /**
