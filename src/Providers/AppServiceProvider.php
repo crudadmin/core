@@ -11,11 +11,11 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     protected $facades = [
-
-    ];
-
-    protected $routeMiddleware = [
-
+        'admin_core' => [
+            'classname' => 'AdminCore',
+            'facade' => Admin\Core\Facades\AdminCore::class,
+            'helper' => Admin\Core\Helpers\AdminCore::class,
+        ],
     ];
 
     /**
@@ -39,25 +39,37 @@ class AppServiceProvider extends ServiceProvider
             __DIR__.'/../Config/config.php', 'admin.core'
         );
 
-        $this->bootFacades();
+        $this->registerFacades();
 
-        $this->bootProviders();
+        $this->registerProviders();
     }
 
-    public function bootFacades()
+    /*
+     * Register facades helpers and aliases
+     */
+    public function registerFacades()
     {
+        //Register facades
+        foreach ($this->facades as $alias => $facade)
+        {
+            $this->app->bind($alias, $facade['helper']);
+        }
+
+        //Register aliasess
         $this->app->booting(function() {
             $loader = \Illuminate\Foundation\AliasLoader::getInstance();
 
-            foreach ($this->facades as $alias => $facade)
+            foreach ($this->facades as $facade)
             {
-                $loader->alias($alias, $facade);
+                $loader->alias($facade['classname'], $facade['facade']);
             }
-
         });
     }
 
-    public function bootProviders($providers = null)
+    /*
+     * Register service providers
+     */
+    public function registerProviders($providers = null)
     {
         foreach ($providers ?: $this->providers as $provider) {
             app()->register($provider);

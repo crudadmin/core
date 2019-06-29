@@ -1,11 +1,11 @@
 <?php
 
-namespace Admin\Core\Contracts;
+namespace Admin\Core\Helpers;
 
 use Admin\Core\Contracts\DataCache;
 use Admin\Models\Model as AdminModel;
 
-class AdminBootloader
+class AdminCore
 {
     use DataCache;
 
