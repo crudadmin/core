@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Providers;
 
+use Admin\Core\Facades;
+use Admin\Core\Helpers;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,10 +13,15 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     protected $facades = [
-        'admin_core' => [
+        'admin.core' => [
             'classname' => 'AdminCore',
-            'facade' => Admin\Core\Facades\AdminCore::class,
-            'helper' => Admin\Core\Helpers\AdminCore::class,
+            'facade' => Facades\AdminCore::class,
+            'helper' => Helpers\AdminCore::class,
+        ],
+        'admin.store' => [
+            'classname' => 'DataStore',
+            'facade' => Facades\DataStore::class,
+            'helper' => Helpers\DataStore::class,
         ],
     ];
 

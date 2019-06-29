@@ -2,28 +2,23 @@
 
 namespace Admin\Core\Helpers;
 
-use Admin\Core\Contracts\DataCache;
+use Admin\Core\Contracts\DataStore;
 use Admin\Models\Model as AdminModel;
+use Illuminate\Filesystem\Filesystem;
 
 class AdminCore
 {
-    use DataCache;
+    use DataStore;
 
     /*
-     * Where will be stored cached data
+     * Filesystem provider
      */
-    private $buffer_key = 'bootloader';
+    protected $files;
 
-    /*
-     * All cached models
-     */
-    private $bootloader = [
-        'models' => [],
-        'namespaces' => [],
-        'booted_namespaces' => [],
-        'modelnames' => [],
-        'components' => [],
-    ];
+    public function __construct()
+    {
+        $this->files = new Filesystem;
+    }
 
     /*
      * Checks if available models are botted already
@@ -47,7 +42,7 @@ class AdminCore
         if ( $this->isLoaded() === false )
             $this->boot();
 
-        return $this->get('models');
+        return $this->get('models', []);
     }
 
     /**
@@ -59,7 +54,7 @@ class AdminCore
         if ( $this->isLoaded() === false )
             $this->boot();
 
-        return $this->get('namespaces');
+        return $this->get('namespaces', []);
     }
 
     /**
@@ -112,9 +107,6 @@ class AdminCore
         foreach ($this->getNamespacesList() as $basepath => $namespace)
             $this->registerAdminModels($basepath, $namespace);
 
-        //Register default model extensions
-        $this->addModelExtensions();
-
         //Sorting models
         $this->sortModels();
 
@@ -122,7 +114,7 @@ class AdminCore
         $this->booted = true;
 
         //Returns namespaces list
-        return $this->get('namespaces');
+        return $this->get('namespaces', []);
     }
 
     /**
@@ -134,7 +126,7 @@ class AdminCore
     public function registerAdminModels($basepath, $namespace)
     {
         //If namespace has been already loaded
-        if ( in_array($namespace, $this->get('booted_namespaces')) )
+        if ( in_array($namespace, $this->get('booted_namespaces', [])) )
             return;
 
         $files = $this->getNamespaceFiles($basepath);
@@ -152,44 +144,6 @@ class AdminCore
 
         //Set actual namespace as booted
         $this->push('booted_namespaces', $namespace);
-    }
-
-    /**
-     * Register default model extensions
-     */
-    private function addModelExtensions()
-    {
-        //If admin bootloaded has been loaded yet
-        if ( $this->isLoaded() === true )
-            return;
-
-        $this->registerModelExtensions([
-            //When is first admin migration started, default User model from package will be included.
-            [
-                'condition' => count( $this->get('namespaces') ) == 0,
-                'model' => \Admin\Models\User::class,
-            ],
-            // Localization
-            [
-                'condition' => $this->isEnabledMultiLanguages() === true,
-                'model' => \Admin\Models\Language::class,
-            ],
-            //Admin groups
-            [
-                'condition' => config('admin.admin_groups', false) === true,
-                'model' => \Admin\Models\AdminsGroup::class,
-            ],
-            //Models history
-            [
-                'condition' => config('admin.history', false) === true,
-                'model' => \Admin\Models\ModelsHistory::class,
-            ],
-            //Sluggable history
-            [
-                'condition' => config('admin.sluggable_history', false) === true,
-                'model' => \Admin\Models\SluggableHistory::class,
-            ],
-        ]);
     }
 
     /**
@@ -313,9 +267,15 @@ class AdminCore
      */
     private function sortModels()
     {
+        $namespaces = $this->get('namespaces', []);
+        $models = $this->get('models', []);
+
         //Sorting according to migration date
-        ksort($this->bootloader['namespaces']);
-        ksort($this->bootloader['models']);
+        ksort($namespaces);
+        ksort($models);
+
+        $this->set('namespaces', $namespaces);
+        $this->set('models', $models);
     }
 
     /**
@@ -333,24 +293,24 @@ class AdminCore
             return;
 
         //If model with migration date already exists
-        if ( array_key_exists($model->getMigrationDate(), $this->bootloader['namespaces']) )
+        if ( array_key_exists($model->getMigrationDate(), $this->get('namespaces', [])) )
         {
             //If duplicite model which is actual loaded is extented parent of loaded child, then just skip adding this model
-            if ( $this->bootloader['models'][$model->getMigrationDate()] instanceof $model ){
+            if ( $this->get('models', [])[$model->getMigrationDate()] instanceof $model ){
                 return;
             }
 
-            abort(500, 'Model name '.$model->getTable().' has migration date which '.$model->getMigrationDate().' already exists in other model '.$this->bootloader['models'][$model->getMigrationDate()]->getTable().'.');
+            abort(500, 'Model name '.$model->getTable().' has migration date which '.$model->getMigrationDate().' already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.');
         }
 
         //Save model namespace into array
-        $this->bootloader['namespaces'][$model->getMigrationDate()] = $namespace;
+        $this->push('namespaces', $namespace, $model->getMigrationDate());
 
         //Save model into array
-        $this->bootloader['models'][$model->getMigrationDate()] = $model;
+        $this->push('models', $model, $model->getMigrationDate());
 
         //Save modelname
-        $this->bootloader['modelnames'][$this->toModelBaseName($namespace)] = $model;
+        $this->push('modelnames', $model, $this->toModelBaseName($namespace));
 
         //Sorting models by migration date
         if ( $sort == true )
@@ -365,28 +325,6 @@ class AdminCore
     public function isAdminModel($model)
     {
         return $model instanceof AdminModel && $model->getMigrationDate();
-    }
-
-    /**
-     * Register given model from admin extensions
-     * @param  array $extensions
-     * @return void
-     */
-    private function registerModelExtensions(array $extensions)
-    {
-        //Get all names of registered models
-        $model_names = $this->get('modelnames');
-
-        foreach ($extensions as $extension)
-        {
-            //If model/extension is allowed and if is not already registred
-            if (
-                $extension['condition']
-                && ! array_key_exists($this->toModelBaseName($extension['model']), $model_names)
-            ) {
-                $this->registerModel($extension['model'], false);
-            }
-        }
     }
 
     /**

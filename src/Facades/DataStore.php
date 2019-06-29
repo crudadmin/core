@@ -4,10 +4,10 @@ namespace Admin\Core\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class AdminCore extends Facade
+class DataStore extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'admin.core';
+        return 'admin.store';
     }
 }
