@@ -9,7 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Symfony\Component\Console\Input\InputOption;
 use \Doctrine\DBAL\Types\Type as DBType;
 use Localization;
-use Admin;
+use AdminCore;
 use Schema;
 use Cache;
 use DB;
@@ -91,7 +91,7 @@ class AdminMigrationCommand extends Command
 
     protected function fire()
     {
-        $models = Admin::getAdminModels();
+        $models = AdminCore::getAdminModels();
 
         $migrations = $this->migrate( $models );
     }
@@ -176,10 +176,12 @@ class AdminMigrationCommand extends Command
 
     /**
      * Generate laravel migratons
-     * @return [type] [description]
+     * @return void
      */
     protected function generateMigration($model)
     {
+        $this->fireModelEvent($model, 'beforeMigrate');
+
         if ( $model->getSchema()->hasTable( $model->getTable() ) )
         {
             $this->updateTable( $model );
@@ -187,16 +189,31 @@ class AdminMigrationCommand extends Command
             $this->createTable( $model );
         }
 
+        $this->fireModelEvent($model, 'afterMigrate');
+
         //Checks if model has some extre migrations on create
-        if ( method_exists($model, 'onMigrate') )
-        {
-            $this->registerAfterAllMigrations($model, function( $table ) use( $model ) {
-                $model->onMigrate($table, $model->getSchema(), $this);
-            });
-        }
+        $this->registerAfterAllMigrations($model, function($table) use( $model ) {
+            $this->fireModelEvent($model, 'onMigrateEnd');
+        });
 
         //Run migrations from cache which have to be runned after actual migration
         $this->fireEventsFromCache($model, 'fire_after_migration');
+    }
+
+    /*
+     * If model method does exists, then run method
+     */
+    public function fireModelEvent($model, $method)
+    {
+        //Checks if model has some extre migrations on create
+        if ( method_exists($model, $method) )
+        {
+            $schema = $model->getSchema();
+
+            $schema->table($model->getTable(), function (Blueprint $table) use ($model, $method, $schema) {
+                $model->{$method}($table, $schema, $this);
+            });
+        }
     }
 
     /*
@@ -211,7 +228,7 @@ class AdminMigrationCommand extends Command
 
         foreach ($this->{$type}[ $table ] as $function)
         {
-            $model->getSchema()->table( $table , function (Blueprint $table) use ($function) {
+            $model->getSchema()->table($table, function (Blueprint $table) use ($function) {
                 $function($table);
             });
         }
@@ -692,7 +709,7 @@ class AdminMigrationCommand extends Command
         {
             $properties = $model->getRelationProperty($key, 'belongsTo');
 
-            $parent = Admin::getModelByTable($properties[0]);
+            $parent = AdminCore::getModelByTable($properties[0]);
 
             //If table in belongsTo relation does not exists
             if ( ! $parent )
@@ -725,7 +742,7 @@ class AdminMigrationCommand extends Command
                     }
                 }
 
-                $this->registerAfterAllMigrations($model, function( $table ) use ( $key, $properties, $model ){
+                $this->registerAfterAllMigrations($model, function($table) use ( $key, $properties, $model ){
                     $table->foreign($key)->references($properties[2])->on($properties[0]);
                 });
             }
@@ -740,7 +757,7 @@ class AdminMigrationCommand extends Command
         $this->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$reference_table.'</error> <comment>table.</comment>');
         $this->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
 
-        $ids_in_reference_table = Admin::getModelByTable($reference_table)->take(10)->select('id')->pluck('id');
+        $ids_in_reference_table = AdminCore::getModelByTable($reference_table)->take(10)->select('id')->pluck('id');
 
         if ( count($ids_in_reference_table) > 0 )
         {
@@ -753,7 +770,7 @@ class AdminMigrationCommand extends Command
                 if ( !is_numeric($requested_id) )
                     continue;
 
-                if ( Admin::getModelByTable($reference_table)->where('id', $requested_id)->count() == 0 )
+                if ( AdminCore::getModelByTable($reference_table)->where('id', $requested_id)->count() == 0 )
                 {
                     $this->line('<error>Id #'.$requested_id.' does not exists.</error>');
                     $requested_id = false;
@@ -1134,7 +1151,7 @@ class AdminMigrationCommand extends Command
                 continue;
             }
 
-            $this->registerAfterAllMigrations($model, function( $table ) use ($foreign_column, $parent) {
+            $this->registerAfterAllMigrations($model, function($table) use ($foreign_column, $parent) {
                 $table->foreign( $foreign_column )->references( 'id' )->on( $parent->getTable() );
             });
         }
