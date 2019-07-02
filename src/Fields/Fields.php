@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Fields;
 
+use Admin\Core\Fields\Mutations\MutationRule;
+
 class Fields
 {
     /*
@@ -490,7 +492,7 @@ class Fields
     {
         $mutation = new $namespace;
 
-        if ( $mutation instanceof \Admin\Fields\Mutations\MutationRule )
+        if ( $mutation instanceof MutationRule )
         {
             $mutation->setFields($this->fields[$model->getTable()]);
             $mutation->setField($field);

@@ -4,7 +4,7 @@ namespace Admin\Core\Fields\Mutations;
 
 class MutationRule
 {
-    protected $fields;
+    protected $fields = [];
 
     protected $field;
 
