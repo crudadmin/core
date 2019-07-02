@@ -1,0 +1,24 @@
+<?php
+
+namespace DummyNamespace;
+
+DummyUseNamespaces;
+
+class DummyClass extends AdminModel
+{
+    /*
+     * Model created date, for ordering tables in database and in user interface
+     */
+    protected $migration_date = 'CREATED_DATETIME';
+DummyParameters
+    /*
+     * Automatic form and database generator by fields list
+     * :name - field name
+     * :type - field type (string/text/editor/select/integer/decimal/file/password/date/datetime/time/checkbox/radio)
+     * ... other validation methods from laravel
+     */
+    protected $fields = [
+DummyFields
+    ];
+
+}

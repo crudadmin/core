@@ -3,12 +3,14 @@
 namespace Admin\Core\Helpers;
 
 use Admin\Core\Contracts\DataStore;
+use Admin\Core\Contracts\AdminEvents;
 use Admin\Models\Model as AdminModel;
 use Illuminate\Filesystem\Filesystem;
 
 class AdminCore
 {
-    use DataStore;
+    use DataStore,
+        AdminEvents;
 
     /*
      * Filesystem provider

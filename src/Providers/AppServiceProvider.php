@@ -9,7 +9,7 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     protected $providers = [
-
+        CommandsServiceProvider::class,
     ];
 
     protected $facades = [
@@ -32,7 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
+        //Load translations
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang/', 'admin.core');
     }
 
     /**
@@ -42,8 +43,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //Merge configs
         $this->mergeConfigFrom(
-            __DIR__.'/../Config/config.php', 'admin.core'
+            __DIR__.'/../Config/config.php', 'admin'
         );
 
         $this->registerFacades();
