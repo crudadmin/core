@@ -4,6 +4,7 @@ namespace Admin\Core\Providers;
 
 use Admin\Core\Facades;
 use Admin\Core\Helpers;
+use Admin\Core\Fields;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,6 +14,11 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     protected $facades = [
+        'admin.fields' => [
+            'classname' => 'Fields',
+            'facade' => Facades\Fields::class,
+            'helper' => Fields\Fields::class,
+        ],
         'admin.core' => [
             'classname' => 'AdminCore',
             'facade' => Facades\AdminCore::class,
