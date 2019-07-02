@@ -288,9 +288,13 @@ class AdminCore
      */
     public function registerModel($namespace, $sort = true)
     {
+        //Checks if is admin model without initializing of class
+        if ( !is_a($namespace, AdminModel::class, true) )
+            return;
+
         $model = new $namespace;
 
-        //Checks if is admin models
+        //Check if is valid admin model with correct migration date
         if ( ! $this->isAdminModel($model) )
             return;
 
