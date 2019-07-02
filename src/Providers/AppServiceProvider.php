@@ -11,6 +11,7 @@ class AppServiceProvider extends ServiceProvider
 {
     protected $providers = [
         CommandsServiceProvider::class,
+        \Intervention\Image\ImageServiceProvider::class,
     ];
 
     protected $facades = [

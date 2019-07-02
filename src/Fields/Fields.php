@@ -18,7 +18,7 @@ class Fields
      * Registred custom admin attributes for fields
      */
     protected $attributes = [
-         'name', 'type', 'resize', 'default', 'unique_db',
+         'name', 'type', 'resize', 'locale', 'default', 'unique_db',
          'index', 'unsigned', 'imaginary', 'migrateToPivot'
     ];
 

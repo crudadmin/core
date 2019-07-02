@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Admin;
+use AdminCore;
 
 trait HasChildrens
 {
@@ -19,7 +19,7 @@ trait HasChildrens
         $child_model_name = strtolower( str_plural( $basename_class ) . $method_singular);
 
         //Check if exists child with model name
-        $relation = Admin::hasAdminModel($child_model_name)
+        $relation = AdminCore::hasAdminModel($child_model_name)
                         ? $this->returnAdminRelationship($child_model_name, $get)
                         : null;
 
@@ -28,7 +28,7 @@ trait HasChildrens
             return $relation;
 
         //Check by last model convention name
-        foreach (Admin::getAdminModelNamespaces() as $migration_date => $modelname)
+        foreach (AdminCore::getAdminModelNamespaces() as $migration_date => $modelname)
         {
             $basename = class_basename($modelname);
 

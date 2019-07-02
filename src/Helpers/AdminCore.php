@@ -23,16 +23,11 @@ class AdminCore
     }
 
     /*
-     * Checks if available models are botted already
-     */
-    private $booted = false;
-
-    /*
      * Returns if is admin models are loaded
      */
     public function isLoaded()
     {
-        return $this->booted;
+        return $this->get('booted', false);
     }
 
     /**
@@ -113,7 +108,7 @@ class AdminCore
         $this->sortModels();
 
         //All admin models has been properly loaded
-        $this->booted = true;
+        $this->set('booted', true);
 
         //Returns namespaces list
         return $this->get('namespaces', []);

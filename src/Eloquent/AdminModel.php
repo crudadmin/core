@@ -4,7 +4,6 @@ namespace Admin\Core\Eloquent;
 
 use Admin\Core\Eloquent\Concerns\AdminModelTrait;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
-use Admin\Core\Eloquent\Concerns\HasAttributes;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Validation;
@@ -16,7 +15,6 @@ class AdminModel extends Model
     use AdminModelTrait,
         HasChildrens,
         RelationsBuilder,
-        HasAttributes,
         FieldProperties,
         SoftDeletes,
         Validation;
