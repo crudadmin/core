@@ -2,8 +2,10 @@
 
 namespace Admin\Core\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Admin\Core\Commands\AdminMigrationCommand;
+use Admin\Core\Commands\AdminModelCommand;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\ServiceProvider;
 
 class CommandsServiceProvider extends ServiceProvider {
 
@@ -19,10 +21,12 @@ class CommandsServiceProvider extends ServiceProvider {
 
     private function registerCommands()
     {
-        $this->app->bind('crudadmin::admin.model', \Admin\Core\Commands\AdminModelCommand::class);
+        $this->app->bind('crudadmin::admin.model', AdminModelCommand::class);
+        $this->app->bind('crudadmin::admin.migrate', AdminMigrationCommand::class);
 
         $this->commands([
             'crudadmin::admin.model',
+            'crudadmin::admin.migrate',
         ]);
     }
 }
