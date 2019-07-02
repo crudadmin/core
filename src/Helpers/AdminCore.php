@@ -160,14 +160,20 @@ class AdminCore
         {
             $basepath = trim_end(trim_end($basepath, '*'), '/');
 
-            $files = array_map(function($item){
-                return $item->getPathName();
-            }, $this->files->allFiles($basepath));
+            //Check if model path exists
+            if ( file_exists($basepath) )
+            {
+                $files = array_map(function($item){
+                    return $item->getPathName();
+                }, $this->files->allFiles($basepath));
+            } else {
+                $files = [];
+            }
         }
 
         //Get files from actual folder
         else {
-            $files = $this->files->files($basepath);
+            $files = file_exists($basepath) ? $this->files->files($basepath) : [];
         }
 
         return array_unique($files);
@@ -181,9 +187,7 @@ class AdminCore
     private function getNamespacesList()
     {
         //Add default app namespace
-        $paths = [
-            app_path() => config('admin.app_namespace', 'App'),
-        ];
+        $paths = [];
 
         //Register paths from config
         foreach (config('admin.models', []) as $namespace => $path)
