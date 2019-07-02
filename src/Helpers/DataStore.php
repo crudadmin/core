@@ -11,10 +11,14 @@ class DataStore
 
     /**
      * Returns store data
+     * @param  string|null $key
      * @return array
      */
-    public function getStore()
+    public function getStore($key = null)
     {
+        if ( $key )
+            return isset($this->store[$key]) ? $this->store[$key] : null;
+
         return $this->store;
     }
 
