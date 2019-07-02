@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Admin;
+use AdminCore;
 use Illuminate\Support\Str;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Eloquent\Model as BaseModel;
@@ -27,7 +27,7 @@ trait RelationsBuilder
         $loaded = parent::relationLoaded($key);
 
         if ( ! $loaded )
-            $loaded = Admin::has( $this->getAdminRelationKey( $key ) );
+            $loaded = AdminCore::has( $this->getAdminRelationKey( $key ) );
 
         return $loaded;
     }
@@ -41,7 +41,7 @@ trait RelationsBuilder
             return parent::getRelation($key);
         }
 
-        return Admin::get( $this->getAdminRelationKey( $key ) );
+        return AdminCore::get( $this->getAdminRelationKey( $key ) );
     }
 
     /*
@@ -49,7 +49,7 @@ trait RelationsBuilder
      */
     public function setRelation($relation, $value)
     {
-        Admin::set( $this->getAdminRelationKey( $relation ), $value );
+        AdminCore::set( $this->getAdminRelationKey( $relation ), $value );
 
         return parent::setRelation($relation, $value);
     }
@@ -213,7 +213,7 @@ trait RelationsBuilder
 
         //Get all admin modules
         if ( ! $models )
-            $models = Admin::getAdminModelNamespaces();
+            $models = AdminCore::getAdminModelNamespaces();
 
         /*
          * Return relations by defined fields in actual model

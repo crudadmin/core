@@ -3,9 +3,15 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use Localization;
+use Fields;
 
 trait FieldProperties
 {
+    /*
+     * Buffered fields in model
+     */
+    private $_fields = null;
+
     /*
      * Which options can be loaded in getFields (eg data from db)
      */
@@ -25,6 +31,129 @@ trait FieldProperties
      * Skip belongsToMany properties in getAdminModelAttributes
      */
     private $skipBelongsToMany = false;
+
+    /**
+     * Return fields converted from string (key:value|otherkey:othervalue) into array format
+     * @return [array]
+     */
+    public function getFields($param = null, $force = false)
+    {
+        $with_options = count($this->withOptions) > 0;
+
+        if ( $param !== null || $with_options === true )
+            $force = true;
+
+        //Field mutations
+        if ( $this->_fields == null || $force == true )
+        {
+            $this->_fields = Fields::getFields( $this, $param, $force );
+
+            $this->withoutOptions();
+        }
+
+        return $this->_fields;
+    }
+
+    /*
+     * Return all model fields with options
+     */
+    public function getFieldsWithOptions($param = null, $force = false)
+    {
+        $this->withAllOptions();
+
+        return $this->getFields($param, $force);
+    }
+
+    /*
+     * Returns needed field
+     */
+    public function getField($key)
+    {
+        $fields = $this->getFields();
+
+        if ( array_key_exists($key, $fields) )
+            return $fields[$key];
+
+        return null;
+    }
+
+    /*
+     * Returns type of field
+     */
+    public function getFieldType($key)
+    {
+        $field = $this->getField($key);
+
+        return $field['type'];
+    }
+
+    /*
+     * Check column type
+     */
+    public function isFieldType($key, $types)
+    {
+        if ( is_string($types) )
+            $types = [ $types ];
+
+        return in_array( $this->getFieldType($key), $types);
+    }
+
+    /*
+     * Returns maximum length of field
+     */
+    public function getFieldLength($key)
+    {
+        $field = $this->getField($key);
+
+        if ( $this->isFieldType($key, ['file', 'password']) )
+        {
+            return 255;
+        }
+
+        //Return maximum defined value
+        if ( array_key_exists('max', $field) )
+            return $field['max'];
+
+        //Return default maximum value
+        return 255;
+    }
+
+    /*
+     * Returns if field has required
+     */
+    public function hasFieldParam($key, $params, $paramValue = null)
+    {
+        if (!$field = $this->getField($key))
+            return false;
+
+        foreach (array_wrap($params) as $paramName) {
+            if ( array_key_exists($paramName, $field) )
+            {
+                if ( $paramValue !== null )
+                {
+                    if ( $field[$paramName] === $paramValue )
+                        return true;
+                } else {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /*
+     * Returns attribute of field
+     */
+    public function getFieldParam($key, $paramName)
+    {
+        if ( $this->hasFieldParam($key, $paramName) === false )
+            return null;
+
+        $field = $this->getField($key);
+
+        return $field[$paramName];
+    }
 
     /*
      * Field mutator for selects returns all options (also from db, etc...)

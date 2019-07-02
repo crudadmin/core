@@ -4,7 +4,7 @@ namespace Admin\Core\Helpers;
 
 use Admin\Core\Contracts\DataStore;
 use Admin\Core\Contracts\AdminEvents;
-use Admin\Models\Model as AdminModel;
+use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Filesystem\Filesystem;
 
 class AdminCore
@@ -67,8 +67,9 @@ class AdminCore
         foreach ($models as $model)
         {
             //Return cloned booted class instance
-            if ( $model->getTable() == $table_name )
+            if ( $model->getTable() == $table_name ){
                 return $model->newInstance();
+            }
         }
     }
 
