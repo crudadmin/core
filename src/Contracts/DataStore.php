@@ -14,6 +14,14 @@ trait DataStore
         return get_class($this);
     }
 
+    /*
+     * Get store data
+     */
+    public function getStore()
+    {
+        return Store::getStore($this->getStoreKey());
+    }
+
     /**
      * Get property from store
      * @param  string $key
