@@ -3,15 +3,6 @@
 namespace Admin\Core\Contracts\Migrations;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\Concerns\HasIndex;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationEvents;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationHelper;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationOutOfDate;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationRelations;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationSluggable;
-use Admin\Core\Contracts\Migrations\Concerns\SupportJson;
-use Admin\Core\Contracts\Migrations\Columnss;
-use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
@@ -21,13 +12,14 @@ use Schema;
 
 class MigrationBuilder extends Command
 {
-    use MigrationEvents,
-        MigrationHelper,
-        MigrationRelations,
-        MigrationOutOfDate,
-        MigrationSluggable,
-        SupportJson,
-        HasIndex;
+    use Concerns\MigrationEvents,
+        Concerns\MigrationHelper,
+        Concerns\MigrationOutOfDate,
+        Concerns\SupportRelations,
+        Concerns\SupportSluggable,
+        Concerns\SupportColumn,
+        Concerns\SupportJson,
+        Concerns\HasIndex;
 
     /*
      * Files
@@ -41,28 +33,6 @@ class MigrationBuilder extends Command
         $this->registerMigrationHelpers();
 
         parent::__construct();
-    }
-
-    public function getMigrationColumns()
-    {
-        $fields = [
-            Columns\Imaginary::class,
-            Columns\BelongsTo::class,
-            Columns\BelongsToMany::class,
-            Columns\Json::class,
-            Columns\StringColumn::class,
-            Columns\Text::class,
-            Columns\LongText::class,
-            Columns\Integer::class,
-            Columns\Decimal::class,
-            Columns\DateTime::class,
-            Columns\Checkbox::class,
-        ];
-
-        //We can mutate given fields by reference variable $fields
-        AdminCore::fire('migrations.fields', [&$fields, $this]);
-
-        return $fields;
     }
 
     /**
@@ -366,87 +336,6 @@ class MigrationBuilder extends Command
                 $row->save();
             }
         });
-    }
-
-    /**
-     * Set all properties of column into migration
-     * @param Blueprint     $table
-     * @param AdminModel    $model
-     * @param string        $key
-     * @param bool          $update
-     */
-    protected function setColumn(Blueprint $table, AdminModel $model, $key, $update = false)
-    {
-        //Registred column types
-        $columns = $this->getMigrationColumns();
-
-        //Set column variable
-        $column = null;
-
-        //Get column
-        foreach ($columns as $class) {
-            //If column has been fired from class
-            if ( !class_exists($class) || !method_exists($class, 'registerColumn') )
-                continue;
-
-            $columnClass = new $class;
-            $columnClass->setInput($this->input);
-            $columnClass->setOutput($this->output);
-
-            if ( $column = $columnClass->registerColumn($table, $model, $key, $update) )
-                break;
-        }
-
-        //Unknown column type
-        if ( !$column )
-            $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
-
-        //If column has not been found, or we want skip column registration
-        if ( !$column || $column === true )
-            return;
-
-        //If is field required
-        if( !$model->hasFieldParam($key, 'required') )
-            $column->nullable();
-
-        //If field is index
-        if( $model->hasFieldParam($key, 'index')
-            && (
-                !$model->getSchema()->hasTable( $model->getTable() ) ||
-                !$this->hasIndex($model, $key, 'index')
-            )
-        ){
-            $column->index();
-        }
-
-        //Set default value of field
-        if( $this->canSetDefault($model, $key) )
-        {
-            $default = $model->getFieldParam($key, 'default');
-
-            //Set default timestamp
-            if ( $default && $model->isFieldType($key, ['date', 'datetime', 'time']) )
-            {
-                if ( strtoupper($default) == 'CURRENT_TIMESTAMP' )
-                    $default = DB::raw('CURRENT_TIMESTAMP');
-                else
-                    $default = null;
-            }
-
-            $column->default( $default );
-        } else {
-            $column->default(NULL);
-        }
-
-        return $column;
-    }
-
-    /*
-     * If default value can be set in db
-     */
-    private function canSetDefault($model, $key)
-    {
-        return $model->hasFieldParam($key, 'default') && ! $model->hasFieldParam($key, ['belongsTo', 'belongsToMany']);
     }
 
     /*

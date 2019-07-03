@@ -5,7 +5,7 @@ namespace Admin\Core\Contracts\Migrations\Concerns;
 use Illuminate\Support\Facades\DB;
 use AdminCore;
 
-trait MigrationRelations
+trait SupportRelations
 {
     /**
      * Check or add static relationship columns from relation admin models

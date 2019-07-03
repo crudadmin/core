@@ -6,7 +6,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Localization;
 use Cache;
 
-trait MigrationSluggable
+trait SupportSluggable
 {
     protected function setSlug($table, $model, $updating = false, $render = true)
     {
