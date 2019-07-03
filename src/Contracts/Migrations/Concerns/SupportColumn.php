@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 trait SupportColumn
 {
     /*
-     * Registered columns types
+     * Registered column types
      */
     protected $columns = [
         Columns\Imaginary::class,
@@ -29,48 +29,25 @@ trait SupportColumn
         Columns\Checkbox::class,
     ];
 
+    /*
+     * Registred statoc column types
+     */
+    protected $staticColumns = [
+        Columns\Sluggable::class,
+    ];
+
     /**
      * Return columns set
      * @return array
      */
-    private function getColumns()
+    private function getColumns($columnType = null)
     {
-        $columns = $this->columns;
+        $columns = $this->{$columnType ?: 'columns'};
 
         //We can mutate given columns by reference variable $columns
         AdminCore::fire('migrations.columns', [&$columns, $this]);
 
         return $columns;
-    }
-
-    /**
-     * Run column action and send response into closure if is available
-     * @param  string $method
-     * @param  array  $params
-     * @param  closure $closure
-     * @return void
-     */
-    public function runActionFromAll(string $method, array $params, $closure = null)
-    {
-        $columns = $this->getColumns();
-
-        foreach ($columns as $class)
-        {
-            $columnClass = new $class;
-
-            if ( !method_exists($columnClass, $method) )
-                continue;
-
-            //Set class input and output for interaction support
-            $columnClass->setInput($this->input);
-            $columnClass->setOutput($this->output);
-
-            $response = $columnClass->{$method}(...$params);
-
-            //If is defined closure, then response will be send into this closure as parameter
-            if ( $closure && call_user_func_array($closure, [$response, $columnClass]) === false )
-                break;
-        }
     }
 
     /**
@@ -89,28 +66,98 @@ trait SupportColumn
     }
 
     /**
+     * Run column action and send response into closure if is available
+     * @param  string  $method
+     * @param  array   $params
+     * @param  string  $columnType
+     * @param  boolean $updating
+     * @param  closure $closure
+     * @return void
+     */
+    public function runFieldAction(string $method, array $params, $closure = null, $columnType = null, $model, $key = null, $updating = false)
+    {
+        $columns = $this->getColumns($columnType);
+
+        foreach ($columns as $class)
+        {
+            $columnClass = new $class;
+
+            if ( !method_exists($columnClass, $method) )
+                continue;
+
+            //Set class input and output for interaction support
+            $columnClass->setInput($this->input);
+            $columnClass->setOutput($this->output);
+
+            $columnExists = $updating === false ? false
+                            : $model->getSchema()->hasColumn($model->getTable(), $key ?: $columnClass->column);
+
+            //Add column exists parameter
+            $params[] = $columnExists;
+
+            $response = $columnClass->{$method}(...$params);
+
+            //If is defined closure, then response will be send into this closure as parameter
+            if ( $closure && call_user_func_array($closure, [$response, $columnClass, $columnExists]) === false )
+                break;
+        }
+    }
+
+    /**
+     * Register all static columns
+     * @return void
+     */
+    protected function registerStaticColumns($table, $model, $updating = false)
+    {
+        //Registred column type
+        $this->runFieldAction(
+            'registerStaticColumn',
+            [$table, $model, $updating],
+            function($response, $class, $columnExists) use (&$column, &$columnClass, $updating, $model) {
+                //If column has not been set
+                if ( ! $response )
+                    return;
+
+                //If static column has been found, and does not exists in db
+                if ( ! $columnExists )
+                    $this->line('<comment>+ Added column:</comment> '.$class->column);
+                else
+                    $response->change();
+            },
+            'staticColumns',
+            $model,
+            null,
+            $updating
+        );
+    }
+
+    /**
      * Set all column types by registred classes
      * @param Blueprint     $table
      * @param AdminModel    $model
      * @param string        $key
-     * @param bool          $update
+     * @param bool          $updating
      */
-    protected function setColumn(Blueprint $table, AdminModel $model, $key, $update = false)
+    protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Get column class
         $columnClass = null;
 
         //Registred column type
-        $this->runActionFromAll(
+        $this->runFieldAction(
             'registerColumn',
-            [$table, $model, $key, $update],
+            [$table, $model, $key, $updating],
             function($response, $class) use (&$column, &$columnClass) {
                 $columnClass = $class;
 
                 //If column has been found, then stop all other registred classes
                 if ( $column = $response )
                     return false;
-            }
+            },
+            'columns',
+            $model,
+            $key,
+            $updating
         );
 
         //Unknown column type

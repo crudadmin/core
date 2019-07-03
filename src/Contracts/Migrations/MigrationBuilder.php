@@ -16,7 +16,6 @@ class MigrationBuilder extends Command
         Concerns\MigrationHelper,
         Concerns\MigrationOutOfDate,
         Concerns\SupportRelations,
-        Concerns\SupportSluggable,
         Concerns\SupportColumn,
         Concerns\SupportJson,
         Concerns\HasIndex;
@@ -102,6 +101,7 @@ class MigrationBuilder extends Command
         $columns = ['_order', 'created_at', 'published_at', 'updated_at'];
 
         //When slug is allowed
+        //TODO: skip all static fields
         if ( $model && $model->getProperty('sluggable') != null )
             $columns[] = 'slug';
 
@@ -127,12 +127,11 @@ class MigrationBuilder extends Command
                 if ( $this->skipField($key) )
                     continue;
 
-                $this->setColumn( $table, $model, $key );
-
-                //Sluggable column
-                if ( $model->getProperty('sluggable') != null && $model->getProperty('sluggable') == $key )
-                    $this->setSlug( $table, $model );
+                $this->registerColumn($table, $model, $key);
             }
+
+            //Register static columns
+            $this->registerStaticColumns($table, $model);
 
             //Add multilanguage support
             $this->createLanguageRelationship($table, $model);
@@ -182,7 +181,7 @@ class MigrationBuilder extends Command
 
                 //Checks if table has column and update it if can...
                 if ( $model->getSchema()->hasColumn($model->getTable(), $key) ){
-                    if ( $column = $this->setColumn( $table, $model, $key, true ) )
+                    if ( $column = $this->registerColumn( $table, $model, $key, true ) )
                     {
                         $column->change();
                     }
@@ -192,7 +191,7 @@ class MigrationBuilder extends Command
                     $add_columns[] = [
                         'key' => $key,
                         'callback' => function($except_columns) use ($table, $model, $key, $value){
-                            if ( $column = $this->setColumn( $table, $model, $key ) )
+                            if ( $column = $this->registerColumn( $table, $model, $key ) )
                             {
                                 $previous_column = $this->getPreviousColumn($model, $key, $except_columns);
 
@@ -240,18 +239,8 @@ class MigrationBuilder extends Command
                 $this->addDefaultOrder($model);
             }
 
-            //Sluggable column
-            if ( $model->getProperty('sluggable') != null )
-            {
-                if ( ! $model->getSchema()->hasColumn($model->getTable(), 'slug') )
-                {
-                    $this->setSlug($table, $model, true, true);
-                    $this->line('<comment>+ Added column:</comment> slug');
-                } else {
-                    if ( $setSlug = $this->setSlug($table, $model, true) )
-                        $setSlug->change();
-                }
-            }
+            //Register static columns
+            $this->registerStaticColumns($table, $model, true);
 
             //Published at column
             if ( ! $model->getSchema()->hasColumn($model->getTable(), 'published_at') && $model->getProperty('publishable') == true )
@@ -272,7 +261,7 @@ class MigrationBuilder extends Command
              */
             $base_fields = $model->getBaseFields(true);
 
-            //Removes unneeded columns
+            //Removes unnecessary columns
             foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)
             {
                 if ( ! in_array($column, $base_fields) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
