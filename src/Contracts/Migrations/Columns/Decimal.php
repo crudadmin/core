@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Fields;
+namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\Fields\Field;
+use Admin\Core\Contracts\Migrations\Column;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Integer extends Field
+class Decimal extends Column
 {
     /**
      * Register column
@@ -16,12 +16,12 @@ class Integer extends Field
      * @param  bool         $update
      * @return Blueprint
      */
-    public function register(Blueprint $table, AdminModel $model, string $key, bool $update)
+    public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        //Integer columns
-        if ( $model->isFieldType($key, 'integer') )
+        //Decimal columns
+        if ( $model->isFieldType($key, 'decimal') )
         {
-            $column = $table->integer($key);
+            $column = $table->decimal($key, 8, 2);
 
             //Check if is integer unsigned or not
             if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0)

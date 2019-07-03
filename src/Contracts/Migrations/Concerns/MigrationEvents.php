@@ -3,21 +3,34 @@
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
 use Illuminate\Database\Schema\Blueprint;
+use AdminCore;
 
 trait MigrationEvents
 {
     /**
-     * Register event after specific migration
+     * Register event migration
      * @param  object $model
      * @param  string $name
      * @param  $callback
      * @return void
      */
-    public function event($model, $name, $callback)
+    public function migrationEvent($model, $name, $callback)
     {
         $table = $model->getTable();
 
-        $this->push($table, $callback, $name);
+        AdminCore::event('migrations.'.$table.'.'.$name, $callback);
+    }
+
+    /*
+     * Run all migrations saved in buffer
+     */
+    public function fireMigrationEvents($model, $name)
+    {
+        $modelTable = $model->getTable();
+
+        $model->getSchema()->table($modelTable, function (Blueprint $table) use ($modelTable, $name) {
+            AdminCore::fire('migrations.'.$modelTable.'.'.$name, [$table]);
+        });
     }
 
     /**
@@ -28,7 +41,7 @@ trait MigrationEvents
      */
     public function registerAfterMigration($model, $callback)
     {
-        $this->event($model, 'fire_after_migration', $callback);
+        $this->migrationEvent($model, 'fire_after_migration', $callback);
     }
 
     /**
@@ -39,27 +52,7 @@ trait MigrationEvents
      */
     public function registerAfterAllMigrations($model, $callback)
     {
-        $this->event($model, 'fire_after_all', $callback);
-    }
-
-    /*
-     * Run all migrations saved in buffer
-     */
-    public function fireMigrationEvents($model, $type)
-    {
-        $table = $model->getTable();
-
-        $events = $this->get($table);
-
-        if ( ! array_key_exists($table, $events) )
-            return;
-
-        foreach ($events[ $table ] as $function)
-        {
-            $model->getSchema()->table($table, function (Blueprint $table) use ($function) {
-                $function($table);
-            });
-        }
+        $this->migrationEvent($model, 'fire_after_all', $callback);
     }
 
     /*

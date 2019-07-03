@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Fields;
+namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\Fields\Field;
+use Admin\Core\Contracts\Migrations\Column;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class LongText extends Field
+class LongText extends Column
 {
     /**
      * Register column
@@ -16,7 +16,7 @@ class LongText extends Field
      * @param  bool         $update
      * @return Blueprint
      */
-    public function register(Blueprint $table, AdminModel $model, string $key, bool $update)
+    public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
         if ( $model->isFieldType($key, ['longtext', 'longeditor']) )
         {

@@ -3,14 +3,15 @@
 namespace Admin\Core\Contracts\Migrations;
 
 use AdminCore;
-use Admin\Core\Contracts\DataStore;
 use Admin\Core\Contracts\Migrations\Concerns\HasIndex;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationEvents;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationHelper;
+use Admin\Core\Contracts\Migrations\Concerns\MigrationOutOfDate;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationRelations;
+use Admin\Core\Contracts\Migrations\Concerns\MigrationSluggable;
 use Admin\Core\Contracts\Migrations\Concerns\SupportJson;
-use Admin\Core\Contracts\Migrations\Fields;
-use Cache;
+use Admin\Core\Contracts\Migrations\Columnss;
+use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
@@ -23,9 +24,10 @@ class MigrationBuilder extends Command
     use MigrationEvents,
         MigrationHelper,
         MigrationRelations,
+        MigrationOutOfDate,
+        MigrationSluggable,
         SupportJson,
-        HasIndex,
-        DataStore;
+        HasIndex;
 
     /*
      * Files
@@ -39,6 +41,28 @@ class MigrationBuilder extends Command
         $this->registerMigrationHelpers();
 
         parent::__construct();
+    }
+
+    public function getMigrationColumns()
+    {
+        $fields = [
+            Columns\Imaginary::class,
+            Columns\BelongsTo::class,
+            Columns\BelongsToMany::class,
+            Columns\Json::class,
+            Columns\StringColumn::class,
+            Columns\Text::class,
+            Columns\LongText::class,
+            Columns\Integer::class,
+            Columns\Decimal::class,
+            Columns\DateTime::class,
+            Columns\Checkbox::class,
+        ];
+
+        //We can mutate given fields by reference variable $fields
+        AdminCore::fire('migrations.fields', [&$fields, $this]);
+
+        return $fields;
     }
 
     /**
@@ -72,41 +96,6 @@ class MigrationBuilder extends Command
         {
             $this->fireMigrationEvents($model, 'fire_after_all');
         }
-    }
-
-    /**
-     * Check if AdminModel is up to date
-     * @param  object  $model
-     * @param  closure  $migration
-     * @return boolean
-     */
-    protected function isOutOfDate($model, $migration)
-    {
-        $path = (new \ReflectionClass($model))->getFileName();
-
-        //If file class does not exists
-        if ( ! file_exists($path) )
-        {
-            //Migrate
-            call_user_func($migration);
-
-            return false;
-        }
-
-        $namespace = 'admin_migrations.' . md5(get_class($model));
-
-        $hash = md5_file($path);
-
-        if ( $this->option('force') === false && Cache::get($namespace) == $hash )
-            return true;
-
-        //Migrate
-        call_user_func($migration);
-
-        //Cache model after migration done
-        Cache::forever($namespace, $hash);
-
-        return false;
     }
 
     /**
@@ -365,98 +354,6 @@ class MigrationBuilder extends Command
         return $last;
     }
 
-    /*
-     * Drops foreign key in table
-     */
-    protected function dropIndex($model, $key, $prefix = null)
-    {
-        return $model->getConnection()->select(
-            DB::raw( 'alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix) .'`' )
-        );
-    }
-
-    protected function setSlug($table, $model, $updating = false, $render = true)
-    {
-        $slugcolumn = $model->getProperty('sluggable');
-
-        if ( ! ($field = $model->getField($slugcolumn)) )
-        {
-            $this->line('<comment>+ Unknown slug column for</comment> <error>'.$slugcolumn.'</error> <comment>column</comment>');
-
-            return;
-        }
-
-        //Set locale slug or normal
-        if ( $has_locale = $model->hasFieldParam($slugcolumn, 'locale', true) )
-            $column = $this->setJsonColumn($table, 'slug', $model, $updating, true);
-        else
-            $column = $table->string('slug', $model->getFieldLength($slugcolumn));
-
-        if ( $updating == true )
-        {
-            $column->after( $slugcolumn );
-        }
-
-        //If is creating new table or when slug index is missing
-        if ( !$has_locale && ($updating === false || ! $this->hasIndex($model, 'slug', 'index')) )
-            $column->index();
-
-        if ( $has_locale && $updating === true && $this->hasIndex($model, 'slug', 'index') )
-            $this->dropIndex($model, 'slug', 'index');
-
-        //If is field required
-        if( ! $model->hasFieldParam( $slugcolumn , 'required') )
-            $column->nullable();
-
-        //If was added column to existing table, then reload sluggs
-        if ( $render == true )
-        {
-            $this->updateSlugs($model);
-        }
-
-        return $column;
-    }
-
-    //Resave all rows in model for updating slug if needed
-    protected function updateSlugs($model)
-    {
-        $this->registerAfterMigration($model, function() use ($model) {
-
-            //Get empty slugs
-            $empty_slugs = $model->withoutGlobalScopes()->where(function($query) use ($model) {
-                //If some of localized slug value is empty
-                if ( $model->hasLocalizedSlug() )
-                {
-                    $languages = Localization::getLanguages(true);
-
-                    //Check all available languages slugs
-                    foreach ($languages as $key => $lang)
-                    {
-                        $query->{ $key == 0 ? 'where' : 'orWhere' }(function($query) use($model, $lang) {
-                            //If row has defined localized value, but slug is missing
-                            $query->whereRaw('JSON_EXTRACT(slug, "$.'.$lang->slug.'") is NULL')
-                                  ->whereRaw('JSON_EXTRACT('.$model->getProperty('sluggable').', "$.'.$lang->slug.'") is NOT NULL');
-                        });
-                    }
-                }
-
-                //If simple slug is empty
-                else {
-                    $query->whereNull('slug')->orWhere('slug', '');
-                }
-
-            })->orWhere('slug', null);
-
-            //If has been found some empty slugs
-            if ( $empty_slugs->count() > 0 )
-            {
-                //Re-save models, and regenerate new slugs
-                foreach ($empty_slugs->select([$model->getKeyName(), 'slug', $model->getProperty('sluggable')])->get() as $row)
-                    $row->save();
-            }
-        });
-    }
-
     //Resave all rows in model for updating slug if needed
     protected function addDefaultOrder($model)
     {
@@ -473,34 +370,30 @@ class MigrationBuilder extends Command
 
     /**
      * Set all properties of column into migration
-     * @param [object] $table
-     * @param [object] $model
-     * @param [string] $key
+     * @param Blueprint     $table
+     * @param AdminModel    $model
+     * @param string        $key
+     * @param bool          $update
      */
-    protected function setColumn($table, $model, $key, $update = false)
+    protected function setColumn(Blueprint $table, AdminModel $model, $key, $update = false)
     {
         //Registred column types
-        $types = [
-            Fields\Imaginary::class,
-            Fields\BelongsTo::class,
-            Fields\BelongsToMany::class,
-            Fields\Json::class,
-            Fields\StringColumn::class,
-            Fields\Text::class,
-            Fields\LongText::class,
-            Fields\Integer::class,
-            Fields\Decimal::class,
-            Fields\DateTime::class,
-            Fields\Checkbox::class,
-        ];
+        $columns = $this->getMigrationColumns();
+
+        //Set column variable
+        $column = null;
 
         //Get column
-        foreach ($types as $type) {
+        foreach ($columns as $class) {
             //If column has been fired from class
-            if ( class_exists($type) && $column = (new $type)->register($table, $model, $key, $update) )
-                break;
+            if ( !class_exists($class) || !method_exists($class, 'registerColumn') )
+                continue;
 
-            else if ( method_exists($this, $type) && $column = $this->{$type}($table, $model, $key, $update) )
+            $columnClass = new $class;
+            $columnClass->setInput($this->input);
+            $columnClass->setOutput($this->output);
+
+            if ( $column = $columnClass->registerColumn($table, $model, $key, $update) )
                 break;
         }
 
@@ -508,18 +401,17 @@ class MigrationBuilder extends Command
         if ( !$column )
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
 
+        //If column has not been found, or we want skip column registration
         if ( !$column || $column === true )
-        {
             return;
-        }
 
         //If is field required
-        if( ! $model->hasFieldParam($key, 'required') )
+        if( !$model->hasFieldParam($key, 'required') )
             $column->nullable();
 
         //If field is index
-        if( $model->hasFieldParam($key, 'index') &&
-            (
+        if( $model->hasFieldParam($key, 'index')
+            && (
                 !$model->getSchema()->hasTable( $model->getTable() ) ||
                 !$this->hasIndex($model, $key, 'index')
             )
@@ -527,7 +419,7 @@ class MigrationBuilder extends Command
             $column->index();
         }
 
-        //If is field required
+        //Set default value of field
         if( $this->canSetDefault($model, $key) )
         {
             $default = $model->getFieldParam($key, 'default');

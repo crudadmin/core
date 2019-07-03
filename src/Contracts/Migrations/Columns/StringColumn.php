@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Fields;
+namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\Fields\Field;
+use Admin\Core\Contracts\Migrations\Column;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class StringColumn extends Field
+class StringColumn extends Column
 {
     /**
      * Register column
@@ -16,7 +16,7 @@ class StringColumn extends Field
      * @param  bool         $update
      * @return Blueprint
      */
-    public function register(Blueprint $table, AdminModel $model, string $key, bool $update)
+    public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
         if ( $model->isFieldType($key, ['string', 'password', 'radio', 'file', 'select']) )
         {

@@ -7,7 +7,6 @@ use AdminCore;
 
 trait MigrationRelations
 {
-
     /**
      * Check or add static relationship columns from relation admin models
      * @param object $table

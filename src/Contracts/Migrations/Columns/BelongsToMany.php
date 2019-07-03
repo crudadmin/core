@@ -1,13 +1,13 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Fields;
+namespace Admin\Core\Contracts\Migrations\Columns;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\Fields\Field;
+use Admin\Core\Contracts\Migrations\Column;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class BelongsToMany extends Field
+class BelongsToMany extends Column
 {
     /**
      * Register column
@@ -17,7 +17,7 @@ class BelongsToMany extends Field
      * @param  bool         $update
      * @return Blueprint
      */
-    public function register(Blueprint $table, AdminModel $model, string $key, bool $update)
+    public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
         if ( ! $model->hasFieldParam($key, 'belongsToMany') )
             return;
