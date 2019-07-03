@@ -3,11 +3,11 @@
 namespace Admin\Core\Contracts\Migrations\Columns;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\Column;
+use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class BelongsToMany extends Column
+class BelongsToMany extends MigrationColumn
 {
     /**
      * Register column

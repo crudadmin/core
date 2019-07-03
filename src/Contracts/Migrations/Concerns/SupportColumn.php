@@ -3,6 +3,7 @@
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
 use AdminCore;
+use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Contracts\Migrations\Columns;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
@@ -49,7 +50,7 @@ trait SupportColumn
      * @param  closure $closure
      * @return void
      */
-    public function runColumnAction(string $method, array $params, $closure = null)
+    public function runActionFromAll(string $method, array $params, $closure = null)
     {
         $columns = $this->getColumns();
 
@@ -67,9 +68,24 @@ trait SupportColumn
             $response = $columnClass->{$method}(...$params);
 
             //If is defined closure, then response will be send into this closure as parameter
-            if ( $closure && call_user_func_array($closure, [$response]) === false )
+            if ( $closure && call_user_func_array($closure, [$response, $columnClass]) === false )
                 break;
         }
+    }
+
+    /**
+     * Run column action if exists
+     * @param  Column $columnClass
+     * @param  string $method
+     * @param  array  $params
+     * @return mixed
+     */
+    public function runColumnAction($columnClass, $method, $params)
+    {
+        if ( method_exists($columnClass, $method) )
+            return $columnClass->{$method}(...$params);
+
+        return null;
     }
 
     /**
@@ -81,11 +97,21 @@ trait SupportColumn
      */
     protected function setColumn(Blueprint $table, AdminModel $model, $key, $update = false)
     {
+        //Get column class
+        $columnClass = null;
+
         //Registred column type
-        $this->runColumnAction('registerColumn', [$table, $model, $key, $update], function($response) use(&$column) {
-            if ( $column = $response )
-                return false;
-        });
+        $this->runActionFromAll(
+            'registerColumn',
+            [$table, $model, $key, $update],
+            function($response, $class) use (&$column, &$columnClass) {
+                $columnClass = $class;
+
+                //If column has been found, then stop all other registred classes
+                if ( $column = $response )
+                    return false;
+            }
+        );
 
         //Unknown column type
         if ( !$column )
@@ -102,7 +128,7 @@ trait SupportColumn
         $this->setIndex($model, $key, $column);
 
         //Set default value of field
-        $this->setDefault($model, $key, $column);
+        $this->setDefault($model, $key, $column, $columnClass);
 
         return $column;
     }
@@ -141,14 +167,6 @@ trait SupportColumn
         }
     }
 
-    /*
-     * If default value can be set in db
-     */
-    private function canSetDefault($model, $key)
-    {
-        return $model->hasFieldParam($key, 'default') && ! $model->hasFieldParam($key, ['belongsTo', 'belongsToMany']);
-    }
-
     /**
      * Set default column value
      * @param  AdminModel       $model
@@ -156,24 +174,23 @@ trait SupportColumn
      * @param  ColumnDefinition $column
      * @return void
      */
-    private function setDefault(AdminModel $model, string $key, ColumnDefinition $column)
+    private function setDefault(AdminModel $model, string $key, ColumnDefinition $column, MigrationColumn $columnClass)
     {
-        if ( $this->canSetDefault($model, $key) )
-        {
-            $default = $model->getFieldParam($key, 'default');
-
-            //Set default timestamp
-            if ( $default && $model->isFieldType($key, ['date', 'datetime', 'time']) )
-            {
-                if ( strtoupper($default) == 'CURRENT_TIMESTAMP' )
-                    $default = DB::raw('CURRENT_TIMESTAMP');
-                else
-                    $default = null;
-            }
-
-            $column->default($default);
-        } else {
+        //If field does not have default value
+        if ( ! $model->hasFieldParam($key, 'default') ) {
             $column->default(NULL);
         }
+
+        //If column has own set default setter
+        if ( method_exists($columnClass, 'setDefault') ) {
+            $columnClass->setDefault($column, $model, $key);
+
+            return;
+        }
+
+        //Set value by parameter
+        $default = $model->getFieldParam($key, 'default');
+
+        $column->default($default);
     }
 }

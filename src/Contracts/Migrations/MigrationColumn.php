@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Column extends Command
+class MigrationColumn extends Command
 {
     use HasIndex,
         MigrationEvents;

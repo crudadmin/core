@@ -2,11 +2,11 @@
 
 namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\Column;
+use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Imaginary extends Column
+class Imaginary extends MigrationColumn
 {
     /**
      * Register column

@@ -3,11 +3,11 @@
 namespace Admin\Core\Contracts\Migrations\Columns;
 
 use Admin\Core\Contracts\Migrations\Concerns\SupportJson;
-use Admin\Core\Contracts\Migrations\Column;
+use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Json extends Column
+class Json extends MigrationColumn
 {
     use SupportJson;
 

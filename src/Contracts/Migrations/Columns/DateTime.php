@@ -2,11 +2,12 @@
 
 namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\Column;
+use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\ColumnDefinition;
 
-class DateTime extends Column
+class DateTime extends MigrationColumn
 {
     /**
      * Register column
@@ -39,5 +40,22 @@ class DateTime extends Column
 
             return $column;
         }
+    }
+
+    /**
+     * Set default value
+     * @param ColumnDefinition $column
+     * @param AdminModel       $model
+     * @param string           $key
+     */
+    public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
+    {
+        //If default value has not been set
+        if ( !($default = $model->getFieldParam($key, 'default')) )
+            return;
+
+        //Set default timestamp
+        if ( strtoupper($default) == 'CURRENT_TIMESTAMP' )
+            $column->default(DB::raw('CURRENT_TIMESTAMP'));
     }
 }
