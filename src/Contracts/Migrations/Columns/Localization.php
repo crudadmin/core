@@ -31,14 +31,14 @@ class Localization extends MigrationColumn
      */
     protected function createLanguageRelationship($table, $model, $updating = false)
     {
-        $column = $table->integer('language_id')->unsigned()->nullable();
+        $column = $table->integer($this->column)->unsigned()->nullable();
 
         //If is creating new column in existing table, add column after id
         if ( $updating == true ) {
             $column->after('id');
         }
 
-        $table->foreign('language_id')->references('id')->on('languages');
+        $table->foreign($this->column)->references('id')->on('languages');
 
         return $column;
     }

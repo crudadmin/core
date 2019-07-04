@@ -132,10 +132,6 @@ class MigrationBuilder extends Command
             //Register static columns
             $this->registerStaticColumns($table, $model);
 
-            //Order column for sorting rows
-            if ( $model->isSortable() )
-                $table->integer('_order')->unsigned();
-
             //Published at column
             if ( $model->getProperty('publishable') == true)
                 $table->timestamp('published_at')->nullable()->default( DB::raw( 'CURRENT_TIMESTAMP' ) );
@@ -219,16 +215,6 @@ class MigrationBuilder extends Command
             foreach ($add_columns as $row)
                 $this->line('<comment>+ Added column:</comment> '.$row['key']);
 
-            //Order column
-            if ( ! $model->getSchema()->hasColumn($model->getTable(), '_order') && $model->isSortable() )
-            {
-                $table->integer('_order')->unsigned();
-                $this->line('<comment>+ Added column:</comment> _order');
-
-                //Insert default increment into order
-                $this->addDefaultOrder($model);
-            }
-
             //Register static columns
             $this->registerStaticColumns($table, $model, true);
 
@@ -301,20 +287,6 @@ class MigrationBuilder extends Command
         }
 
         return $last;
-    }
-
-    //Resave all rows in model for updating slug if needed
-    protected function addDefaultOrder($model)
-    {
-        $this->registerAfterMigration($model, function() use ($model) {
-            $i = 0;
-
-            foreach ($model->get() as $row)
-            {
-                $row->_order = $i++;
-                $row->save();
-            }
-        });
     }
 
     //Returns schema with correct connection

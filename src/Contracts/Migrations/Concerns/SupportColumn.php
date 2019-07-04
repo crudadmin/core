@@ -35,6 +35,7 @@ trait SupportColumn
     protected $staticColumns = [
         Columns\Sluggable::class,
         Columns\Localization::class,
+        Columns\Sortable::class,
     ];
 
     /**
