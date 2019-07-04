@@ -30,7 +30,7 @@ class BelongsTo extends MigrationColumn
         //If table in belongsTo relation does not exists
         if ( ! $parent )
         {
-            $this->line('<error>Table '.$properties[0].' does not exists.</error>');
+            $this->getCommand()->line('<error>Table '.$properties[0].' does not exists.</error>');
             die;
         }
 

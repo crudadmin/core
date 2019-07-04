@@ -50,17 +50,17 @@ class BelongsToMany extends MigrationColumn
                     $table->foreign( $properties[7], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[7]) )->references($properties[2])->on( $properties[0] );
                 });
 
-                $this->line('<comment>Created table:</comment> '.$properties[3]);
+                $this->getCommand()->line('<comment>Created table:</comment> '.$properties[3]);
 
                 //Sync data from previous belongsTo relation into belongsToMany
                 if ( count($pivot_rows) > 0 )
                 {
                     $model->{$key}()->sync($pivot_rows);
 
-                    $this->line('<comment>Imported rows ('.count($pivot_rows).'):</comment> from <info>'.$singularColumn.'</info> into pivot <info>'.$properties[3].'</info> table');
+                    $this->getCommand()->line('<comment>Imported rows ('.count($pivot_rows).'):</comment> from <info>'.$singularColumn.'</info> into pivot <info>'.$properties[3].'</info> table');
                 }
             } else {
-                $this->line('<info>Checked table:</info> '.$properties[3]);
+                $this->getCommand()->line('<info>Checked table:</info> '.$properties[3]);
 
                 if ( ! $model->getSchema()->hasColumn($properties[3], 'id') )
                 {
@@ -69,7 +69,7 @@ class BelongsToMany extends MigrationColumn
                         $table->increments('id')->first();
                     });
 
-                    $this->line('<comment>+ Added column:</comment> id');
+                    $this->getCommand()->line('<comment>+ Added column:</comment> id');
                 }
 
             }

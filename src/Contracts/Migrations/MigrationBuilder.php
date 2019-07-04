@@ -92,19 +92,19 @@ class MigrationBuilder extends Command
         $this->fireMigrationEvents($model, 'fire_after_migration');
     }
 
-    /*
-     * Skip creating of preddefined columns
+    /**
+     * Skip creating of static columns
+     * @param  string     $key
+     * @param  AdminModel $model
+     * @return bool
      */
-    private function skipField($key, $model = null)
+    private function skipField(string $key, AdminModel $model)
     {
-        $columns = ['_order', 'created_at', 'published_at', 'updated_at'];
+        $staticColumns = array_map(function($columnClass){
+            return $columnClass->getColumn();
+        }, $this->getEnabledStaticFields($model));
 
-        //When slug is allowed
-        //TODO: skip all static fields
-        if ( $model && $model->getProperty('sluggable') != null )
-            $columns[] = 'slug';
-
-        return in_array($key, $columns);
+        return in_array($key, $staticColumns);
     }
 
     /**
@@ -123,7 +123,7 @@ class MigrationBuilder extends Command
 
             foreach ($model->getFields() as $key => $value)
             {
-                if ( $this->skipField($key) )
+                if ( $this->skipField($key, $model) )
                     continue;
 
                 $this->registerColumn($table, $model, $key);
@@ -157,7 +157,7 @@ class MigrationBuilder extends Command
 
             foreach ($model->getFields() as $key => $value)
             {
-                if ( $this->skipField($key) )
+                if ( $this->skipField($key, $model) )
                     continue;
 
                 //Checks if table has column and update it if can...
@@ -220,6 +220,13 @@ class MigrationBuilder extends Command
     private function dropUnnecessaryColumns(Blueprint $table, AdminModel $model)
     {
         $baseFields = $model->getBaseFields(true);
+
+        $staticColumns = array_map(function($columnClass){
+            return $columnClass->getColumn();
+        }, $this->getEnabledStaticFields($model));
+
+        //Get enabled static columns
+        $baseFields = array_unique(array_merge($baseFields, $staticColumns));
 
         //Removes unnecessary columns
         foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)

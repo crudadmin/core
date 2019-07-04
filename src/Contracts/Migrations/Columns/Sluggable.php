@@ -11,6 +11,16 @@ class Sluggable extends MigrationColumn
     public $column = 'slug';
 
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model)
+    {
+        return $model->getProperty('sluggable');
+    }
+
+    /**
      * Register static column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -19,10 +29,6 @@ class Sluggable extends MigrationColumn
      */
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
-        //Add Sluggable column support
-        if ( ! $model->getProperty('sluggable') )
-            return;
-
         return $this->setSlug($table, $model, $update, $columnExists === false);
     }
 
@@ -39,7 +45,7 @@ class Sluggable extends MigrationColumn
 
         if ( ! ($field = $model->getField($slugcolumn)) )
         {
-            $this->line('<comment>+ Unknown slug column for</comment> <error>'.$slugcolumn.'</error> <comment>column</comment>');
+            $this->getCommand()->line('<comment>+ Unknown slug column for</comment> <error>'.$slugcolumn.'</error> <comment>column</comment>');
 
             return;
         }

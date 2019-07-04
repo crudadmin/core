@@ -4,14 +4,69 @@ namespace Admin\Core\Contracts\Migrations;
 
 use Admin\Core\Contracts\Migrations\Concerns\HasIndex;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationEvents;
-use Illuminate\Console\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Admin\Core\Eloquent\AdminModel;
+use Illuminate\Database\Schema\Blueprint;
 
-class MigrationColumn extends Command
+class MigrationColumn
 {
     use HasIndex,
         MigrationEvents;
+
+    /*
+     * Migration command
+     */
+    protected $command = null;
+
+    /*
+     * Column name
+     */
+    protected $column = null;
+
+    /*
+     * Set command
+     */
+    public function setCommand($command)
+    {
+        $this->command = $command;
+    }
+
+    /*
+     * Get command
+     */
+    public function getCommand()
+    {
+        return $this->command;
+    }
+
+    /*
+     * Get column name
+     */
+    public function getColumn()
+    {
+        return $this->column;
+    }
+
+    /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @return boolean
+     */
+    public function isColumnEnabled(AdminModel $model)
+    {
+        return false;
+    }
+
+    /**
+     * Register static column
+     * @param  Blueprint    $table
+     * @param  AdminModel   $model
+     * @param  bool         $update
+     * @return Blueprint
+     */
+    public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
+    {
+
+    }
 
     /*
      * Set input of field for line, writeln support etx...

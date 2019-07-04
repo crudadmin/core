@@ -11,6 +11,16 @@ class Sortable extends MigrationColumn
     public $column = '_order';
 
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model)
+    {
+        return $model->isSortable();
+    }
+
+    /**
      * Register static column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -20,7 +30,7 @@ class Sortable extends MigrationColumn
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
         //Check if is enabled sortable support and column does not exists
-        if ( ! $model->isSortable() || $columnExists )
+        if ( $columnExists )
             return;
 
         //If column does not exists in existing table, then regenerate order position

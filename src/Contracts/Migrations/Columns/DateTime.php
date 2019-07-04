@@ -30,7 +30,7 @@ class DateTime extends MigrationColumn
                 //If previoius column has not been datetime and has some value
                 if (
                     ! in_array($type, ['date', 'datetime', 'time'])
-                    && $this->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
+                    && $this->getCommand()->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
                 ){
                     $model->getConnection()->table($model->getTable())->update([ $key => null ]);
                 }

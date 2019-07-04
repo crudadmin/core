@@ -69,8 +69,7 @@ trait SupportColumn
             $columnClass = new $columnClass;
 
         //Set class input and output for interaction support
-        $columnClass->setInput($this->input);
-        $columnClass->setOutput($this->output);
+        $columnClass->setCommand($this);
 
         return $columnClass;
     }
@@ -92,24 +91,40 @@ trait SupportColumn
         return null;
     }
 
-    /**
-     * Register all static columns
-     * @return void
+    /*
+     * Returns enabled static fields for each model
      */
-    protected function registerStaticColumns($table, $model, $updating = false)
+    public function getEnabledStaticFields(AdminModel $model)
     {
+        $classes = [];
+
         foreach ($this->getColumns('staticColumns') as $columnClass)
         {
             $columnClass = $this->getColumnClass($columnClass);
 
-            //If column has not been found, continue
-            if ( ! method_exists($columnClass, 'registerStaticColumn') )
-                continue;
+            //Check if given column is enabled
+            if ( $columnClass->isEnabled($model) === true )
+                $classes[] = $columnClass;
+        }
 
+        return $classes;
+    }
+
+    /**
+     * Register all static columns
+     * @param  Blueprint    $table
+     * @param  AdminModel   $model
+     * @param  bool|boolean $updating
+     * @return void
+     */
+    protected function registerStaticColumns(Blueprint $table, AdminModel $model, bool $updating = false)
+    {
+        foreach ($this->getEnabledStaticFields($model) as $columnClass)
+        {
             //Check if column does exists
             $columnExists = ($updating === false)
                             ? false
-                            : $model->getSchema()->hasColumn($model->getTable(), $columnClass->column);
+                            : $model->getSchema()->hasColumn($model->getTable(), $columnClass->getColumn());
 
             //Get column response
             $column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists);

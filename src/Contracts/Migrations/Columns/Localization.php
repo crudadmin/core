@@ -11,6 +11,16 @@ class Localization extends MigrationColumn
     public $column = 'language_id';
 
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model)
+    {
+        return $model->isEnabledLanguageForeign();
+    }
+
+    /**
      * Register static column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -20,7 +30,7 @@ class Localization extends MigrationColumn
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
         //Check if is enabled localization support and column does not exists
-        if ( ! $model->isEnabledLanguageForeign() || $columnExists )
+        if ( $columnExists )
             return;
 
         return $this->createLanguageRelationship($table, $model, $update);
