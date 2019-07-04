@@ -273,7 +273,7 @@ class MigrationBuilder extends Command
             //Check if given field type is represented with existing field from db
             //and also check if previous position of field does exists in database
             if (
-                ($columnClass = $this->getColumnType($model, $key)) && $columnClass->hasColumn()
+                ($columnClass = Fields::getColumnType($model, $key)) && $columnClass->hasColumn()
                 && !in_array($key, $exceptDoesntExistinging)
             ) {
                 $last = $key;

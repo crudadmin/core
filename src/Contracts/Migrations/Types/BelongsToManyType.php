@@ -45,7 +45,7 @@ class BelongsToManyType extends Type
         //but only with migrateToPivot parameter
         $pivot_rows = $this->getPivotRowsFromSingleRelation($model, $singularColumn, $properties);
 
-        $this->registerAfterMigration($table, function() use($table, $model, $key, $properties, $pivot_rows, $singularColumn) {
+        $this->registerAfterAllMigrations($model, function() use($table, $model, $key, $properties, $pivot_rows, $singularColumn) {
             //If pivot table does not exists
             if ( ! $model->getSchema()->hasTable( $properties[3] ) )
             {

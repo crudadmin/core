@@ -2,8 +2,9 @@
 
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
-use Illuminate\Database\Schema\Blueprint;
 use AdminCore;
+use Admin\Core\Eloquent\AdminModel;
+use Illuminate\Database\Schema\Blueprint;
 
 trait MigrationEvents
 {
@@ -24,7 +25,7 @@ trait MigrationEvents
     /*
      * Run all migrations saved in buffer
      */
-    public function fireMigrationEvents($model, $name)
+    public function fireMigrationEvents(AdminModel $model, $name)
     {
         $modelTable = $model->getTable();
 
@@ -39,7 +40,7 @@ trait MigrationEvents
      * @param  $callback
      * @return void
      */
-    public function registerAfterMigration($model, $callback)
+    public function registerAfterMigration(AdminModel $model, $callback)
     {
         $this->migrationEvent($model, 'fire_after_migration', $callback);
     }
@@ -50,7 +51,7 @@ trait MigrationEvents
      * @param  $callback
      * @return void
      */
-    public function registerAfterAllMigrations($model, $callback)
+    public function registerAfterAllMigrations(AdminModel $model, $callback)
     {
         $this->migrationEvent($model, 'fire_after_all', $callback);
     }

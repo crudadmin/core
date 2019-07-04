@@ -14,7 +14,11 @@ trait AdminEvents
      */
     public function event($name, $callback)
     {
-        AdminCore::push('events', $callback, $name);
+        $events = AdminCore::get('events', []);
+
+        $events[$name][] = $callback;
+
+        AdminCore::set('events', $events);
     }
 
     /**
