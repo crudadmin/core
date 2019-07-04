@@ -2,10 +2,11 @@
 
 namespace Admin\Core\Helpers;
 
-use Admin\Core\Contracts\DataStore;
 use Admin\Core\Contracts\AdminEvents;
+use Admin\Core\Contracts\DataStore;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Log;
 
 class AdminCore
 {
@@ -306,7 +307,10 @@ class AdminCore
                 return;
             }
 
-            abort(500, 'Model name '.$model->getTable().' has migration date which '.$model->getMigrationDate().' already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.');
+            $error = 'Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
+
+            Log::error($error);
+            abort(500, $error);
         }
 
         //Save model namespace into array
