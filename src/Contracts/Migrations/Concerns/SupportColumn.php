@@ -36,6 +36,10 @@ trait SupportColumn
         Columns\Sluggable::class,
         Columns\Localization::class,
         Columns\Sortable::class,
+        Columns\Publishable::class,
+        Columns\CreatedAt::class,
+        Columns\UpdatedAt::class,
+        Columns\DeletedAt::class,
     ];
 
     /**

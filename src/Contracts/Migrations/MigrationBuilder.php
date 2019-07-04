@@ -6,7 +6,6 @@ use AdminCore;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\DB;
 use Schema;
 
 class MigrationBuilder extends Command
@@ -131,17 +130,6 @@ class MigrationBuilder extends Command
 
             //Register static columns
             $this->registerStaticColumns($table, $model);
-
-            //Published at column
-            if ( $model->getProperty('publishable') == true)
-                $table->timestamp('published_at')->nullable()->default( DB::raw( 'CURRENT_TIMESTAMP' ) );
-
-            //Softdeletes
-            $table->softDeletes();
-
-            //Timestamps
-            if ( $model->getProperty('timestamps') == true )
-                $table->timestamps();
         });
 
         $this->line('<comment>Created table:</comment> '.$model->getTable());
@@ -217,20 +205,6 @@ class MigrationBuilder extends Command
 
             //Register static columns
             $this->registerStaticColumns($table, $model, true);
-
-            //Published at column
-            if ( ! $model->getSchema()->hasColumn($model->getTable(), 'published_at') && $model->getProperty('publishable') == true )
-            {
-                $table->timestamp('published_at')->nullable()->default( DB::raw( 'CURRENT_TIMESTAMP' ) );
-                $this->line('<comment>+ Added column:</comment> published_at');
-            }
-
-            //Deleted at
-            if ( ! $model->getSchema()->hasColumn($model->getTable(), 'deleted_at') )
-            {
-                $table->softDeletes();
-                $this->line('<comment>+ Added column:</comment> deleted_at');
-            }
 
             /**
              *  Automatic dropping columns
