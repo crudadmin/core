@@ -2,8 +2,10 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Localization;
 use Fields;
+use AdminCore;
+use Localization;
+use Admin\Core\Contracts\Migrations\MigrationProvider;
 
 trait FieldProperties
 {
@@ -263,5 +265,56 @@ trait FieldProperties
             return null;
 
         return $options[$field][$value];
+    }
+
+    /**
+     * Get migration column type
+     * @param  string $key
+     * @return bool
+     */
+    private function getMigrationColumnType($key)
+    {
+        return (new MigrationProvider)->getColumnType($this, $key);
+    }
+
+    /*
+     * Returns short values of fields for content table of rows in administration
+     */
+    public function getColumnNames()
+    {
+        $a = AdminCore::cache('models.'.$this->getTable().'.columns_names', function(){
+            $fields = ['id'];
+
+            //If has foreign key, add column name to base fields
+            if ( $this->getForeignColumn() ) {
+                $fields = array_merge($fields, array_values($this->getForeignColumn()));
+            }
+
+            foreach ($this->getFields() as $key => $field) {
+                //Skip column types without database column representation
+                if ( $this->getMigrationColumnType($key)->hasColumn() )
+                    $fields[] = $key;
+            }
+
+            //Insert skipped columns
+            if ( is_array($this->skipDropping) ) {
+                foreach ($this->skipDropping as $key) {
+                    $fields[] = $key;
+                }
+            }
+
+            //Get register static columns from migrations
+            //_order, published_at, deleted_at etc...
+            $staticColumns = array_map(function($columnClass){
+                return $columnClass->getColumn();
+            }, (new MigrationProvider)->getEnabledStaticFields($this));
+
+            //Get enabled static columns
+            $fields = array_unique(array_merge($fields, $staticColumns));
+
+            return $fields;
+        });
+
+        return $a;
     }
 }

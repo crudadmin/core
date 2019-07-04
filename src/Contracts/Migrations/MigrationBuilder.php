@@ -3,6 +3,7 @@
 namespace Admin\Core\Contracts\Migrations;
 
 use AdminCore;
+use Admin\Core\Contracts\Migrations\MigrationProvider;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
@@ -27,6 +28,8 @@ class MigrationBuilder extends Command
     public function __construct()
     {
         $this->files = new Filesystem;
+
+        $this->migrationProvider = (new MigrationProvider)->setCommand($this);
 
         $this->registerMigrationSupport();
 
@@ -102,7 +105,7 @@ class MigrationBuilder extends Command
     {
         $staticColumns = array_map(function($columnClass){
             return $columnClass->getColumn();
-        }, $this->getEnabledStaticFields($model));
+        }, $this->migrationProvider->getEnabledStaticFields($model));
 
         return in_array($key, $staticColumns);
     }
@@ -221,19 +224,12 @@ class MigrationBuilder extends Command
      */
     private function dropUnnecessaryColumns(Blueprint $table, AdminModel $model)
     {
-        $baseFields = $model->getBaseFields(true);
-
-        $staticColumns = array_map(function($columnClass){
-            return $columnClass->getColumn();
-        }, $this->getEnabledStaticFields($model));
-
-        //Get enabled static columns
-        $baseFields = array_unique(array_merge($baseFields, $staticColumns));
+        $columnNames = $model->getColumnNames();
 
         //Removes unnecessary columns
         foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)
         {
-            if ( ! in_array($column, $baseFields) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
+            if ( ! in_array($column, $columnNames) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
             {
                 $this->line('<comment>+ Unknown column:</comment> '.$column);
 

@@ -15,6 +15,8 @@ class MigrationDefinition
     public function setCommand($command)
     {
         $this->command = $command;
+
+        return $this;
     }
 
     /*

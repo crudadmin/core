@@ -90,8 +90,8 @@ class DataStore
      */
     public function cache($key, $data, $store = 'global')
     {
-        if ( $this->has($key) )
-            return $this->get($key, $store);
+        if ( $this->has($key, $store) )
+            return $this->get($key, null, $store);
 
         //If is passed data callable function
         if ( is_callable($data) )

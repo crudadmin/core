@@ -3,8 +3,7 @@
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\Columns;
-use Admin\Core\Contracts\Migrations\Types;
+use Admin\Core\Contracts\Migrations\MigrationProvider;
 use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,121 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 trait SupportColumn
 {
-    /*
-     * Registered column types
-     */
-    protected $types = [
-        Types\ImaginaryType::class,
-        Types\BelongsToType::class,
-        Types\BelongsToManyType::class,
-        Types\JsonType::class,
-        Types\StringType::class,
-        Types\TextType::class,
-        Types\LongTextType::class,
-        Types\IntegerType::class,
-        Types\DecimalType::class,
-        Types\DateTimeType::class,
-        Types\CheckboxType::class,
-    ];
-
-    /*
-     * Registred statoc column types
-     */
-    protected $staticColumns = [
-        Columns\Sluggable::class,
-        Columns\Localization::class,
-        Columns\Sortable::class,
-        Columns\Publishable::class,
-        Columns\CreatedAt::class,
-        Columns\UpdatedAt::class,
-        Columns\DeletedAt::class,
-    ];
-
-    /**
-     * Get column types
-     */
-    public function getColumnTypes()
-    {
-        $types = $this->types;
-
-        //We can mutate given types by reference variable $types
-        AdminCore::fire('migrations.column.types', [&$types, $this]);
-
-        return $types;
-    }
-
-    /**
-     * Get static column
-     */
-    public function getStaticColumns()
-    {
-        $columns = $this->staticColumns;
-
-        //We can mutate given columns by reference variable $columns
-        AdminCore::fire('migrations.column.static', [&$columns, $this]);
-
-        return $columns;
-    }
-
-    /**
-     * Returns loaded column class
-     * @param  string/object $class
-     * @return MigrationDefinition
-     */
-    public function getColumnClass($columnClass)
-    {
-        if ( is_string($columnClass) )
-            $columnClass = new $columnClass;
-
-        //Set class input and output for interaction support
-        $columnClass->setCommand($this);
-
-        return $columnClass;
-    }
-
-    /**
-     * Returns enabled static fields for each model
-     * @param  AdminModel $model
-     * @return array
-     */
-    public function getEnabledStaticFields(AdminModel $model)
-    {
-        $classes = [];
-
-        foreach ($this->getStaticColumns() as $columnClass)
-        {
-            $columnClass = $this->getColumnClass($columnClass);
-
-            //Check if given column is enabled
-            if ( $columnClass->isEnabled($model) === true )
-                $classes[] = $columnClass;
-        }
-
-        return $classes;
-    }
-
-    /**
-     * Returns enabled column type of given field
-     * @param  AdminModel $model
-     * @param  string     $key
-     * @return Type
-     */
-    public function getColumnType(AdminModel $model, string $key)
-    {
-        $classes = [];
-
-        foreach ($this->getColumnTypes() as $columnClass)
-        {
-            $columnClass = $this->getColumnClass($columnClass);
-
-            //Check if given column is enabled
-            if ( $columnClass->isEnabled($model, $key) === true )
-                return $columnClass;
-        }
-
-        return null;
-    }
-
     /**
      * Register all static columns
      * @param  Blueprint    $table
@@ -137,7 +21,7 @@ trait SupportColumn
      */
     protected function registerStaticColumns(Blueprint $table, AdminModel $model, bool $updating = false)
     {
-        foreach ($this->getEnabledStaticFields($model) as $columnClass)
+        foreach ($this->migrationProvider->getEnabledStaticFields($model) as $columnClass)
         {
             //Check if column does exists
             $columnExists = ($updating === false)
@@ -169,7 +53,7 @@ trait SupportColumn
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Unknown column type
-        if ( !($columnClass = $this->getColumnType($model, $key)) )
+        if ( !($columnClass = $this->migrationProvider->getColumnType($model, $key)) )
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
 
         //Get column response
@@ -242,7 +126,6 @@ trait SupportColumn
         //If column has own set default setter
         if ( method_exists($columnClass, 'setDefault') ) {
             $columnClass->setDefault($column, $model, $key);
-
             return;
         }
 
