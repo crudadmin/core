@@ -9,6 +9,17 @@ use Illuminate\Database\Schema\Blueprint;
 class ImaginaryType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, 'imaginary') || $model->hasFieldParam($key, 'imaginary');
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -18,7 +29,7 @@ class ImaginaryType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, 'imaginary') || $model->hasFieldParam($key, 'imaginary') )
-            return true;
+        //Skip column registration, this column does not exists in db
+        return true;
     }
 }

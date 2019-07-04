@@ -9,6 +9,17 @@ use Illuminate\Database\Schema\Blueprint;
 class TextType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, ['text', 'editor']);
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -18,9 +29,6 @@ class TextType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, ['text', 'editor']) )
-        {
-            return $table->text($key);
-        }
+        return $table->text($key);
     }
 }

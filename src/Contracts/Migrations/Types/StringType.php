@@ -9,6 +9,17 @@ use Illuminate\Database\Schema\Blueprint;
 class StringType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, ['string', 'password', 'radio', 'file', 'select']);
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -18,9 +29,6 @@ class StringType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, ['string', 'password', 'radio', 'file', 'select']) )
-        {
-            return $table->string($key, $model->getFieldLength($key));
-        }
+        return $table->string($key, $model->getFieldLength($key));
     }
 }

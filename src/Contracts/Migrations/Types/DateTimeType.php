@@ -10,6 +10,17 @@ use Illuminate\Database\Schema\ColumnDefinition;
 class DateTimeType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, ['date', 'datetime', 'time']);
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -19,27 +30,23 @@ class DateTimeType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        //Timestamp columns
-        if ( $model->isFieldType($key, ['date', 'datetime', 'time']) )
+        //Check for correct values
+        if ( $update === true )
         {
-            //Check for correct values
-            if ( $update === true )
-            {
-                $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
+            $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
 
-                //If previoius column has not been datetime and has some value
-                if (
-                    ! in_array($type, ['date', 'datetime', 'time'])
-                    && $this->getCommand()->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
-                ){
-                    $model->getConnection()->table($model->getTable())->update([ $key => null ]);
-                }
+            //If previoius column has not been datetime and has some value
+            if (
+                ! in_array($type, ['date', 'datetime', 'time'])
+                && $this->getCommand()->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
+            ){
+                $model->getConnection()->table($model->getTable())->update([ $key => null ]);
             }
-
-            $column = $table->{$model->getFieldType($key)}($key)->nullable();
-
-            return $column;
         }
+
+        $column = $table->{$model->getFieldType($key)}($key)->nullable();
+
+        return $column;
     }
 
     /**

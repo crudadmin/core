@@ -9,6 +9,17 @@ use Illuminate\Database\Schema\Blueprint;
 class IntegerType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, 'integer');
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -18,16 +29,12 @@ class IntegerType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        //Integer columns
-        if ( $model->isFieldType($key, 'integer') )
-        {
-            $column = $table->integer($key);
+        $column = $table->integer($key);
 
-            //Check if is integer unsigned or not
-            if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0)
-                $column->unsigned();
+        //Check if is integer unsigned or not
+        if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0)
+            $column->unsigned();
 
-            return $column;
-        }
+        return $column;
     }
 }

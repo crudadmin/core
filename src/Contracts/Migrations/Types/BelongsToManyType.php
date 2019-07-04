@@ -10,6 +10,17 @@ use Illuminate\Database\Schema\Blueprint;
 class BelongsToManyType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->hasFieldParam($key, 'belongsToMany');
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -19,9 +30,6 @@ class BelongsToManyType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( ! $model->hasFieldParam($key, 'belongsToMany') )
-            return;
-
         $properties = $model->getRelationProperty($key, 'belongsToMany');
 
         $singularColumn = ($migrateToPivot = $model->getFieldParam($key, 'migrateToPivot')) && is_string($migrateToPivot)

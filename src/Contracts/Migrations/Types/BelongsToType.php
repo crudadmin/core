@@ -11,6 +11,17 @@ use Illuminate\Database\Schema\ColumnDefinition;
 class BelongsToType extends Type
 {
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->hasFieldParam($key, 'belongsTo');
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -20,9 +31,6 @@ class BelongsToType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( ! $model->hasFieldParam($key, 'belongsTo') )
-            return;
-
         $properties = $model->getRelationProperty($key, 'belongsTo');
 
         $parent = AdminCore::getModelByTable($properties[0]);
@@ -34,7 +42,7 @@ class BelongsToType extends Type
             die;
         }
 
-        //Skip adding new key if exists from belongsToModel property
+        //Skip adding new foreign key if exists from belongsToModel property
         if ( $this->isForeignInBelongsToModel($table, $key) )
             return true;
 

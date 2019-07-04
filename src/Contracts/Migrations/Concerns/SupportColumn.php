@@ -150,6 +150,10 @@ trait SupportColumn
         {
             $columnClass = $this->getColumnClass($columnClass);
 
+            //Skip not allowed column types for this field
+            if ( $columnClass->isEnabled($model, $key) !== true )
+                continue;
+
             //If column has been found, skip all other classes
             if ( $column = $columnClass->registerColumn($table, $model, $key, $updating) ) {
                 break;

@@ -31,10 +31,7 @@ abstract class Column extends MigrationDefinition
      * @param  AdminModel  $model
      * @return boolean
      */
-    public function isColumnEnabled(AdminModel $model)
-    {
-        return false;
-    }
+    abstract public function isEnabled(AdminModel $model);
 
     /**
      * Register static column
@@ -43,8 +40,5 @@ abstract class Column extends MigrationDefinition
      * @param  bool         $update
      * @return Blueprint
      */
-    public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
-    {
-
-    }
+    abstract public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null);
 }

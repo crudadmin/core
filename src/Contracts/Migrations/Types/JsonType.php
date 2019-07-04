@@ -12,6 +12,17 @@ class JsonType extends Type
     use SupportJson;
 
     /**
+     * Check if can apply given column
+     * @param  AdminModel  $model
+     * @param  string      $key
+     * @return boolean
+     */
+    public function isEnabled(AdminModel $model, string $key)
+    {
+        return $model->isFieldType($key, ['json']) || $model->hasFieldParam($key, ['locale', 'multiple']);
+    }
+
+    /**
      * Register column
      * @param  Blueprint    $table
      * @param  AdminModel   $model
@@ -21,9 +32,6 @@ class JsonType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, ['json']) || $model->hasFieldParam($key, ['locale', 'multiple']) )
-        {
-            return $this->setJsonColumn($table, $key, $model, $update, $model->hasFieldParam($key, ['locale']));
-        }
+        return $this->setJsonColumn($table, $key, $model, $update, $model->hasFieldParam($key, ['locale']));
     }
 }
