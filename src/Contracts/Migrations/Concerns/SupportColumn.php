@@ -34,6 +34,7 @@ trait SupportColumn
      */
     protected $staticColumns = [
         Columns\Sluggable::class,
+        Columns\Localization::class,
     ];
 
     /**
@@ -42,10 +43,12 @@ trait SupportColumn
      */
     private function getColumns($columnType = null)
     {
-        $columns = $this->{$columnType ?: 'columns'};
+        $columnType = $columnType ?: 'columns';
+
+        $columns = $this->{$columnType};
 
         //We can mutate given columns by reference variable $columns
-        AdminCore::fire('migrations.columns', [&$columns, $this]);
+        AdminCore::fire('migrations.'.$columnType, [&$columns, $this]);
 
         return $columns;
     }
@@ -109,7 +112,7 @@ trait SupportColumn
 
             //If static column has been found, and does not exists in db
             if ( ! $columnExists )
-                $this->line('<comment>+ Added column:</comment> '.$class->column);
+                $this->line('<comment>+ Added column:</comment> '.$columnClass->column);
             else
                 $column->change();
         }

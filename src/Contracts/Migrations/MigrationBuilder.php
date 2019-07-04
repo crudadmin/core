@@ -7,7 +7,6 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
-use Localization;
 use Schema;
 
 class MigrationBuilder extends Command
@@ -133,9 +132,6 @@ class MigrationBuilder extends Command
             //Register static columns
             $this->registerStaticColumns($table, $model);
 
-            //Add multilanguage support
-            $this->createLanguageRelationship($table, $model);
-
             //Order column for sorting rows
             if ( $model->isSortable() )
                 $table->integer('_order')->unsigned();
@@ -222,12 +218,6 @@ class MigrationBuilder extends Command
             //Which columns has been successfully added
             foreach ($add_columns as $row)
                 $this->line('<comment>+ Added column:</comment> '.$row['key']);
-
-            //Add multilanguage support
-            if ( ! $model->getSchema()->hasColumn($model->getTable(), 'language_id') )
-            {
-                $this->createLanguageRelationship($table, $model, true);
-            }
 
             //Order column
             if ( ! $model->getSchema()->hasColumn($model->getTable(), '_order') && $model->isSortable() )
@@ -325,25 +315,6 @@ class MigrationBuilder extends Command
                 $row->save();
             }
         });
-    }
-
-    /*
-     * Add language_id relationship
-     */
-    protected function createLanguageRelationship($table, $model, $updating = false)
-    {
-        //If is multi languages support
-        if ( ! $model->isEnabledLanguageForeign() )
-            return $table;
-
-        $_table = $table->integer('language_id')->unsigned()->nullable();
-
-        if ( $updating == true )
-        {
-            $_table->after('id');
-        }
-
-        $table->foreign('language_id')->references('id')->on('languages');
     }
 
     //Returns schema with correct connection

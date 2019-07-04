@@ -23,7 +23,7 @@ class Sluggable extends MigrationColumn
         if ( ! $model->getProperty('sluggable') )
             return;
 
-        return $this->setSlug($table, $model, $update, !$columnExists);
+        return $this->setSlug($table, $model, $update, $columnExists === false);
     }
 
     /**
@@ -31,9 +31,9 @@ class Sluggable extends MigrationColumn
      * @param Blueprint  $table
      * @param AdminModel $model
      * @param boolean    $updating
-     * @param boolean    $render
+     * @param boolean    $reloadSlugs
      */
-    protected function setSlug(Blueprint $table, AdminModel $model, $updating = false, $render = true)
+    protected function setSlug(Blueprint $table, AdminModel $model, $updating = false, $reloadSlugs = true)
     {
         $slugcolumn = $model->getProperty('sluggable');
 
@@ -67,8 +67,8 @@ class Sluggable extends MigrationColumn
         if( ! $model->hasFieldParam($slugcolumn , 'required') )
             $column->nullable();
 
-        //If was added column to existing table, then reload sluggs
-        if ( $render == true ) {
+        //If column has been added into existing table, then regenerate all slugs
+        if ( $reloadSlugs == true ) {
             $this->updateSlugs($model);
         }
 
