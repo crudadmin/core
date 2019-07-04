@@ -2,12 +2,11 @@
 
 namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 
-class Publishable extends MigrationColumn
+class Publishable extends Column
 {
     public $column = 'published_at';
 

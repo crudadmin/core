@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Columns;
+namespace Admin\Core\Contracts\Migrations\Types;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Checkbox extends MigrationColumn
+class TextType extends Type
 {
     /**
      * Register column
@@ -18,11 +18,9 @@ class Checkbox extends MigrationColumn
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, 'checkbox') )
+        if ( $model->isFieldType($key, ['text', 'editor']) )
         {
-            $default = $model->hasFieldParam($key, 'default') ? $model->getFieldParam($key, 'default') : 0;
-
-            return $table->boolean($key)->default( $default );
+            return $table->text($key);
         }
     }
 }

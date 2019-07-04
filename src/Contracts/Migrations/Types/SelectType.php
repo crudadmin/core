@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Columns;
+namespace Admin\Core\Contracts\Migrations\Types;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Select extends MigrationColumn
+class SelectType extends Type
 {
     /**
      * Register column

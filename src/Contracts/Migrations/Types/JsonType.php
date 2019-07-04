@@ -1,13 +1,13 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Columns;
+namespace Admin\Core\Contracts\Migrations\Types;
 
 use Admin\Core\Contracts\Migrations\Concerns\SupportJson;
-use Admin\Core\Contracts\Migrations\MigrationColumn;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Json extends MigrationColumn
+class JsonType extends Type
 {
     use SupportJson;
 

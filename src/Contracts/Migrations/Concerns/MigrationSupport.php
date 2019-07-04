@@ -5,20 +5,27 @@ namespace Admin\Core\Contracts\Migrations\Concerns;
 use Illuminate\Support\Facades\DB;
 use Doctrine\DBAL\Types\Type as DBType;
 
-trait MigrationHelper
+trait MigrationSupport
 {
-    public function registerMigrationHelpers()
+    public function registerMigrationSupport()
     {
-        $this->fixJsonColumns();
+        $this->fixEnumType();
 
-        //DB doctrine fix for enum columns
+        $this->fixJsonType();
+    }
+
+    /**
+     * DB doctrine fix for enum columns
+     */
+    private function fixEnumType()
+    {
         DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
     }
 
     /*
      * Fix json columns in doctrine dbal
      */
-    protected function fixJsonColumns()
+    protected function fixJsonType()
     {
         //Add json support
         if ( ! DBType::hasType('json') )

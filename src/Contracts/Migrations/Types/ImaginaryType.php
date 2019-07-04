@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Columns;
+namespace Admin\Core\Contracts\Migrations\Types;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Text extends MigrationColumn
+class ImaginaryType extends Type
 {
     /**
      * Register column
@@ -18,9 +18,7 @@ class Text extends MigrationColumn
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, ['text', 'editor']) )
-        {
-            return $table->text($key);
-        }
+        if ( $model->isFieldType($key, 'imaginary') || $model->hasFieldParam($key, 'imaginary') )
+            return true;
     }
 }

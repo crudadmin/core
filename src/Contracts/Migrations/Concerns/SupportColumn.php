@@ -3,8 +3,9 @@
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Contracts\Migrations\Columns;
+use Admin\Core\Contracts\Migrations\Types;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
@@ -15,18 +16,18 @@ trait SupportColumn
     /*
      * Registered column types
      */
-    protected $columns = [
-        Columns\Imaginary::class,
-        Columns\BelongsTo::class,
-        Columns\BelongsToMany::class,
-        Columns\Json::class,
-        Columns\StringColumn::class,
-        Columns\Text::class,
-        Columns\LongText::class,
-        Columns\Integer::class,
-        Columns\Decimal::class,
-        Columns\DateTime::class,
-        Columns\Checkbox::class,
+    protected $types = [
+        Types\ImaginaryType::class,
+        Types\BelongsToType::class,
+        Types\BelongsToManyType::class,
+        Types\JsonType::class,
+        Types\StringType::class,
+        Types\TextType::class,
+        Types\LongTextType::class,
+        Types\IntegerType::class,
+        Types\DecimalType::class,
+        Types\DateTimeType::class,
+        Types\CheckboxType::class,
     ];
 
     /*
@@ -43,17 +44,27 @@ trait SupportColumn
     ];
 
     /**
-     * Return columns set
-     * @return array
+     * Get column types
      */
-    private function getColumns($columnType = null)
+    public function getColumnTypes()
     {
-        $columnType = $columnType ?: 'columns';
+        $types = $this->types;
 
-        $columns = $this->{$columnType};
+        //We can mutate given types by reference variable $types
+        AdminCore::fire('migrations.column.types', [&$types, $this]);
+
+        return $types;
+    }
+
+    /**
+     * Get static column
+     */
+    public function getStaticColumns()
+    {
+        $columns = $this->staticColumns;
 
         //We can mutate given columns by reference variable $columns
-        AdminCore::fire('migrations.'.$columnType, [&$columns, $this]);
+        AdminCore::fire('migrations.column.static', [&$columns, $this]);
 
         return $columns;
     }
@@ -61,7 +72,7 @@ trait SupportColumn
     /**
      * Returns loaded column class
      * @param  string/object $class
-     * @return MigrationColumn
+     * @return MigrationDefinition
      */
     public function getColumnClass($columnClass)
     {
@@ -74,23 +85,6 @@ trait SupportColumn
         return $columnClass;
     }
 
-    /**
-     * Run column action if exists
-     * @param  Column $columnClass
-     * @param  string $method
-     * @param  array  $params
-     * @return mixed
-     */
-    public function runColumnAction($columnClass, $method, $params)
-    {
-        $columnClass = $this->getColumnClass($columnClass);
-
-        if ( method_exists($columnClass, $method) )
-            return $columnClass->{$method}(...$params);
-
-        return null;
-    }
-
     /*
      * Returns enabled static fields for each model
      */
@@ -98,7 +92,7 @@ trait SupportColumn
     {
         $classes = [];
 
-        foreach ($this->getColumns('staticColumns') as $columnClass)
+        foreach ($this->getStaticColumns() as $columnClass)
         {
             $columnClass = $this->getColumnClass($columnClass);
 
@@ -152,12 +146,12 @@ trait SupportColumn
     {
         $column = null;
 
-        foreach ($this->getColumns('columns') as $columnClass)
+        foreach ($this->getColumnTypes() as $columnClass)
         {
             $columnClass = $this->getColumnClass($columnClass);
 
             //If column has been found, skip all other classes
-            if ( $column = $this->runColumnAction($columnClass, 'registerColumn', [$table, $model, $key, $updating]) ) {
+            if ( $column = $columnClass->registerColumn($table, $model, $key, $updating) ) {
                 break;
             }
         }
@@ -220,10 +214,10 @@ trait SupportColumn
      * Set default column value
      * @param  AdminModel       $model
      * @param  string           $key
-     * @param  ColumnDefinition $column
+     * @param  Type             $column
      * @return void
      */
-    private function setDefault(AdminModel $model, string $key, ColumnDefinition $column, MigrationColumn $columnClass)
+    private function setDefault(AdminModel $model, string $key, ColumnDefinition $column, Type $columnClass)
     {
         //If field does not have default value
         if ( ! $model->hasFieldParam($key, 'default') ) {

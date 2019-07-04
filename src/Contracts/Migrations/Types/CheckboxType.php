@@ -1,12 +1,12 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations\Columns;
+namespace Admin\Core\Contracts\Migrations\Types;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
+use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Imaginary extends MigrationColumn
+class CheckboxType extends Type
 {
     /**
      * Register column
@@ -18,7 +18,11 @@ class Imaginary extends MigrationColumn
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        if ( $model->isFieldType($key, 'imaginary') || $model->hasFieldParam($key, 'imaginary') )
-            return true;
+        if ( $model->isFieldType($key, 'checkbox') )
+        {
+            $default = $model->hasFieldParam($key, 'default') ? $model->getFieldParam($key, 'default') : 0;
+
+            return $table->boolean($key)->default( $default );
+        }
     }
 }

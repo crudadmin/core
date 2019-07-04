@@ -12,7 +12,7 @@ use Schema;
 class MigrationBuilder extends Command
 {
     use Concerns\MigrationEvents,
-        Concerns\MigrationHelper,
+        Concerns\MigrationSupport,
         Concerns\MigrationOutOfDate,
         Concerns\SupportRelations,
         Concerns\SupportColumn,
@@ -28,7 +28,7 @@ class MigrationBuilder extends Command
     {
         $this->files = new Filesystem;
 
-        $this->registerMigrationHelpers();
+        $this->registerMigrationSupport();
 
         parent::__construct();
     }

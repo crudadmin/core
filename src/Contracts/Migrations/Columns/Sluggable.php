@@ -2,11 +2,10 @@
 
 namespace Admin\Core\Contracts\Migrations\Columns;
 
-use Admin\Core\Contracts\Migrations\MigrationColumn;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class Sluggable extends MigrationColumn
+class Sluggable extends Column
 {
     public $column = 'slug';
 

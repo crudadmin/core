@@ -1,42 +1,22 @@
 <?php
 
-namespace Admin\Core\Contracts\Migrations;
+namespace Admin\Core\Contracts\Migrations\Columns;
 
 use Admin\Core\Contracts\Migrations\Concerns\HasIndex;
+use Admin\Core\Contracts\Migrations\Concerns\MigrationDefinition;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationEvents;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class MigrationColumn
+abstract class Column extends MigrationDefinition
 {
     use HasIndex,
         MigrationEvents;
 
     /*
-     * Migration command
-     */
-    protected $command = null;
-
-    /*
      * Column name
      */
     protected $column = null;
-
-    /*
-     * Set command
-     */
-    public function setCommand($command)
-    {
-        $this->command = $command;
-    }
-
-    /*
-     * Get command
-     */
-    public function getCommand()
-    {
-        return $this->command;
-    }
 
     /*
      * Get column name
@@ -66,21 +46,5 @@ class MigrationColumn
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
 
-    }
-
-    /*
-     * Set input of field for line, writeln support etx...
-     */
-    public function setInput(InputInterface $input)
-    {
-        $this->input = $input;
-    }
-
-    /*
-     * Set output of field for line, writeln support etx...
-     */
-    public function setOutput(OutputInterface $output)
-    {
-        $this->output = $output;
     }
 }
