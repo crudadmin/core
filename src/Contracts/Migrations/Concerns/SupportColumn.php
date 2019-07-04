@@ -51,6 +51,23 @@ trait SupportColumn
     }
 
     /**
+     * Returns loaded column class
+     * @param  string/object $class
+     * @return MigrationColumn
+     */
+    public function getColumnClass($columnClass)
+    {
+        if ( is_string($columnClass) )
+            $columnClass = new $columnClass;
+
+        //Set class input and output for interaction support
+        $columnClass->setInput($this->input);
+        $columnClass->setOutput($this->output);
+
+        return $columnClass;
+    }
+
+    /**
      * Run column action if exists
      * @param  Column $columnClass
      * @param  string $method
@@ -59,48 +76,12 @@ trait SupportColumn
      */
     public function runColumnAction($columnClass, $method, $params)
     {
+        $columnClass = $this->getColumnClass($columnClass);
+
         if ( method_exists($columnClass, $method) )
             return $columnClass->{$method}(...$params);
 
         return null;
-    }
-
-    /**
-     * Run column action and send response into closure if is available
-     * @param  string  $method
-     * @param  array   $params
-     * @param  string  $columnType
-     * @param  boolean $updating
-     * @param  closure $closure
-     * @return void
-     */
-    public function runFieldAction(string $method, array $params, $closure = null, $columnType = null, $model, $key = null, $updating = false)
-    {
-        $columns = $this->getColumns($columnType);
-
-        foreach ($columns as $class)
-        {
-            $columnClass = new $class;
-
-            if ( !method_exists($columnClass, $method) )
-                continue;
-
-            //Set class input and output for interaction support
-            $columnClass->setInput($this->input);
-            $columnClass->setOutput($this->output);
-
-            $columnExists = $updating === false ? false
-                            : $model->getSchema()->hasColumn($model->getTable(), $key ?: $columnClass->column);
-
-            //Add column exists parameter
-            $params[] = $columnExists;
-
-            $response = $columnClass->{$method}(...$params);
-
-            //If is defined closure, then response will be send into this closure as parameter
-            if ( $closure && call_user_func_array($closure, [$response, $columnClass, $columnExists]) === false )
-                break;
-        }
     }
 
     /**
@@ -109,26 +90,29 @@ trait SupportColumn
      */
     protected function registerStaticColumns($table, $model, $updating = false)
     {
-        //Registred column type
-        $this->runFieldAction(
-            'registerStaticColumn',
-            [$table, $model, $updating],
-            function($response, $class, $columnExists) use (&$column, &$columnClass, $updating, $model) {
-                //If column has not been set
-                if ( ! $response )
-                    return;
+        foreach ($this->getColumns('staticColumns') as $columnClass)
+        {
+            $columnClass = $this->getColumnClass($columnClass);
 
-                //If static column has been found, and does not exists in db
-                if ( ! $columnExists )
-                    $this->line('<comment>+ Added column:</comment> '.$class->column);
-                else
-                    $response->change();
-            },
-            'staticColumns',
-            $model,
-            null,
-            $updating
-        );
+            //If column has not been found, continue
+            if ( ! method_exists($columnClass, 'registerStaticColumn') )
+                continue;
+
+            //Check if column does exists
+            $columnExists = ($updating === false)
+                            ? false
+                            : $model->getSchema()->hasColumn($model->getTable(), $columnClass->column);
+
+            //If column has not been registred
+            if ( !($column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists)) )
+                continue;
+
+            //If static column has been found, and does not exists in db
+            if ( ! $columnExists )
+                $this->line('<comment>+ Added column:</comment> '.$class->column);
+            else
+                $column->change();
+        }
     }
 
     /**
@@ -140,25 +124,17 @@ trait SupportColumn
      */
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
-        //Get column class
-        $columnClass = null;
+        $column = null;
 
-        //Registred column type
-        $this->runFieldAction(
-            'registerColumn',
-            [$table, $model, $key, $updating],
-            function($response, $class) use (&$column, &$columnClass) {
-                $columnClass = $class;
+        foreach ($this->getColumns('columns') as $columnClass)
+        {
+            $columnClass = $this->getColumnClass($columnClass);
 
-                //If column has been found, then stop all other registred classes
-                if ( $column = $response )
-                    return false;
-            },
-            'columns',
-            $model,
-            $key,
-            $updating
-        );
+            //If column has been found, skip all other classes
+            if ( $column = $this->runColumnAction($columnClass, 'registerColumn', [$table, $model, $key, $updating]) ) {
+                break;
+            }
+        }
 
         //Unknown column type
         if ( !$column )

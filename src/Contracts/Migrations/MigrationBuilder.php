@@ -181,7 +181,7 @@ class MigrationBuilder extends Command
 
                 //Checks if table has column and update it if can...
                 if ( $model->getSchema()->hasColumn($model->getTable(), $key) ){
-                    if ( $column = $this->registerColumn( $table, $model, $key, true ) )
+                    if ( $column = $this->registerColumn($table, $model, $key, true) )
                     {
                         $column->change();
                     }
@@ -191,7 +191,7 @@ class MigrationBuilder extends Command
                     $add_columns[] = [
                         'key' => $key,
                         'callback' => function($except_columns) use ($table, $model, $key, $value){
-                            if ( $column = $this->registerColumn( $table, $model, $key ) )
+                            if ( $column = $this->registerColumn($table, $model, $key) )
                             {
                                 $previous_column = $this->getPreviousColumn($model, $key, $except_columns);
 
