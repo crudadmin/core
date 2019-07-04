@@ -13,6 +13,19 @@ abstract class Type extends MigrationDefinition
     use HasIndex,
         MigrationEvents;
 
+    /*
+     * This column does represent existing column in database
+     */
+    protected $hasColumn = true;
+
+    /*
+     * Returns if column is represented with existing column in databasse
+     */
+    public function hasColumn()
+    {
+        return $this->hasColumn;
+    }
+
     /**
      * Check if can apply given column
      * @param  AdminModel  $model

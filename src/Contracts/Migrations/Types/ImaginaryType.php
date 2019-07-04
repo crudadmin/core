@@ -8,6 +8,11 @@ use Illuminate\Database\Schema\Blueprint;
 
 class ImaginaryType extends Type
 {
+    /*
+     * This column type does not contain of column in database
+     */
+    public $hasColumn = false;
+
     /**
      * Check if can apply given column
      * @param  AdminModel  $model

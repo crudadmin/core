@@ -149,11 +149,11 @@ class MigrationBuilder extends Command
             $this->addRelationships($table, $model, true);
 
             //Which columns will be added in reversed order
-            $add_columns = [];
+            $addColumns = [];
 
-            //Which columns has been added, so next columns can not be added after this columns,
-            //because this columns are not in database yet
-            $except_columns = [];
+            //Which columns are creating. Next columns can't be added after this new columns,
+            //because this columns does not exists in database yet
+            $exceptDoesntExistinging = [];
 
             foreach ($model->getFields() as $key => $value)
             {
@@ -167,21 +167,23 @@ class MigrationBuilder extends Command
                         $column->change();
                     }
                 } else {
-                    $except_columns[] = $key;
+                    //This key does not exists in db
+                    $exceptDoesntExistinging[] = $key;
 
-                    $add_columns[] = [
+                    $addColumns[] = [
                         'key' => $key,
-                        'callback' => function($except_columns) use ($table, $model, $key, $value){
+                        'callback' => function($exceptDoesntExistinging) use ($table, $model, $key, $value){
                             if ( $column = $this->registerColumn($table, $model, $key) )
                             {
-                                $previous_column = $this->getPreviousColumn($model, $key, $except_columns);
+                                $previous_column = $this->getPreviousColumn($model, $key, $exceptDoesntExistinging);
 
+                                //Add creating column after previous existing field in fields position
                                 if ( $model->getSchema()->hasColumn($model->getTable(), $previous_column) )
-                                    $column->after( $previous_column );
+                                    $column->after($previous_column);
 
-                                //If column does not exists, then add before deleted ad column
+                                //If column does not exists, then add before deleted_at column
                                 else if ( $model->getSchema()->hasColumn($model->getTable(), 'deleted_at') )
-                                    $column->after( 'id' );
+                                    $column->after('id');
                             }
 
                             return $column;
@@ -191,17 +193,17 @@ class MigrationBuilder extends Command
             }
 
             //Add columns in reversed order
-            for ( $i = count($add_columns) - 1; $i >= 0; $i-- )
+            for ( $i = count($addColumns) - 1; $i >= 0; $i-- )
             {
                 //if no column has been added, then remove column from array for messages
-                if ( !($column = call_user_func_array($add_columns[$i]['callback'], [ $except_columns ])) )
+                if ( !($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ])) )
                 {
-                    unset($add_columns[$i]);
+                    unset($addColumns[$i]);
                 }
             }
 
             //Which columns has been successfully added
-            foreach ($add_columns as $row)
+            foreach ($addColumns as $row)
                 $this->line('<comment>+ Added column:</comment> '.$row['key']);
 
             //Register static columns
@@ -252,28 +254,34 @@ class MigrationBuilder extends Command
         }
     }
 
-    /*
-     * Returns field before selected field, if is selected field first, returns last field
+    /**
+     * Returns field before given field, if is given field first, returns last field
+     * @param  AdminModel $model
+     * @param  string     $findKey
+     * @param  array      $exceptDoesntExistinging
+     * @return string
      */
-    public function getPreviousColumn($model, $findKey, $except = [])
+    public function getPreviousColumn(AdminModel $model, string $findKey, array $exceptDoesntExistinging = [])
     {
         $last = 'id';
         $i = 0;
 
         foreach ($model->getFields() as $key => $item)
         {
-            if ( $key == $findKey )
-            {
-                if ( $i == 0 )
-                    return 'id';
-                else
-                    return $last;
+            if ( $key == $findKey ) {
+                return $i == 0 ? 'id' : $last;
             }
 
             $i++;
 
-            if ( !$model->hasFieldParam($key, 'belongsToMany') && !in_array($key, $except) )
+            //Check if given field type is represented with existing field from db
+            //and also check if previous position of field does exists in database
+            if (
+                ($columnClass = $this->getColumnType($model, $key)) && $columnClass->hasColumn()
+                && !in_array($key, $exceptDoesntExistinging)
+            ) {
                 $last = $key;
+            }
         }
 
         return $last;

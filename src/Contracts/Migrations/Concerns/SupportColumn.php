@@ -85,8 +85,10 @@ trait SupportColumn
         return $columnClass;
     }
 
-    /*
+    /**
      * Returns enabled static fields for each model
+     * @param  AdminModel $model
+     * @return array
      */
     public function getEnabledStaticFields(AdminModel $model)
     {
@@ -102,6 +104,28 @@ trait SupportColumn
         }
 
         return $classes;
+    }
+
+    /**
+     * Returns enabled column type of given field
+     * @param  AdminModel $model
+     * @param  string     $key
+     * @return Type
+     */
+    public function getColumnType(AdminModel $model, string $key)
+    {
+        $classes = [];
+
+        foreach ($this->getColumnTypes() as $columnClass)
+        {
+            $columnClass = $this->getColumnClass($columnClass);
+
+            //Check if given column is enabled
+            if ( $columnClass->isEnabled($model, $key) === true )
+                return $columnClass;
+        }
+
+        return null;
     }
 
     /**
@@ -144,28 +168,15 @@ trait SupportColumn
      */
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
-        $column = null;
-
-        foreach ($this->getColumnTypes() as $columnClass)
-        {
-            $columnClass = $this->getColumnClass($columnClass);
-
-            //Skip not allowed column types for this field
-            if ( $columnClass->isEnabled($model, $key) !== true )
-                continue;
-
-            //If column has been found, skip all other classes
-            if ( $column = $columnClass->registerColumn($table, $model, $key, $updating) ) {
-                break;
-            }
-        }
-
         //Unknown column type
-        if ( !$column )
+        if ( !($columnClass = $this->getColumnType($model, $key)) )
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
 
+        //Get column response
+        $column = $columnClass->registerColumn($table, $model, $key, $updating);
+
         //If column has not been found, or we want skip column registration
-        if ( !$column || $column === true )
+        if ( !$column || $column === true || $columnClass->hasColumn() == false )
             return;
 
         //Set nullable column
