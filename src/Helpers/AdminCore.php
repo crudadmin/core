@@ -56,10 +56,10 @@ class AdminCore
 
     /**
      * Return model by table name
-     * @param  string $table_name
+     * @param  string $tableName
      * @return AdminModel
      */
-    public function getModelByTable($table_name)
+    public function getModelByTable($tableName)
     {
         $models = $this->getAdminModels();
 
@@ -67,7 +67,7 @@ class AdminCore
         foreach ($models as $model)
         {
             //Return cloned booted class instance
-            if ( $model->getTable() == $table_name ){
+            if ( $model->getTable() == $tableName ){
                 return $model->newInstance();
             }
         }

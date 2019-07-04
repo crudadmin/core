@@ -57,8 +57,9 @@ class MigrationBuilder extends Command
             $migrated++;
         }
 
-        if ( $migrated === 0 )
+        if ( $migrated === 0 ) {
             return $this->line('<info>Noting to migrate.</info>');
+        }
 
         /*
          * Run events migrations from buffer
