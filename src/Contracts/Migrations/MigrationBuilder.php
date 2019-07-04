@@ -3,6 +3,7 @@
 namespace Admin\Core\Contracts\Migrations;
 
 use AdminCore;
+use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
@@ -206,47 +207,55 @@ class MigrationBuilder extends Command
             //Register static columns
             $this->registerStaticColumns($table, $model, true);
 
-            /**
-             *  Automatic dropping columns
-             */
-            $base_fields = $model->getBaseFields(true);
+            $this->dropUnnecessaryColumns($table, $model);
+        });
+    }
 
-            //Removes unnecessary columns
-            foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)
+    /**
+     * Automatic columns dropping
+     * @param  Blueprint  $table
+     * @param  AdminModel $model
+     * @return void
+     */
+    private function dropUnnecessaryColumns(Blueprint $table, AdminModel $model)
+    {
+        $baseFields = $model->getBaseFields(true);
+
+        //Removes unnecessary columns
+        foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)
+        {
+            if ( ! in_array($column, $baseFields) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
             {
-                if ( ! in_array($column, $base_fields) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
+                $this->line('<comment>+ Unknown column:</comment> '.$column);
+
+                $auto_drop = $this->option('auto-drop', false);
+
+                if ( $auto_drop === true || $this->confirm('Do you want drop this column? [y|N]') )
                 {
-                    $this->line('<comment>+ Unknown column:</comment> '.$column);
-
-                    $auto_drop = $this->option('auto-drop', false);
-
-                    if ( $auto_drop === true || $this->confirm('Do you want drop this column? [y|N]') )
+                    if ( $this->hasIndex($model, $column) )
                     {
-                        if ( $this->hasIndex($model, $column) )
-                        {
-                            $this->dropIndex($model, $column);
-                        }
-
-                        $table->dropColumn($column);
-
-                        $this->line('<comment>+ Dropped column:</comment> '.$column);
+                        $this->dropIndex($model, $column);
                     }
+
+                    $table->dropColumn($column);
+
+                    $this->line('<comment>+ Dropped column:</comment> '.$column);
                 }
             }
-        });
+        }
     }
 
     /*
      * Returns field before selected field, if is selected field first, returns last field
      */
-    public function getPreviousColumn($model, $find_key, $except = [])
+    public function getPreviousColumn($model, $findKey, $except = [])
     {
         $last = 'id';
         $i = 0;
 
         foreach ($model->getFields() as $key => $item)
         {
-            if ( $key == $find_key )
+            if ( $key == $findKey )
             {
                 if ( $i == 0 )
                     return 'id';
