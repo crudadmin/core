@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Contracts\Migrations;
 
+use Fields;
 use AdminCore;
-use Admin\Core\Contracts\Migrations\MigrationProvider;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
@@ -29,9 +29,9 @@ class MigrationBuilder extends Command
     {
         $this->files = new Filesystem;
 
-        $this->migrationProvider = (new MigrationProvider)->setCommand($this);
-
         $this->registerMigrationSupport();
+
+        Fields::setCommand($this);
 
         parent::__construct();
     }
@@ -105,7 +105,7 @@ class MigrationBuilder extends Command
     {
         $staticColumns = array_map(function($columnClass){
             return $columnClass->getColumn();
-        }, $this->migrationProvider->getEnabledStaticFields($model));
+        }, Fields::getEnabledStaticFields($model));
 
         return in_array($key, $staticColumns);
     }

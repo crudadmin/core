@@ -2,27 +2,20 @@
 
 namespace Admin\Core\Fields;
 
+use AdminCore;
+use Admin\Core\Contracts\Migrations\Concerns\MigrationDefinition;
+use Admin\Core\Fields\Concerns\FieldTypes;
+use Admin\Core\Fields\Concerns\HasAttributes;
+use Admin\Core\Fields\Concerns\HasMutations;
+use Admin\Core\Fields\Concerns\StaticFields;
 use Admin\Core\Fields\Mutations\MutationRule;
 
-class Fields
+class Fields extends MigrationDefinition
 {
-    /*
-     * This mutations will be applied into field in admin model
-     */
-    protected $mutations = [
-        Mutations\FieldToArray::class,
-        Mutations\AddGlobalRules::class,
-        Mutations\AddAttributeRules::class,
-        Mutations\BelongsToAttributeMutator::class
-    ];
-
-    /*
-     * Registred custom admin attributes for fields
-     */
-    protected $attributes = [
-         'name', 'type', 'resize', 'locale', 'default', 'unique_db',
-         'index', 'unsigned', 'imaginary', 'migrateToPivot'
-    ];
+    use FieldTypes,
+        StaticFields,
+        HasMutations,
+        HasAttributes;
 
     /*
      * Model fields
@@ -59,45 +52,20 @@ class Fields
      */
     protected $post_update = [];
 
-    /*
-     * Returns field attributes which are not includes in request rules, and are used for mutations
+    /**
+     * Returns loaded column class
+     * @param  string/object $class
+     * @return MigrationDefinition
      */
-    public function getAttributes()
+    private function bootColumnClass($columnClass)
     {
-        return $this->attributes;
-    }
+        if ( is_string($columnClass) )
+            $columnClass = new $columnClass;
 
-    /*
-     * Add attribute for mutations
-     */
-    public function addAttribute($attribute)
-    {
-        foreach (array_wrap($attribute) as $attr)
-        {
-            if ( in_array($attr, $this->attributes) )
-                continue;
+        //Set class input and output for interaction support
+        $columnClass->setCommand($this->getCommand());
 
-           $this->attributes[] = $attr;
-        }
-    }
-
-    /*
-     * Add new mutation into list
-     */
-    public function addMutation( $namespace )
-    {
-        foreach (array_wrap($namespace) as $namespace)
-        {
-            $this->mutations[] = $namespace;
-        }
-    }
-
-    /*
-     * Get mutations list
-     */
-    public function getMutations()
-    {
-        return $this->mutations;
+        return $columnClass;
     }
 
     /*
@@ -172,7 +140,7 @@ class Fields
         //Set rendering of fields as completed
         $this->setCompletedState($table);
 
-        //Register base fields without options for cachced operations
+        //Register base fields without options for cached operations
         $this->base_fields[$table] = $this->removeOptions($this->fields[$table]);
 
         //Fire post updated on fields as queries, loading options etc...

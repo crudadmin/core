@@ -5,7 +5,6 @@ namespace Admin\Core\Eloquent\Concerns;
 use Fields;
 use AdminCore;
 use Localization;
-use Admin\Core\Contracts\Migrations\MigrationProvider;
 
 trait FieldProperties
 {
@@ -274,7 +273,7 @@ trait FieldProperties
      */
     private function getMigrationColumnType($key)
     {
-        return (new MigrationProvider)->getColumnType($this, $key);
+        return Fields::getColumnType($this, $key);
     }
 
     /*
@@ -307,7 +306,7 @@ trait FieldProperties
             //_order, published_at, deleted_at etc...
             $staticColumns = array_map(function($columnClass){
                 return $columnClass->getColumn();
-            }, (new MigrationProvider)->getEnabledStaticFields($this));
+            }, Fields::getEnabledStaticFields($this));
 
             //Get enabled static columns
             $fields = array_unique(array_merge($fields, $staticColumns));

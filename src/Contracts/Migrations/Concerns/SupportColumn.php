@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Contracts\Migrations\Concerns;
 
+use Fields;
 use AdminCore;
-use Admin\Core\Contracts\Migrations\MigrationProvider;
 use Admin\Core\Contracts\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
@@ -21,7 +21,7 @@ trait SupportColumn
      */
     protected function registerStaticColumns(Blueprint $table, AdminModel $model, bool $updating = false)
     {
-        foreach ($this->migrationProvider->getEnabledStaticFields($model) as $columnClass)
+        foreach (Fields::getEnabledStaticFields($model) as $columnClass)
         {
             //Check if column does exists
             $columnExists = ($updating === false)
@@ -53,7 +53,7 @@ trait SupportColumn
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Unknown column type
-        if ( !($columnClass = $this->migrationProvider->getColumnType($model, $key)) )
+        if ( !($columnClass = Fields::getColumnType($model, $key)) )
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
 
         //Get column response
