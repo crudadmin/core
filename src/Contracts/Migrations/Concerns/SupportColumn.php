@@ -111,8 +111,11 @@ trait SupportColumn
                             ? false
                             : $model->getSchema()->hasColumn($model->getTable(), $columnClass->column);
 
+            //Get column response
+            $column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists);
+
             //If column has not been registred
-            if ( !($column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists)) )
+            if ( !$column || $column === true )
                 continue;
 
             //If static column has been found, and does not exists in db
