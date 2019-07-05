@@ -287,40 +287,43 @@ class AdminCore
      * @param  boolean $sort
      * @return void
      */
-    public function registerModel($namespace, $sort = true)
+    public function registerModel($namespaces, $sort = true)
     {
-        //Checks if is admin model without initializing of class
-        if ( !is_a($namespace, AdminModel::class, true) )
-            return;
-
-        $model = new $namespace;
-
-        //Check if is valid admin model with correct migration date
-        if ( ! $this->isAdminModel($model) )
-            return;
-
-        //If model with migration date already exists
-        if ( array_key_exists($model->getMigrationDate(), $this->get('namespaces', [])) )
+        foreach (array_wrap($namespaces) as $namespace)
         {
-            //If duplicite model which is actual loaded is extented parent of loaded child, then just skip adding this model
-            if ( $this->get('models', [])[$model->getMigrationDate()] instanceof $model ){
+            //Checks if is admin model without initializing of class
+            if ( !is_a($namespace, AdminModel::class, true) )
+                continue;
+
+            $model = new $namespace;
+
+            //Check if is valid admin model with correct migration date
+            if ( ! $this->isAdminModel($model) )
                 return;
+
+            //If model with migration date already exists
+            if ( array_key_exists($model->getMigrationDate(), $this->get('namespaces', [])) )
+            {
+                //If duplicite model which is actual loaded is extented parent of loaded child, then just skip adding this model
+                if ( $this->get('models', [])[$model->getMigrationDate()] instanceof $model ){
+                    return;
+                }
+
+                $error = 'In '.__class__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
+
+                Log::error($error);
+                abort(500, $error);
             }
 
-            $error = 'In '.__class__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
+            //Save model namespace into array
+            $this->push('namespaces', $namespace, $model->getMigrationDate());
 
-            Log::error($error);
-            abort(500, $error);
+            //Save model into array
+            $this->push('models', $model, $model->getMigrationDate());
+
+            //Save modelname
+            $this->push('modelnames', $model, $this->toModelBaseName($namespace));
         }
-
-        //Save model namespace into array
-        $this->push('namespaces', $namespace, $model->getMigrationDate());
-
-        //Save model into array
-        $this->push('models', $model, $model->getMigrationDate());
-
-        //Save modelname
-        $this->push('modelnames', $model, $this->toModelBaseName($namespace));
 
         //Sorting models by migration date
         if ( $sort == true )

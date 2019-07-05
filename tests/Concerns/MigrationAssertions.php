@@ -6,32 +6,50 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MigrationAssertions
 {
+    /*
+     * Model schema builder
+     */
+    private $schema;
 
     /**
-     * Get doctrine scheme
-     * @param  AdminModel $model
+     * Set schema
+     * @param Schema $schema
+     */
+    public function setSchema($schema)
+    {
+        $this->schema = $schema;
+    }
+
+    /**
+     * Set schema
+     * @return Schema
+     */
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    /**
+     * Get doctrine schema
      * @return SchemaManager
      */
-    private function getDoctrineScheme($model)
+    public function getDoctrineSchema()
     {
-        $model = $this->getModelClass($model);
-
-        return $model->getConnection()
-                     ->getDoctrineConnection()
-                     ->getSchemaManager();
+        return $this->getSchema()
+                    ->getConnection()
+                    ->getDoctrineConnection()
+                    ->getSchemaManager();
     }
 
     /**
      * Returns doctrine column
-     * @param  AdminModel $model
-     * @param  string     $column
+     * @param  string $table
+     * @param  string $column
      * @return Doctrine\DBAL\Schema\Column
      */
-    public function getDoctrineColumn($model, string $column)
+    public function getDoctrineColumn($table, string $column)
     {
-        $model = $this->getModelClass($model);
-
-        $columns = $this->getDoctrineScheme($model)->listTableColumns($model->getTable());
+        $columns = $this->getDoctrineSchema()->listTableColumns($table);
 
         //Fix doctrine columns keys format
         $array = [];
@@ -46,9 +64,9 @@ trait MigrationAssertions
 
     /**
      * Check if column is correct db type
-     * @param  AdminModel $model
-     * @param  string     $column
-     * @param  string     $type
+     * @param  string $table
+     * @param  string $column
+     * @param  string $type
      * @return this
      */
     public function assertColumnType($model, string $column, string $type)
@@ -62,27 +80,27 @@ trait MigrationAssertions
 
     /**
      * Check if column in database does exists
-     * @param  AdminModel $model
-     * @param  string     $column
+     * @param  string $table
+     * @param  string $column
      * @return this
      */
-    public function assertColumnExists($model, string $column)
+    public function assertColumnExists($table, string $column)
     {
-        PHPUnit::assertNotNull($this->getDoctrineColumn($model, $column), "Column $column does not exists");
+        PHPUnit::assertNotNull($this->getDoctrineColumn($table, $column), "Column $column does not exists");
 
         return $this;
     }
 
     /**
      * Check if column is NotNull
-     * @param  AdminModel $model
-     * @param  string     $column
-     * @param  bool       $isNull
+     * @param  string $table
+     * @param  string $column
+     * @param  bool   $isNull
      * @return this
      */
-    public function assertColumnNotNull($model, string $column, bool $isNull)
+    public function assertColumnNotNull($table, string $column, bool $isNull)
     {
-        $dbNull = $this->getDoctrineColumn($model, $column)->getNotNull();
+        $dbNull = $this->getDoctrineColumn($table, $column)->getNotNull();
 
         PHPUnit::assertEquals($isNull, $dbNull, "Column $column does not match excepted null value [".($isNull ? 'true' : 'false')."] with db value [".($dbNull ? 'true' : 'false')."]");
 
@@ -91,14 +109,14 @@ trait MigrationAssertions
 
     /**
      * Check if column length
-     * @param  AdminModel $model
-     * @param  string     $column
-     * @param  int        $length
+     * @param  string $table
+     * @param  string $column
+     * @param  int    $length
      * @return this
      */
-    public function assertColumnLength($model, string $column, int $length)
+    public function assertColumnLength($table, string $column, int $length)
     {
-        $dbLength = $this->getDoctrineColumn($model, $column)->getLength();
+        $dbLength = $this->getDoctrineColumn($table, $column)->getLength();
 
         PHPUnit::assertEquals($length, $dbLength, "Column $column does not match excepted length [$length] with db value [$dbLength]");
 
@@ -107,16 +125,48 @@ trait MigrationAssertions
 
     /**
      * Check if column is unsigned
-     * @param  AdminModel $model
-     * @param  string     $column
-     * @param  int        $length
+     * @param  string $table
+     * @param  string $column
+     * @param  int    $length
      * @return this
      */
-    public function assertColumnUnsigned($model, string $column, bool $unsigned)
+    public function assertColumnUnsigned($table, string $column, bool $unsigned)
     {
-        $dbUnsigned = $this->getDoctrineColumn($model, $column)->getUnsigned();
+        $dbUnsigned = $this->getDoctrineColumn($table, $column)->getUnsigned();
 
         PHPUnit::assertEquals($unsigned, $dbUnsigned, "Column $column does not match excepted unsigned [[".($unsigned ? 'true' : 'false')."]] with db value [[".($dbUnsigned ? 'true' : 'false')."]]");
+
+        return $this;
+    }
+
+    /**
+     * Check if table has foreign key
+     * @param  string $table
+     * @param  string $key
+     * @return this
+     */
+    public function assertTableExists($table)
+    {
+        $tableExists = $this->getSchema()->hasTable($table);
+
+        PHPUnit::assertTrue($tableExists, "Table [$table] does not exists");
+
+        return $this;
+    }
+
+    /**
+     * Check if table has foreign key
+     * @param  string $table
+     * @param  string $key
+     * @return this
+     */
+    public function assertHasForeignKey($table, string $key)
+    {
+        $keys = array_map(function($key){
+            return $key->getName();
+        }, $this->getDoctrineSchema()->listTableForeignKeys($table));
+
+        PHPUnit::assertContains($key, $keys, "Table [$table] does not have foreign key [$key]");
 
         return $this;
     }

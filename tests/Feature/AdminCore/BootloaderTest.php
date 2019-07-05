@@ -28,6 +28,7 @@ class BootloaderTest extends TestCase
         $this->assertEquals(AdminCore::boot(), [
             '2019-05-03 11:11:02' => 'Admin\Core\Tests\App\Models\Fields\FieldsGroup',
             '2019-05-03 12:02:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsType',
+            '2019-05-03 14:12:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsRelation',
             '2019-05-03 15:12:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsMutator',
             '2019-05-04 12:10:04' => 'Admin\Core\Tests\App\Models\Articles\Article',
             '2019-05-04 12:10:15' => 'Admin\Core\Tests\App\Models\Articles\ArticlesComment'

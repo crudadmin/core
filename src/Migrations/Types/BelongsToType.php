@@ -49,25 +49,22 @@ class BelongsToType extends Type
         //If foreign key in table exists
         $keyExists = 0;
 
-        if ( $tableExists = $model->getSchema()->hasTable( $model->getTable() ) )
-        {
+        //Check if actual table and key exists
+        if ( $tableExists = $model->getSchema()->hasTable($model->getTable()) ) {
             $keyExists = $this->hasIndex($model, $key);
         }
 
         //If table has not foreign column
-        if ( $keyExists == 0 && $parent->getSchema()->hasTable( $parent->getTable() ) )
+        if ( $keyExists == 0 )
         {
-            if ( $tableExists === true && $model->count() > 0 )
-            {
-                //Checks if table has already inserted rows which won't allow insert foreign key without NULL value
-                if ( $model->hasFieldParam($key, 'required', true) )
-                {
-                    $this->checkForReferenceTable($model, $key, $properties[0]);
-                }
+            //Checks if table has already inserted rows which won't allow insert foreign key without NULL value
+            if ( $tableExists === true && $model->count() > 0 && $model->hasFieldParam($key, 'required', true) ) {
+                $this->checkForReferenceTable($model, $key, $properties[0]);
             }
 
-            $this->registerAfterAllMigrations($model, function($table) use ( $key, $properties, $model ){
-                $table->foreign($key)->references($properties[2])->on($properties[0]);
+            $this->registerAfterAllMigrations($model, function($table) use ($key, $properties, $model, $parent){
+                if ( $parent->getSchema()->hasTable( $parent->getTable() ) )
+                    $table->foreign($key)->references($properties[2])->on($properties[0]);
             });
         }
 
