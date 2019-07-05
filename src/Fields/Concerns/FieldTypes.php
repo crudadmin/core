@@ -11,7 +11,6 @@ trait FieldTypes
      * Registered column types
      */
     public $types = [
-        Types\ImaginaryType::class,
         Types\BelongsToType::class,
         Types\BelongsToManyType::class,
         Types\JsonType::class,
@@ -21,7 +20,7 @@ trait FieldTypes
         Types\IntegerType::class,
         Types\DecimalType::class,
         Types\DateTimeType::class,
-        Types\CheckboxType::class,
+        Types\BooleanType::class,
     ];
 
     /**
@@ -35,11 +34,19 @@ trait FieldTypes
 
     /**
      * Add column type
-     * @param string $class
+     * @param string/array $class
      */
-    public function addColumnType($class)
+    public function addColumnType($classes)
     {
-        $this->types = $class;
+        foreach (array_reverse(array_wrap($classes)) as $class)
+        {
+            if ( in_array($class, $this->types) )
+                continue;
+
+            //Add into first position in array
+            //because we want added type behind of all types
+            array_unshift($this->types, $class);
+        }
     }
 
     /**

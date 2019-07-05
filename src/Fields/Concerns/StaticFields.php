@@ -38,7 +38,7 @@ trait StaticFields
                 continue;
 
             //Add into first position in array
-            //because we want added columns in front of all static columns
+            //because we want added columns behind of all static columns in database
             array_unshift($this->staticColumns, $class);
         }
     }

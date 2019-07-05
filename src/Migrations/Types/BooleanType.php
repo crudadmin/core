@@ -6,13 +6,8 @@ use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
-class ImaginaryType extends Type
+class BooleanType extends Type
 {
-    /*
-     * This column type does not contain of column in database
-     */
-    public $hasColumn = false;
-
     /**
      * Check if can apply given column
      * @param  AdminModel  $model
@@ -21,7 +16,7 @@ class ImaginaryType extends Type
      */
     public function isEnabled(AdminModel $model, string $key)
     {
-        return $model->isFieldType($key, 'imaginary') || $model->hasFieldParam($key, 'imaginary');
+        return $model->isFieldType($key, ['checkbox', 'boolean']);
     }
 
     /**
@@ -34,7 +29,8 @@ class ImaginaryType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        //Skip column registration, this column does not exists in db
-        return true;
+        $default = $model->hasFieldParam($key, 'default') ? $model->getFieldParam($key, 'default') : 0;
+
+        return $table->boolean($key)->default($default);
     }
 }
