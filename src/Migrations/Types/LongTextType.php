@@ -16,7 +16,7 @@ class LongTextType extends Type
      */
     public function isEnabled(AdminModel $model, string $key)
     {
-        return $model->isFieldType($key, ['longtext', 'longeditor']);
+        return $model->isFieldType($key, 'longtext');
     }
 
     /**

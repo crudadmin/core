@@ -40,20 +40,11 @@ class ColumnsTypesTest extends TestCase
     }
 
     /** @test */
-    public function test_editor_column()
+    public function test_longtext_column()
     {
-        $this->assertColumnExists(FieldsType::class, 'editor')
-             ->assertColumnType(FieldsType::class, 'editor', 'text')
-             ->assertColumnNotNull(FieldsType::class, 'editor', true);
-    }
-
-    /** @test */
-    public function test_select_column()
-    {
-        $this->assertColumnExists(FieldsType::class, 'select')
-             ->assertColumnType(FieldsType::class, 'select', 'string')
-             ->assertColumnNotNull(FieldsType::class, 'select', true)
-             ->assertColumnLength(FieldsType::class, 'select', 255);
+        $this->assertColumnExists(FieldsType::class, 'longtext')
+             ->assertColumnType(FieldsType::class, 'longtext', 'text')
+             ->assertColumnNotNull(FieldsType::class, 'longtext', true);
     }
 
     /** @test */
@@ -81,15 +72,6 @@ class ColumnsTypesTest extends TestCase
              ->assertColumnType(FieldsType::class, 'file', 'string')
              ->assertColumnNotNull(FieldsType::class, 'file', true)
              ->assertColumnLength(FieldsType::class, 'file', 255);
-    }
-
-    /** @test */
-    public function test_password_column()
-    {
-        $this->assertColumnExists(FieldsType::class, 'password')
-             ->assertColumnType(FieldsType::class, 'password', 'string')
-             ->assertColumnNotNull(FieldsType::class, 'password', true)
-             ->assertColumnLength(FieldsType::class, 'password', 255);
     }
 
     /** @test */
@@ -122,14 +104,5 @@ class ColumnsTypesTest extends TestCase
         $this->assertColumnExists(FieldsType::class, 'checkbox')
              ->assertColumnType(FieldsType::class, 'checkbox', 'boolean')
              ->assertColumnNotNull(FieldsType::class, 'checkbox', false);
-    }
-
-    /** @test */
-    public function test_radio_column()
-    {
-        $this->assertColumnExists(FieldsType::class, 'radio')
-             ->assertColumnType(FieldsType::class, 'radio', 'string')
-             ->assertColumnNotNull(FieldsType::class, 'radio', true)
-             ->assertColumnLength(FieldsType::class, 'string', 255);
     }
 }

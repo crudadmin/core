@@ -16,7 +16,7 @@ class TextType extends Type
      */
     public function isEnabled(AdminModel $model, string $key)
     {
-        return $model->isFieldType($key, ['text', 'editor']);
+        return $model->isFieldType($key, ['text']);
     }
 
     /**

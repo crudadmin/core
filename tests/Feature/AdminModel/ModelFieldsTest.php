@@ -15,8 +15,7 @@ class ModelFieldsTest extends TestCase
         $fields = (new FieldsType)->getFields();
 
         $this->assertEquals(array_keys($fields), [
-            'string', 'text', 'editor', 'select', 'integer', 'decimal', 'file',
-            'password', 'date', 'datetime', 'time', 'checkbox', 'radio'
+            'string', 'text', 'longtext', 'integer', 'decimal', 'file', 'date', 'datetime', 'time', 'checkbox'
         ]);
     }
 

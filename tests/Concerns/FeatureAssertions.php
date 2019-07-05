@@ -55,7 +55,7 @@ trait FeatureAssertions
     {
         $dbType = $this->getDoctrineColumn($model, $column)->getType();
 
-        PHPUnit::assertEquals($dbType->getName(), $type, "Column $column does not match excepted [$type] with db type [$dbType]");
+        PHPUnit::assertEquals($dbType->getName(), $type, "Column $column does not match excepted db type [$type] with actual type [$dbType]");
 
         return $this;
     }

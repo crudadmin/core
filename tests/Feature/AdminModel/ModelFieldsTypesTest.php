@@ -39,23 +39,12 @@ class ModelFieldsTypesTest extends TestCase
     }
 
     /** @test */
-    public function editor()
+    public function longtext()
     {
-        $this->assertEquals($this->model->getField('editor'), [
-            'name' => 'my editor field',
-            'type' => 'editor',
-            'required' => true,
-        ]);
-    }
-
-    /** @test */
-    public function select()
-    {
-        $this->assertEquals($this->model->getField('select'), [
-            'name' => 'my select field',
-            'type' => 'select',
-            'required' => true,
-            'options' => 'option a,option b'
+        $this->assertEquals($this->model->getField('longtext'), [
+            'name' => 'my longtext field',
+            'type' => 'longtext',
+            'required' => true
         ]);
     }
 
@@ -92,16 +81,6 @@ class ModelFieldsTypesTest extends TestCase
             'max' => '10240',
             'file' => true,
             'nullable' => true
-        ]);
-    }
-
-    /** @test */
-    public function password()
-    {
-        $this->assertEquals($this->model->getField('password'), [
-            'name' => 'my password field',
-            'type' => 'password',
-            'required' => true,
         ]);
     }
 
@@ -148,17 +127,6 @@ class ModelFieldsTypesTest extends TestCase
             'name' => 'my checkbox field',
             'type' => 'checkbox',
             'boolean' => true
-        ]);
-    }
-
-    /** @test */
-    public function radio()
-    {
-        $this->assertEquals($this->model->getField('radio'), [
-            'name' => 'my radio field',
-            'type' => 'radio',
-            'options' => 'c,d,b',
-            'required' => true
         ]);
     }
 }
