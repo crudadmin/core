@@ -44,7 +44,7 @@ trait OrchestraSetup
         // Setup default database to use sqlite :memory:
         $app['config']->set('app.debug', true);
         $app['config']->set('database.default', 'mysql');
-        $app['config']->set('database.connections.mysql.database', 'crudadmin_v2_test');
+        $app['config']->set('database.connections.mysql.database', 'crudadmin_v2_core');
         $app['config']->set('database.connections.mysql.username', 'homestead');
         $app['config']->set('database.connections.mysql.password', 'secret');
 
