@@ -12,8 +12,6 @@ trait StaticFields
      */
     public $staticColumns = [
         Columns\Sluggable::class,
-        Columns\Localization::class,
-        Columns\Sortable::class,
         Columns\Publishable::class,
         Columns\CreatedAt::class,
         Columns\UpdatedAt::class,
@@ -29,12 +27,20 @@ trait StaticFields
     }
 
     /**
-     * Add column type
-     * @param string $class
+     * Add static column (one or multiple at once)
+     * @param string/array $class
      */
-    public function addStaticColumn($class)
+    public function addStaticColumn($classes)
     {
-        $this->staticColumns = $class;
+        foreach (array_reverse(array_wrap($classes)) as $class)
+        {
+            if ( in_array($class, $this->staticColumns) )
+                continue;
+
+            //Add into first position in array
+            //because we want added columns in front of all static columns
+            array_unshift($this->staticColumns, $class);
+        }
     }
 
     /**
