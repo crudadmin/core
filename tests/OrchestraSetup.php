@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\File;
 
 trait OrchestraSetup
 {
+    /*
+     * Register all admin models into each test
+     */
+    protected $loadAllAdminModels = false;
+
     protected function getPackageProviders($app)
     {
         return [
@@ -45,6 +50,10 @@ trait OrchestraSetup
 
         // Setup default database to use sqlite :memory:
         $app['config']->set('admin.app_namespace', 'Admin\Core\Tests\App');
+
+        //Register all admin models by default
+        if ( $this->loadAllAdminModels === true )
+            $this->registerAllAdminModels();
     }
 
     /**

@@ -181,7 +181,7 @@ class AdminCore
      * Returns all available model namespaces
      * @return array
      */
-    private function getNamespacesList()
+    public function getNamespacesList()
     {
         //Add default app namespace
         $paths = [];

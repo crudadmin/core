@@ -7,7 +7,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Tests\App\OtherModels\Blog;
 use Admin\Core\Tests\TestCase;
 
-class AdminCoreTest extends TestCase
+class BootloaderTest extends TestCase
 {
     protected function setUp() : void
     {
@@ -26,6 +26,9 @@ class AdminCoreTest extends TestCase
         $this->registerAllAdminModels();
 
         $this->assertEquals(AdminCore::boot(), [
+            '2019-05-03 11:11:02' => 'Admin\Core\Tests\App\Models\Fields\FieldsGroup',
+            '2019-05-03 12:02:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsType',
+            '2019-05-03 15:12:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsMutator',
             '2019-05-04 12:10:04' => 'Admin\Core\Tests\App\Models\Articles\Article',
             '2019-05-04 12:10:15' => 'Admin\Core\Tests\App\Models\Articles\ArticlesComment'
         ]);
@@ -69,13 +72,13 @@ class AdminCoreTest extends TestCase
     }
 
 
-    // /** @test */
-    // public function check_if_has_admin_model()
-    // {
-    //     AdminCore::registerAdminModels($this->getAppPath('OtherModels'), 'Admin\Core\Tests\App\OtherModels');
+    /** @test */
+    public function check_if_has_admin_model()
+    {
+        AdminCore::registerAdminModels($this->getAppPath('OtherModels'), 'Admin\Core\Tests\App\OtherModels');
 
-    //     $this->assertTrue(AdminCore::hasAdminModel('Blog'));
-    //     $this->assertTrue(AdminCore::hasAdminModel('BlogsImage'));
-    //     $this->assertFalse(AdminCore::hasAdminModel('BlogsImages'));
-    // }
+        $this->assertTrue(AdminCore::hasAdminModel('Blog'));
+        $this->assertTrue(AdminCore::hasAdminModel('BlogsImage'));
+        $this->assertFalse(AdminCore::hasAdminModel('BlogsImages'));
+    }
 }

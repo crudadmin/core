@@ -4,6 +4,7 @@ namespace Admin\Core\Fields;
 
 use AdminCore;
 use Admin\Core\Contracts\Migrations\Concerns\MigrationDefinition;
+use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Concerns\FieldTypes;
 use Admin\Core\Fields\Concerns\HasAttributes;
 use Admin\Core\Fields\Concerns\HasMutations;
@@ -385,7 +386,7 @@ class Fields extends MigrationDefinition
     /*
      * Return registered groups for given model
      */
-    public function getFieldsGroups($model)
+    public function getFieldsGroups(AdminModel $model)
     {
         $table = $model->getTable();
 
@@ -399,7 +400,7 @@ class Fields extends MigrationDefinition
     /*
      * Register group into field buffer for groups
      */
-    protected function registerGroup( $group, $model )
+    protected function registerGroup($group, AdminModel $model)
     {
         //Update and register field
         $this->groups[$model->getTable()][] = $group;

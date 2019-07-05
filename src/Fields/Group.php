@@ -37,9 +37,57 @@ class Group
         $this->fields = $fields;
     }
 
-    /*
+    /**
+     * Set id of group
+     * @param  string $id
+     * @return Group
+     */
+    public function id(string $id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * Set name of group
+     * @param  $name
+     * @return Group
+     */
+    public function name($name = null)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Make fields group
+     * @param  array  $fields
+     * @param  string $type
+     * @return Group
+     */
+    public static function fields(array $fields = [], $type = 'default')
+    {
+        return (new static($fields))->type($type);
+    }
+
+    /**
+     * Push fields parameters into every field in group
+     * @param string $params
+     * @return Group
+     */
+    public function add($params)
+    {
+        $this->add[] = $params;
+
+        return $this;
+    }
+
+    /**
      * Set type of group
-     * group/tab
+     * @param $type string group/tab
+     * @return Group
      */
     public function type($type = 'group')
     {
