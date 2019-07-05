@@ -31,23 +31,38 @@ trait FieldTypes
         return $this->types;
     }
 
+    /**
+     * Add column type at the beginning of all types.
+     * Sometimes you need apply field with same rules
+     * as other fields, but with additional parameter.
+     * In this case this function will help you.
+     * @param string/array $class
+     */
+    public function addColumnTypeBefore($classes)
+    {
+        $this->addColumnType($classes, true);
+    }
 
     /**
      * Add column type
      * @param string/array $class
      */
-    public function addColumnType($classes)
+    public function addColumnType($classes, $before = false)
     {
-        foreach (array_reverse(array_wrap($classes)) as $class)
-        {
-            if ( in_array($class, $this->types) )
-                continue;
+        $add = [];
 
-            //Add into first position in array
-            //because we want added type behind of all types
-            array_unshift($this->types, $class);
+        foreach (array_wrap($classes) as $class)
+        {
+            //If class does not exists in array
+            if ( in_array($class, $this->types) === false )
+                $add[] = $class;
         }
+
+        //Add types at the beggining or at the end of array
+        $this->types = $before === true ? array_merge(array_reverse($add), $this->types)
+                                        : array_merge($this->types, $add);
     }
+
 
     /**
      * Returns enabled column type of given field

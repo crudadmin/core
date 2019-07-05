@@ -290,8 +290,10 @@ trait FieldProperties
             }
 
             foreach ($this->getFields() as $key => $field) {
+                $columnType = $this->getMigrationColumnType($key);
+
                 //Skip column types without database column representation
-                if ( $this->getMigrationColumnType($key)->hasColumn() )
+                if ( $columnType && $columnType->hasColumn() )
                     $fields[] = $key;
             }
 

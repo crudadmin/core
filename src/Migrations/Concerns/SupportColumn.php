@@ -60,8 +60,10 @@ trait SupportColumn
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Unknown column type
-        if ( !($columnClass = Fields::getColumnType($model, $key)) )
+        if ( !($columnClass = Fields::getColumnType($model, $key)) ) {
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
+            return;
+        }
 
         //Get column response
         $column = $columnClass->registerColumn($table, $model, $key, $updating);

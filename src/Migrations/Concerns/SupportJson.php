@@ -41,7 +41,7 @@ trait SupportJson
         {
             $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
 
-            if ( ! in_array($type, ['json', 'json_array']) && $localized === true ){
+            if ( ! in_array($type, ['json', 'json_array']) && $localized === true ) {
                 $this->updateToJsonColumn($model, $key, $type);
             }
         }
@@ -59,12 +59,12 @@ trait SupportJson
     private function hasInvalidValues($model, $key)
     {
         $query = $model->getConnection()
-                      ->table( $model->getTable() )
+                      ->table($model->getTable())
                       ->select([ $model->getKeyName(), $key ])
                       ->whereNotNull($key)
                       ->take(5);
 
-        return $query->whereRaw('NOT JSON_VALID('.$key.')')->pluck($key, $model->getKeyName());
+        return $query->whereRaw('NOT JSON_VALID(`'.$key.'`)')->pluck($key, $model->getKeyName());
     }
 
     /**
@@ -77,7 +77,7 @@ trait SupportJson
     private function updateToJsonColumn($model, $key, $type = null)
     {
         //Check if exists row in table,
-        if ( $model->getConnection()->table( $model->getTable() )->count() === 0 )
+        if ( $model->getConnection()->table($model->getTable())->count() === 0 )
             return;
 
         //Check if database has unvalid values for correct json type application
@@ -106,7 +106,7 @@ trait SupportJson
 
         $prefix = $languages->first()->slug;
 
-        $model->getConnection()->table( $model->getTable() )->whereRaw('NOT JSON_VALID('.$key.')')->update([
+        $model->getConnection()->table( $model->getTable() )->whereRaw('NOT JSON_VALID(`'.$key.'`)')->update([
             $key => DB::raw( 'CONCAT("{\"'.$prefix.'\": \"", REPLACE(REPLACE(REPLACE('.$key.', \'"\', \'\\\\"\'), \'\r\', \'\'), \'\n\', \'\'), "\"}")' )
         ]);
     }
