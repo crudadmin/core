@@ -5,6 +5,7 @@ namespace Admin\Core\Tests\Feature\Migrations;
 use Admin\Core\Tests\App\Models\Fields\FieldsType;
 use Admin\Core\Tests\Concerns\DropDatabase;
 use Admin\Core\Tests\TestCase;
+use AdminCore;
 
 class ColumnsTypesTest extends TestCase
 {
@@ -14,13 +15,10 @@ class ColumnsTypesTest extends TestCase
     {
         parent::setUp();
 
+        AdminCore::registerModel(FieldsType::class);
+
         $this->artisan('admin:migrate');
     }
-
-    /*
-     * Load all admin models
-     */
-    protected $loadAllAdminModels = true;
 
     /** @test */
     public function test_string_column()
