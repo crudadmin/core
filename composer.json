@@ -21,7 +21,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Admin\\Core\\": "src"
+            "Admin\\Core\\": "src",
+            "Admin\\Core\\Tests\\": "tests"
         },
         "files": [
             "src/Helpers/helpers.php"
@@ -29,7 +30,6 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Admin\\Core\\Tests\\": "tests",
             "Admin\\Core\\Tests\\App\\": "tests/Stubs/app"
         }
     },
