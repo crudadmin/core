@@ -3,7 +3,7 @@
 namespace Admin\Core\Fields\Concerns;
 
 use Admin\Core\Eloquent\AdminModel;
-use Admin\Core\Contracts\Migrations\Types;
+use Admin\Core\Migrations\Types;
 
 trait FieldTypes
 {

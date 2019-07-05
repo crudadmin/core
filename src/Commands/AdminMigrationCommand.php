@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Commands;
 
-use Admin\Core\Contracts\Migrations\MigrationBuilder;
+use Admin\Core\Migrations\MigrationBuilder;
 use Illuminate\Console\ConfirmableTrait;
 use Symfony\Component\Console\Input\InputOption;
 use AdminCore;

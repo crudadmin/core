@@ -307,7 +307,7 @@ class AdminCore
                 return;
             }
 
-            $error = 'Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
+            $error = 'In '.__class__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
 
             Log::error($error);
             abort(500, $error);

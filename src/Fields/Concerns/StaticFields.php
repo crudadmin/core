@@ -3,7 +3,7 @@
 namespace Admin\Core\Fields\Concerns;
 
 use Admin\Core\Eloquent\AdminModel;
-use Admin\Core\Contracts\Migrations\Columns;
+use Admin\Core\Migrations\Columns;
 
 trait StaticFields
 {

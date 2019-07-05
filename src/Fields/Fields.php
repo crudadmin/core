@@ -3,7 +3,7 @@
 namespace Admin\Core\Fields;
 
 use AdminCore;
-use Admin\Core\Contracts\Migrations\Concerns\MigrationDefinition;
+use Admin\Core\Migrations\Concerns\MigrationDefinition;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Concerns\FieldTypes;
 use Admin\Core\Fields\Concerns\HasAttributes;
