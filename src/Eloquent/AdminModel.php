@@ -7,6 +7,7 @@ use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
+use Admin\Core\Eloquent\Concerns\Sluggable;
 use Admin\Core\Eloquent\Concerns\Validation;
 use Admin\Core\Helpers\File;
 use Carbon\Carbon;
@@ -19,7 +20,8 @@ class AdminModel extends Model
         HasSettings,
         RelationsBuilder,
         FieldProperties,
-        Validation;
+        Validation,
+        Sluggable;
 
     /*
      * Model Parent

@@ -148,7 +148,7 @@ class MigrationBuilder extends Command
     {
         $this->line('<info>Updated table:</info> '.$model->getTable());
 
-        $model->getSchema()->table( $model->getTable() , function (Blueprint $table) use ($model) {
+        $model->getSchema()->table($model->getTable(), function (Blueprint $table) use ($model) {
             //Add relationships with other models
             $this->addRelationships($table, $model, true);
 
@@ -165,9 +165,8 @@ class MigrationBuilder extends Command
                     continue;
 
                 //Checks if table has column and update it if can...
-                if ( $model->getSchema()->hasColumn($model->getTable(), $key) ){
-                    if ( $column = $this->registerColumn($table, $model, $key, true) )
-                    {
+                if ( $model->getSchema()->hasColumn($model->getTable(), $key) ) {
+                    if ( $column = $this->registerColumn($table, $model, $key, true) ) {
                         $column->change();
                     }
                 } else {
@@ -200,8 +199,7 @@ class MigrationBuilder extends Command
             for ( $i = count($addColumns) - 1; $i >= 0; $i-- )
             {
                 //if no column has been added, then remove column from array for messages
-                if ( !($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ])) )
-                {
+                if ( !($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ])) ) {
                     unset($addColumns[$i]);
                 }
             }

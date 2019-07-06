@@ -35,17 +35,16 @@ trait SupportColumn
             if ( !$column || $column === true )
                 continue;
 
-            //If static column has been found, and does not exists in db
-            if ( ! $columnExists )
-            {
-                if ( $updating ) {
-                    $this->line('<comment>+ Added column:</comment> '.$columnClass->column);
-                }
+            //If column does exists
+            if ( $columnExists ) {
+                $column->change();
             }
 
-            //If column does exists
-            else {
-                $column->change();
+            //If static column has been found, and does not exists in db and is updating
+            else if ( $updating ) {
+                $this->setStaticColumnPosition($table, $enabled, $column);
+
+                $this->line('<comment>+ Added column:</comment> '.$columnClass->column);
             }
         }
     }

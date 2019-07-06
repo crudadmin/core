@@ -16,7 +16,7 @@ class Sluggable extends Column
      */
     public function isEnabled(AdminModel $model)
     {
-        return $model->getProperty('sluggable');
+        return $model->getProperty('sluggable') !== null;
     }
 
     /**
@@ -54,12 +54,6 @@ class Sluggable extends Column
             $column = $this->setJsonColumn($table, $this->column, $model, $updating, true);
         else
             $column = $table->string($this->column, $model->getFieldLength($slugcolumn));
-
-        //If is updating, add column after specific field
-        if ( $updating == true )
-        {
-            $column->after($slugcolumn);
-        }
 
         //If is creating new table or when slug index is missing
         if ( !$has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index')) )
