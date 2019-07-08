@@ -102,7 +102,7 @@ trait MigrationAssertions
     {
         $dbNull = $this->getDoctrineColumn($table, $column)->getNotNull();
 
-        PHPUnit::assertEquals($isNull, $dbNull, "Column $column does not match excepted null value [".($isNull ? 'true' : 'false')."] with db value [".($dbNull ? 'true' : 'false')."]");
+        PHPUnit::assertEquals($isNull, $dbNull, "Column $column does not match excepted NULL value [".($isNull ? 'true' : 'false')."] with db value [".($dbNull ? 'true' : 'false')."]");
 
         return $this;
     }
