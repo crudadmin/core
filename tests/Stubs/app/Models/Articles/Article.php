@@ -12,6 +12,11 @@ class Article extends AdminModel
     protected $migration_date = '2019-05-04 12:10:04';
 
     /*
+     * Set sluggable support
+     */
+    protected $sluggable = 'name';
+
+    /*
      * Automatic form and database generation
      * @name - field name
      * @placeholder - field placeholder
