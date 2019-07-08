@@ -21,7 +21,7 @@ trait SupportColumn
      */
     protected function registerStaticColumns(Blueprint $table, AdminModel $model, bool $updating = false)
     {
-        foreach (Fields::getEnabledStaticFields($model) as $columnClass)
+        foreach ($enabled = Fields::getEnabledStaticFields($model) as $columnClass)
         {
             //Check if column does exists
             $columnExists = ($updating === false)

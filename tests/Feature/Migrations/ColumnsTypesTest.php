@@ -9,7 +9,6 @@ use Admin\Core\Tests\App\Models\Fields\FieldsType;
 use Admin\Core\Tests\Concerns\DropDatabase;
 use Admin\Core\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use PHPUnit\Framework\Assert as PHPUnit;
 
 class ColumnsTypesTest extends TestCase
 {
