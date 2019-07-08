@@ -21,17 +21,17 @@ trait FieldProperties
     /*
      * Save admin parent row into model
      */
-    private $withParentRow = null;
+    protected $withParentRow = null;
 
     /*
      * Returns just base fields in getAdminAttributes
      */
-    private $justBaseFields = false;
+    protected $justBaseFields = false;
 
     /*
      * Skip belongsToMany properties in getAdminModelAttributes
      */
-    private $skipBelongsToMany = false;
+    protected $skipBelongsToMany = false;
 
     /**
      * Return fields converted from string (key:value|otherkey:othervalue) into array format
