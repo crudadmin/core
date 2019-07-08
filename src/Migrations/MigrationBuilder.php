@@ -15,6 +15,7 @@ class MigrationBuilder extends Command
     use Concerns\MigrationEvents,
         Concerns\MigrationSupport,
         Concerns\MigrationOutOfDate,
+        Concerns\SupportColumnsPosition,
         Concerns\SupportRelations,
         Concerns\SupportColumn,
         Concerns\SupportJson,
