@@ -37,6 +37,15 @@ class MigrationBuilder extends Command
         parent::__construct();
     }
 
+    /*
+     * Returns this instace for supporting
+     * columns traits
+     */
+    public function getCommand()
+    {
+        return $this;
+    }
+
     /**
      * Generate CrudAdmin migrations
      * @return void

@@ -2,6 +2,7 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
+use Illuminate\Support\Facades\DB;
 use Localization;
 
 trait SupportJson
@@ -18,8 +19,8 @@ trait SupportJson
 
         //Compare of mysql versions
         if (version_compare($version, '5.7.0', '<')) {
-            $this->line('<error>Sorry, but JSON columns are not supported in your MySQL '.$version.' database.</error>');
-            $this->line('<comment>You need minimum MySQL 5.7.0 for supporting multiple '.($type == 'select' ? 'select columns' : 'upload files').'.<comment>');
+            $this->getCommand()->line('<error>Sorry, but JSON columns are not supported in your MySQL '.$version.' database.</error>');
+            $this->getCommand()->line('<comment>You need minimum MySQL 5.7.0 for supporting multiple '.($type == 'select' ? 'select columns' : 'upload files').'.<comment>');
             die;
         }
     }
@@ -88,21 +89,21 @@ trait SupportJson
 
         $slug = ($lang = $languages->first()) ? $lang->slug : 'en';
 
-        $this->line('<comment>- You are updating</comment> '.$key.' <comment>column from '.($type ?: 'non-json').' type to json type for translates purposes.</comment>');
+        $this->getCommand()->line('<comment>- You are updating</comment> '.$key.' <comment>column from '.($type ?: 'non-json').' type to json type for translates purposes.</comment>');
 
         foreach ($update as $id => $value) {
             $value = str_limit($value, 30);
-            $this->line('<comment>'.$id.':</comment> '.$value.' <comment>=></comment> <info>{"'.$slug.'":"</info>'.$value.'<info>"}</info>');
+            $this->getCommand()->line('<comment>'.$id.':</comment> '.$value.' <comment>=></comment> <info>{"'.$slug.'":"</info>'.$value.'<info>"}</info>');
         }
 
         if ( $update->count() == 5 )
-            $this->line('<comment>...</comment>');
+            $this->getCommand()->line('<comment>...</comment>');
 
-        if ( ! $this->confirm('Would you like to update this '.($type ?: 'non-json').' values in database to translated format of JSON values?', true) )
+        if ( ! $this->getCommand()->confirm('Would you like to update this '.($type ?: 'non-json').' values in database to translated format of JSON values?', true) )
             return;
 
         if ( $languages->count() === 0 )
-            $this->line('<error>You have no inserted languages to update '.$key.' column.</error>');
+            $this->getCommand()->line('<error>You have no inserted languages to update '.$key.' column.</error>');
 
         $prefix = $languages->first()->slug;
 
