@@ -173,7 +173,7 @@ class AdminModelCommand extends GeneratorCommand
         //Format lines with field keys
         $lines = [];
         foreach ($fields as $key => $field)
-            $lines[] = "'$key' => '$field';";
+            $lines[] = "'$key' => '$field',";
 
         return $this->fixParameterSpacing(implode("\n", $lines), '        ');
     }
