@@ -75,7 +75,7 @@ class AdminModelCommand extends GeneratorCommand
         //We can mutate namespaces via $namespaces reference
         AdminCore::fire('admin.command.model.create.namespaces', [&$namespaces, $this]);
 
-        return implode("\n", $namespaces);
+        return implode(";\n", $namespaces);
     }
 
     /**
@@ -173,7 +173,7 @@ class AdminModelCommand extends GeneratorCommand
         //Format lines with field keys
         $lines = [];
         foreach ($fields as $key => $field)
-            $lines[] = "'$key' => '$field'";
+            $lines[] = "'$key' => '$field';";
 
         return $this->fixParameterSpacing(implode("\n", $lines), '        ');
     }

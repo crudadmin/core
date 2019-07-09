@@ -349,7 +349,7 @@ class AdminCore
     {
         $model = strtolower($model);
 
-        $modelnames = $this->get('modelnames');
+        $modelnames = $this->get('modelnames', []);
 
         return array_key_exists($model, $modelnames);
     }
