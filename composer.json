@@ -1,5 +1,5 @@
 {
-    "name": "crudadmin/core",
+    "name": "crudadmin/framework",
     "type": "library",
     "description": "Package creating support for Admin Model migrations feature",
     "keywords": ["crudadmin", "admin-model", "model", "admin", "eloquent", "laravel"],
