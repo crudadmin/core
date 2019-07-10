@@ -9,14 +9,17 @@ use Fields;
 
 trait Validation {
 
-    /*
-     * Makes properties from array to string
+    /**
+     * Makes properties keys and values from array to string format.
+     *
+     * @param  array  $field
+     * @return array
      */
-    protected function fieldToString($field)
+    protected function fieldToString(array $field)
     {
         $data = [];
 
-        foreach ( $field as $key => $value )
+        foreach ($field as $key => $value )
         {
             if ( $value === true ){
                 $data[] = $key;
@@ -34,24 +37,30 @@ trait Validation {
         return $data;
     }
 
-    /*
-     * Removes admin properties in field from request
+    /**
+     * Removes admin properties in field from request.
+     *
+     * @param  array  $field
+     * @return array
      */
     protected function removeAdminProperties($field)
     {
         //Remove admin columns
-        foreach (Fields::getAttributes() as $key)
-        {
+        foreach (Fields::getAttributes() as $key) {
             unset($field[$key]);
         }
 
         return $this->fieldToString($field);
     }
 
-    /*
-     * Remove uneccessary parameters from fields
+    /**
+     * Remove uneccessary parameters from fields.
+     *
+     * @param  string  $key
+     * @param  array  &$field
+     * @return void
      */
-    private function removeMultiFields($key, &$field)
+    private function removeMultiFields(string $key, &$field)
     {
         if ($this->isFieldType($key, 'file') || $this->isFieldType($key, ['date', 'time']))
         {
@@ -69,8 +78,11 @@ trait Validation {
         }
     }
 
-    /*
-     * Returns validation rules of model
+    /**
+     * Returns validation rules of model.
+     *
+     * @param  Admin\Core\Eloquent\AdminModel|null  $row
+     * @return array
      */
     public function getValidationRules($row = null)
     {
@@ -88,8 +100,7 @@ trait Validation {
 
             //If is available default locale, then set default key name, if
             //language is not available, then apply for all langs...
-            if ( $has_locale = $this->hasFieldParam($orig_key, 'locale') )
-            {
+            if ( $has_locale = $this->hasFieldParam($orig_key, 'locale') ) {
                 if ( $default_language )
                     $key = $orig_key . '.' . $default_language->slug;
                 else
@@ -100,12 +111,12 @@ trait Validation {
             if (
                 $is_multiple = $this->hasFieldParam($orig_key, 'array', true)
                 && $this->isFieldType($key, ['file', 'date', 'time'])
-            )
+            ) {
                 $key = $key . '.*';
+            }
 
             //If field is not required
-            if ( !$this->hasFieldParam($orig_key, 'required') )
-            {
+            if ( !$this->hasFieldParam($orig_key, 'required') ) {
                 $field['nullable'] = true;
             }
 
@@ -114,7 +125,7 @@ trait Validation {
                 && !empty($row[$orig_key])
                 && $this->hasFieldParam($orig_key, 'required')
                 && $this->isFieldType($orig_key, 'file')
-            ){
+            ) {
                 $field['required'] = false;
             }
 
@@ -122,17 +133,15 @@ trait Validation {
             $data[$key] = $this->removeAdminProperties($field);
 
             //If field has locales, then clone rules for specific locale
-            if ( $has_locale )
-            {
-                foreach (Localization::getLanguages() as $lang)
-                {
-                    if ( $lang->getKey() != $default_language->getKey() )
-                    {
+            if ( $has_locale ) {
+                foreach (Localization::getLanguages() as $lang) {
+                    if ( $lang->getKey() != $default_language->getKey() ) {
                         $lang_rules = array_unique(array_merge($data[$key], ['nullable']));
 
                         //Remove required rule for other languages
-                        if ( ($k = array_search('required', $lang_rules)) !== false )
+                        if ( ($k = array_search('required', $lang_rules)) !== false ) {
                             unset($lang_rules[$k]);
+                        }
 
                         //Apply also for multiple files support
                         $field_key = $is_multiple
@@ -148,89 +157,100 @@ trait Validation {
         return $data;
     }
 
-    /*
-     * Returns error response after wrong validation
+    /**
+     * Returns error response after wrong validation.
+     *
+     * @param  Illuminate\Validation\Validator  $validator
+     * @return Illuminate\Http\Response
      */
     private function buildFailedValidationResponse($validator)
     {
         //If is ajax request
-        if (request()->expectsJson())
-        {
+        if (request()->expectsJson()) {
             return response()->json($validator->errors(), 422);
         }
 
-        return redirect( url()->previous() )->withErrors($validator)->withInput();
+        return redirect(url()->previous())->withErrors($validator)->withInput();
     }
 
+    /**
+     * Build request with admin mutators.
+     *
+     * @param  array  $fields
+     * @return array
+     */
     protected function muttatorsResponse($fields)
     {
-        $request = new \Admin\Requests\DataRequest( request()->all() );
+        $request = new \Admin\Requests\DataRequest(request()->all());
 
         $request->applyMutators( $this, $fields );
 
         $data = $request->allWithMutators()[0];
 
-        request()->merge( $data );
+        request()->merge($data);
 
         return $data;
     }
 
     /**
-     * Validate incoming request
-     * @param  [model] $row model data with existing row for rules in validation
-     * @return [boolean]
+     * Validate incoming request.
+     *
+     * @param  AdminModel $row
+     * @return bool
      */
     public function scopeValidateRequest($query, array $fields = null, array $except = null, $mutators = true, $row = null)
     {
         //If row exists
-        if ( ! $row && $this->exists )
-        {
+        if ( ! $row && $this->exists ) {
             $row = $this;
         }
 
-        $rules = $this->getValidationRules( $row );
+        $rules = $this->getValidationRules($row);
 
         $only = [];
         $replace = [];
         $add = [];
 
         //Custom properties
-        if ( is_array($fields) )
-        {
+        if ( is_array($fields) ) {
             //Filtrate which fields will be validated
-            foreach ($fields as $key => $field)
-            {
+            foreach ($fields as $key => $field) {
                 //If is just key, then just this fields will be allowed in validation
-                if ( is_numeric($key) && is_string($field) && $this->getField($field) )
+                if ( is_numeric($key) && is_string($field) && $this->getField($field) ) {
                     $only[] = $field;
+                }
 
                 //If field has also attributes to validation, then exists validation rules will be replaced
-                else if ( ! is_numeric($key) )
-                {
-                    if ( $this->getField($key) )
+                else if ( ! is_numeric($key) ) {
+                    if ( $this->getField($key) ) {
                         $replace[$key] = $field;
-                    else
+                    } else {
                         $add[$key] = $field;
+                    }
                 }
 
             }
 
-            if ( count($only) > 0 )
+            if ( count($only) > 0 ) {
                 $rules = array_intersect_key($rules, array_flip($only));
+            }
 
             //Add rules
-            foreach ($add as $key => $value)
+            foreach ($add as $key => $value) {
                 $rules[$key] = $value;
+            }
 
             //Replace rules
-            foreach ($replace as $key => $value)
+            foreach ($replace as $key => $value) {
                 $rules[$key] = $value;
+            }
 
         }
 
         //Remove unnecesary fields
-        if ( is_array($except) )
+        if ( is_array($except) ) {
             $rules = array_diff_key($rules, array_flip($except));
+        }
 
         $validator = Validator::make(request()->all(), $rules);
 

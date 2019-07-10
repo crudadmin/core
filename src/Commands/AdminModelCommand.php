@@ -65,8 +65,10 @@ class AdminModelCommand extends GeneratorCommand
         return trim($this->argument('name'));
     }
 
-    /*
-     * Returns different namespaces for CrudAdmin model and Core models
+    /**
+     * Returns different namespaces for CrudAdmin model and Core models.
+     *
+     * @return string
      */
     protected function getNamespacesList()
     {
@@ -106,8 +108,10 @@ class AdminModelCommand extends GeneratorCommand
         return $this;
     }
 
-    /*
-     * Get owner model of actual class
+    /**
+     * Get owner model of actual class.
+     *
+     * @return string
      */
     protected function getParentModelName()
     {
@@ -120,8 +124,10 @@ class AdminModelCommand extends GeneratorCommand
         return $parent;
     }
 
-    /*
-     * Returns name of parent model
+    /**
+     * Returns name of parent model.
+     *
+     * @return string
      */
     protected function getBelongsTo()
     {
@@ -134,8 +140,10 @@ class AdminModelCommand extends GeneratorCommand
         return $parent.'::class';
     }
 
-    /*
-     * Returns parameters generated into model stub
+    /**
+     * Returns parameters generated into model stub.
+     *
+     * @return string
      */
     protected function getStubParameters()
     {
@@ -154,8 +162,10 @@ class AdminModelCommand extends GeneratorCommand
         return $this->fixParameterSpacing(implode("\n", $parameters), '    ');
     }
 
-    /*
-     * Returns fields generated into model stub
+    /**
+     * Returns fields generated into model stub.
+     *
+     * @return string
      */
     protected function getStubFields()
     {
@@ -179,7 +189,8 @@ class AdminModelCommand extends GeneratorCommand
     }
 
     /**
-     * Receive stub with random tabulators spaces, and fix length of spaces for each parameter
+     * Receive stub with random tabulators spaces, and fix length of spaces for each parameter.
+     *
      * @param  string $stub
      * @param  string $spaces
      * @return string

@@ -4,10 +4,16 @@ namespace Admin\Core\Eloquent\Concerns;
 
 trait HasSettings
 {
-    /*
-     * Convert inline settings into array
+    /**
+     * Convert inline settings into array.
+     *
+     * @param  array  &$arr
+     * @param  string  $path
+     * @param  mixed  $value
+     * @param  string  $separator
+     * @return void
      */
-    private function assignArrayByPath(&$arr, $path, $value, $separator='.') {
+    private function assignArrayByPath(&$arr, string $path, $value, $separator='.') {
         $keys = explode($separator, $path);
 
         foreach ($keys as $key) {
@@ -27,8 +33,12 @@ trait HasSettings
         $arr = is_array($value) ? $row : $value;
     }
 
-    /*
-     * Returns model settings in array
+    /**
+     * Returns model settings in array.
+     *
+     * @param  string  $separator
+     * @param  array  &$arr
+     * @return array
      */
     public function getModelSettings($separator = '.', &$arr = [])
     {

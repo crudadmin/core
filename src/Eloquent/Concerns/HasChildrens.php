@@ -6,10 +6,14 @@ use AdminCore;
 
 trait HasChildrens
 {
-    /*
-     * Automatically and easy assign children relation into model
+    /**
+     * Automatically and easy assign children relation into model.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @return Illuminate\Database\Eloquent\Relations\Relation|bool
      */
-    protected function checkForChildrenModels($method, $get = false)
+    protected function checkForChildrenModels(string $method, $get = false)
     {
         $basename_class = class_basename( get_class($this) );
 

@@ -9,55 +9,77 @@ use \Illuminate\Database\Eloquent\Model as BaseModel;
 
 trait RelationsBuilder
 {
-    private $save_collection = null;
+    private $saveCollection = null;
 
-    /*
-     * Relation key in admin buffer
+    /**
+     * Returns admin relation key.
+     *
+     * @param  string  $method
+     * @return string
      */
-    protected function getAdminRelationKey( $method )
+    protected function getAdminRelationKey(string $method)
     {
         return '$relations.' . $this->getTable() . '.' . $method .'.'. ($this->exists ? $this->getKey() : 'global');
     }
 
-    /*
-     * Checks if is relation in laravel buffer or in admin buffer
+    /**
+     * Checks if is relation in laravel buffer or in admin buffer.
+     *
+     * @param  string  $key
+     * @return bool
      */
-    public function isAdminRelationLoaded($key)
+    public function isAdminRelationLoaded(string $key)
     {
         $loaded = parent::relationLoaded($key);
 
-        if ( ! $loaded )
+        if ( ! $loaded ) {
             $loaded = AdminCore::has( $this->getAdminRelationKey( $key ) );
+        }
 
         return $loaded;
     }
 
-    /*
-     * Get relation from laravel buffer if exists, or admin buffer
+    /**
+     * Returns relation from cache.
+     *
+     * @param  string  $key
+     * @return Illuminate\Database\Eloquent\Relations\Relation
      */
-    public function getRelationFromCache($key)
+    public function getRelationFromCache(string $key)
     {
-        if ( parent::relationLoaded($key) ){
+        if ( parent::relationLoaded($key) ) {
             return parent::getRelation($key);
         }
 
-        return AdminCore::get( $this->getAdminRelationKey( $key ) );
+        $relationKey = $this->getAdminRelationKey($key);
+
+        return AdminCore::get($relationKey);
     }
 
-    /*
-     * Set relation into laravel buffer, and also into admin buffer
+    /**
+     * Set relation into laravel buffer, and also into admin buffer.
+     *
+     * @param  string  $relation
+     * @param  mixed  $value
+     * @return $this
      */
     public function setRelation($relation, $value)
     {
-        AdminCore::set( $this->getAdminRelationKey( $relation ), $value );
+        $relationKey = $this->getAdminRelationKey($relation);
+
+        AdminCore::set($relationKey, $value);
 
         return parent::setRelation($relation, $value);
     }
 
-    /*
-     * Returns relation from cache
+    /**
+     * Returns relation from cache.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @return Illuminate\Database\Eloquent\Relations\Relation|bool
      */
-    private function returnRelationFromCache($method, $get)
+    private function returnRelationFromCache(string $method, $get)
     {
         $relation = $this->getRelationFromCache($method);
 
@@ -70,7 +92,7 @@ trait RelationsBuilder
 
             //If is saved collection, but requested is object, then save old collection and return new relation object
             else if ( $is_collection )
-                $this->save_collection = $relation;
+                $this->saveCollection = $relation;
         }
 
         //If is in relation buffer saved admin relation object
@@ -80,7 +102,7 @@ trait RelationsBuilder
             {
                 //Save old collection when is generating new object
                 if ( $relation['relation'] instanceof Collection )
-                    $this->save_collection = $relation['relation'];
+                    $this->saveCollection = $relation['relation'];
 
                 return $this->relationResponse(
                     $method,
@@ -106,21 +128,26 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
-     * Return relation by belongsToMany field property
+    /**
+     * Return relation by belongsToMany field property.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @param  bool|array  $models
+     * @param  string  $methodSnake
+     * @param  string  $methodLowercase
+     * @return Illuminate\Database\Eloquent\Relations\Relation|bool
      */
-    private function returnByBelongsToMany($method, $get, $models, $method_snake, $method_lowercase)
+    private function returnByBelongsToMany(string $method, $get, $models, $methodSnake, $methodLowercase)
     {
-        if ( $this->hasFieldParam($method_snake, 'belongsToMany') )
+        if ( $this->hasFieldParam($methodSnake, 'belongsToMany') )
         {
-            $properties = $this->getRelationProperty($method_snake, 'belongsToMany');
+            $properties = $this->getRelationProperty($methodSnake, 'belongsToMany');
 
-            foreach ($models as $path)
-            {
+            foreach ($models as $path) {
                 //Find match
-                if ( strtolower( Str::snake( class_basename($path) ) ) == $properties[5] )
-                {
-                    return $this->relationResponse($method_snake, 'belongsToMany', $path, $get, $properties);
+                if ( strtolower( Str::snake( class_basename($path) ) ) == $properties[5] ) {
+                    return $this->relationResponse($methodSnake, 'belongsToMany', $path, $get, $properties);
                 }
             }
         }
@@ -128,15 +155,21 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
+    /**
      * Return relation by belongsTo field property
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @param  bool|array  $models
+     * @param  string  $methodSnake
+     * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    private function returnByBelongsTo($method, $get, $models, $method_snake)
+    private function returnByBelongsTo(string $method, $get, $models, $methodSnake)
     {
-        if ( $this->hasFieldParam($method_snake . '_id', 'belongsTo') )
+        if ( $this->hasFieldParam($methodSnake . '_id', 'belongsTo') )
         {
             //Get edited field key
-            $field_key = $method_snake . '_id';
+            $field_key = $methodSnake . '_id';
 
             //Get related table
             $foreign_table = explode(',', $this->getFieldParam($field_key, 'belongsTo'))[0];
@@ -156,11 +189,16 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
-     * Return relation by belongsToModel property in model
-     * find all parent in actual model, and check if actual child is not calling some of parents, if yes, then return relationship.
+    /**
+     * Return relation by belongsToModel property in model.
+     * Find all parents in actual model, and check if actual child is not calling some of parents.
+     * If yes, then return relationship.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    private function returnByBelongsToModel($method, $get)
+    private function returnByBelongsToModel(string $method, $get)
     {
         foreach ($this->getBelongsToRelation() as $namespace) {
             $basename = class_basename($namespace);
@@ -176,17 +214,24 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
-     * Return relations by fields from actual admin model
+    /**
+     * Return relations by fields from actual admin model.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @param  array|bool  $models
+     * @param  string  $methodSnake
+     * @param  string  $methodLowercase
+     * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    private function returnByFieldsRelations($method, $get, $models, $method_snake, $method_lowercase)
+    private function returnByFieldsRelations(string $method, $get, $models, $methodSnake, $methodLowercase)
     {
         //Belongs to many relation
-        if ( ($relation = $this->returnByBelongsToMany($method, $get, $models, $method_snake, $method_lowercase)) !== false )
+        if ( ($relation = $this->returnByBelongsToMany($method, $get, $models, $methodSnake, $methodLowercase)) !== false )
             return $relation;
 
         //Belongs to
-        if ( ($relation = $this->returnByBelongsTo($method, $get, $models, $method_snake)) !== false )
+        if ( ($relation = $this->returnByBelongsTo($method, $get, $models, $methodSnake)) !== false )
             return $relation;
 
         //Find relation by parent of actual model
@@ -196,33 +241,41 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
-     * Returns relationship for sibling model
+    /**
+     * Returns relationship for sibling model.
+     *
+     * @param  string  $method
+     * @param  bool  $get
+     * @param  bool  $models
+     * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    protected function returnAdminRelationship($method, $get = false, $models = false)
+    protected function returnAdminRelationship(string $method, $get = false, $models = false)
     {
-        $method_lowercase = strtolower( $method );
-        $method_snake = Str::snake($method);
+        $methodLowercase = strtolower( $method );
+        $methodSnake = Str::snake($method);
 
         //Checks laravel buffer for relations
         if ( $this->isAdminRelationLoaded($method) )
         {
-            if ( ($cache = $this->returnRelationFromCache($method, $get)) !== false )
+            if ( ($cache = $this->returnRelationFromCache($method, $get)) !== false ) {
                 return $cache;
+            }
         }
 
         //Get all admin modules
-        if ( ! $models )
+        if ( ! $models ) {
             $models = AdminCore::getAdminModelNamespaces();
+        }
 
         /*
          * Return relations by defined fields in actual model
          */
-        if ( ($relation = $this->returnByFieldsRelations($method, $get, $models, $method_snake, $method_lowercase)) !== false )
+        if ( ($relation = $this->returnByFieldsRelations($method, $get, $models, $methodSnake, $methodLowercase)) !== false ) {
             return $relation;
+        }
 
-        $this_basename = class_basename(get_class($this));
-        $this_table_last_prefix = last(explode('_', snake_case($this->getTable())));
+        $thisBasename = class_basename(get_class($this));
+        $thisTableLastPrefix = last(explode('_', snake_case($this->getTable())));
 
         /*
          * Return relation from other way... search in all models, if some fields or models are note connected with actual model
@@ -232,12 +285,12 @@ trait RelationsBuilder
             $classname = strtolower( class_basename($path) );
 
             //Find match
-            if ( $classname == $method_lowercase || str_plural($classname) == $method_lowercase )
+            if ( $classname == $methodLowercase || str_plural($classname) == $methodLowercase )
             {
                 $model = new $path;
 
                 //If has belongs to many relation
-                if ( ($field = $model->getField( $field_key = $this->getTable() )) || ($field = $model->getField( $field_key = $this_table_last_prefix)) )
+                if ( ($field = $model->getField( $field_key = $this->getTable() )) || ($field = $model->getField( $field_key = $thisTableLastPrefix)) )
                 {
                     if ( array_key_exists('belongsToMany', $field) )
                     {
@@ -258,11 +311,11 @@ trait RelationsBuilder
 
                         if ( $properties[0] == $this->getTable() )
                         {
-                            $key_lower = trim_end($key, '_id');
-                            $key_lower = strtolower(str_replace('_', '', $key_lower));
+                            $keyLower = trim_end($key, '_id');
+                            $keyLower = strtolower(str_replace('_', '', $keyLower));
 
                             //Check if actual model name is same with property name in singular mode, but compare just last model convention name
-                            if ( substr(strtolower($this_basename), - strlen($key_lower)) == $key_lower )
+                            if ( substr(strtolower($thisBasename), - strlen($keyLower)) == $keyLower )
                                 return $this->relationResponse($method, 'hasMany', $path, $get, $properties);
                         }
                     }
@@ -274,7 +327,7 @@ trait RelationsBuilder
                 //Check if called model belongs to caller
                 if (
                     ! ($isBelongsTo = in_array(class_basename(get_class($model)), $thisBelongsToModel)) &&
-                    ! in_array($this_basename, $modelBelongsToModel)
+                    ! in_array($thisBasename, $modelBelongsToModel)
                 ) {
                     break;
                 }
@@ -292,43 +345,56 @@ trait RelationsBuilder
         return false;
     }
 
-    /*
-     * Return belongsToModel property in right format
+    /**
+     * Return belongsToModel property in right format.
+     *
+     * @param  bool  $baseName
+     * @return array
      */
-    public function getBelongsToRelation($base_name = false)
+    public function getBelongsToRelation($baseName = false)
     {
-        $items = array_filter(is_array($this->belongsToModel) ?
-             $this->belongsToModel : [ $this->belongsToModel ]);
+        $items = array_filter(is_array($this->belongsToModel)
+                    ? $this->belongsToModel
+                    : [ $this->belongsToModel ]);
 
-        if ( $base_name !== true )
+        if ( $baseName !== true ) {
             return $items;
+        }
 
         return array_map(function($item){
-            if ( $item )
+            if ( $item ) {
                 return class_basename($item);
+            }
         }, $items);
     }
 
-    /*
-     * Returns type of relation
+    /**
+     * Returns type of relation.
+     *
+     * @param  string  $method
+     * @param  bool  $relationType
+     * @param  string  $path
+     * @param  bool  $get
+     * @param  array  $properties
+     * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    protected function relationResponse($method, $relationType = false, $path, $get = false, $properties = [])
+    protected function relationResponse(string $method, $relationType = false, $path, $get = false, $properties = [])
     {
         $relation = false;
 
         if ( $relationType == 'belongsTo' ){
-            $relation = $this->belongsTo( $path, $properties[4] );
+            $relation = $this->belongsTo($path, $properties[4]);
         } else if ( $relationType == 'belongsToMany' ){
-            $relation = $this->belongsToMany( $path, $properties[3], $properties[6], $properties[7] )->orderBy($properties[3].'.id', 'asc');
-        } else if ( $relationType == 'hasOne' )
-            $relation = $this->hasOne( $path );
-        else if ( $relationType == 'hasMany' )
-            $relation = $this->hasMany( $path, $properties[4] );
-        else if ( $relationType == 'manyToMany' )
+            $relation = $this->belongsToMany($path, $properties[3], $properties[6], $properties[7])->orderBy($properties[3].'.id', 'asc');
+        } else if ( $relationType == 'hasOne') {
+            $relation = $this->hasOne($path);
+        } else if ($relationType == 'hasMany') {
+            $relation = $this->hasMany($path, $properties[4]);
+        } else if ($relationType == 'manyToMany') {
             $relation = $this->belongsToMany( $path, $properties[3], $properties[7], $properties[6] );
+        }
 
-        if ( $relation )
-        {
+        if ( $relation ) {
             $relation_buffer = [
                 'relation' => $relation,
                 'type' => $relationType,
@@ -338,17 +404,16 @@ trait RelationsBuilder
             ];
 
             //If was relation called as property, and is only hasOne relationship, then return value
-            if ( $get === true )
-            {
+            if ( $get === true ) {
                 $relation_buffer['relation'] = $relation = $this->returnRelationItems($relation_buffer) ?: true;
             }
 
             //Save previous loaded collection into laravel admin buffer
-            if ( $this->save_collection !== null ){
-                $relation_buffer['relation'] = $this->save_collection;
+            if ( $this->saveCollection !== null ) {
+                $relation_buffer['relation'] = $this->saveCollection;
                 $relation_buffer['get'] = true;
 
-                $this->save_collection = null;
+                $this->saveCollection = null;
             }
 
             $this->setRelation($method, $relation_buffer);
@@ -358,9 +423,10 @@ trait RelationsBuilder
     }
 
     /**
-     * Returns foreign keys or specific key for parent model
-     * @param  [type] $table [description]
-     * @return array/string        returns all foreign keys, or specific one
+     * Returns foreign keys or specific key for parent model.
+     *
+     * @param  string  $table
+     * @return array|string
      */
     public function getForeignColumn($table = null)
     {
@@ -384,16 +450,24 @@ trait RelationsBuilder
         return $columns;
     }
 
+    /**
+     * Returns base model table.
+     *
+     * @return string
+     */
     public function getBaseModelTable()
     {
         return Str::snake(class_basename($this));
     }
 
-
-    /*
-     * Returns properties of field with belongsTo or belongsToMany relationship
+    /**
+     * Returns properties of field with belongsTo or belongsToMany relationship.
+     *
+     * @param  string  $key
+     * @param  string  $relation
+     * @return array
      */
-    public function getRelationProperty($key, $relation)
+    public function getRelationProperty(string $key, string $relation)
     {
         $field = $this->getField($key);
 
@@ -431,9 +505,12 @@ trait RelationsBuilder
         return $properties;
     }
 
-    /*
+    /**
      * Return type of data according to relation type, when is single relation, then method returns model,
      * else returns collection
+     *
+     * @param  array  $relation
+     * @return mixed
      */
     public function returnRelationItems($relation)
     {
@@ -441,20 +518,29 @@ trait RelationsBuilder
         if ( $relation['relation'] === true )
             return true;
 
-        return in_array($relation['type'], ['hasOne', 'belongsTo']) ?
-            $relation['relation']->first()
-            : $relation['relation']->get();
+        return in_array($relation['type'], ['hasOne', 'belongsTo'])
+                    ? $relation['relation']->first()
+                    : $relation['relation']->get();
     }
 
-    /*
+    /**
      * If is relation empty, owns TRUE value, so we need return null
+     *
+     * @param  mixed  $relation
+     * @return null|mixed
      */
     protected function checkIfIsRelationNull($relation)
     {
         return $relation === true ? null : $relation;
     }
 
-    public function getRelationshipNameBuilder($selector)
+    /**
+     * Get relation column name or extract additional columns in given format string in format :columnA :columnB
+     *
+     * @param  string  $selector
+     * @return array
+     */
+    public function getRelationshipNameBuilder(string $selector)
     {
         preg_match_all('/(?<!\\\\)[\:^]([0-9,a-z,A-Z$_]+)+/', $selector, $matches);
 

@@ -7,7 +7,8 @@ use AdminCore;
 trait AdminEvents
 {
     /**
-     * Register event
+     * Register event.
+     *
      * @param  string $name
      * @param  closure $callback
      * @return void
@@ -22,7 +23,8 @@ trait AdminEvents
     }
 
     /**
-     * Register class with events
+     * Register class with events.
+     *
      * @param  string $class
      * @return void
      */
@@ -35,9 +37,10 @@ trait AdminEvents
 
     /**
      * Fire registered event
+     *
      * @param  string $name
      * @param  array  $args
-     * @return
+     * @return void
      */
     public function fire($name, &$args = [])
     {

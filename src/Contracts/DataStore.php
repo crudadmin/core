@@ -6,16 +6,20 @@ use DataStore as Store;
 
 trait DataStore
 {
-    /*
-     * Get property name where will be stored all data
+    /**
+     * Get property name where will be stored all data.
+     *
+     * @return string
      */
     protected function getStoreKey()
     {
         return get_class($this);
     }
 
-    /*
-     * Get store data
+    /**
+     * Get store data.
+     *
+     * @return mixed
      */
     public function getStore()
     {
@@ -23,7 +27,8 @@ trait DataStore
     }
 
     /**
-     * Get property from store
+     * Get property from store.
+     *
      * @param  string $key
      * @param  mixed $default
      * @return mixed
@@ -34,7 +39,8 @@ trait DataStore
     }
 
     /**
-     * Save property with value into store
+     * Save property with value into store.
+     *
      * @param string $key
      * @param mixed $data
      * @param mixed $store
@@ -46,7 +52,8 @@ trait DataStore
     }
 
     /**
-     * Checks if property exists in buffer
+     * Checks if property exists in buffer.
+     *
      * @param  string  $key
      * @param  string  $store
      * @return boolean
@@ -57,7 +64,8 @@ trait DataStore
     }
 
     /**
-     * Push data into array store
+     * Push data into array store.
+     *
      * @param  string $key
      * @param  mixed $value
      * @param  mixed $arrayKey
@@ -70,7 +78,8 @@ trait DataStore
     }
 
     /**
-     * Save data into instance. On second access data will be retrieved from storage
+     * Save data into instance. On second access data will be retrieved from storage.
+     *
      * @param  string  $key
      * @param  mixed  $data
      * @param  mixed  $store

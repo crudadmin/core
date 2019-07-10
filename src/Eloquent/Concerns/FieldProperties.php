@@ -2,40 +2,54 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Fields;
 use AdminCore;
+use Admin\Core\Eloquent\AdminModel;
+use Fields;
 use Localization;
 
 trait FieldProperties
 {
-    /*
-     * Buffered fields in model
+    /**
+     * Buffered fields in model.
+     *
+     * @var null|array
      */
     private $_fields = null;
 
-    /*
-     * Which options can be loaded in getFields (eg data from db)
+    /**
+     * Which options can be loaded in getFields (eg data from db).
+     *
+     * @var array
      */
     private $withOptions = [];
 
-    /*
-     * Save admin parent row into model
+    /**
+     * Save admin parent row into model.
+     *
+     * @var Admin\Core\Eloquent\AdminModel|null
      */
     protected $withParentRow = null;
 
-    /*
-     * Returns just base fields in getAdminAttributes
+    /**
+     * Returns just base fields in getAdminAttributes.
+     *
+     * @var boolean
      */
     protected $justBaseFields = false;
 
-    /*
-     * Skip belongsToMany properties in getAdminModelAttributes
+    /**
+     * Skip belongsToMany properties in getAdminModelAttributes.
+     *
+     * @var boolean
      */
     protected $skipBelongsToMany = false;
 
     /**
-     * Return fields converted from string (key:value|otherkey:othervalue) into array format
-     * @return [array]
+     * Return fields converted from string (key:value|otherkey:othervalue) into array format.
+     *
+     * @param  Admin\Core\Eloquent\AdminModel|null  $param
+     * @param  boolean  $force
+     * @return array
      */
     public function getFields($param = null, $force = false)
     {
@@ -55,8 +69,12 @@ trait FieldProperties
         return $this->_fields;
     }
 
-    /*
-     * Return all model fields with options
+    /**
+     * Return all model fields with options.
+     *
+     * @param  Admin\Core\Eloquent\AdminModel  $param
+     * @param  boolean  $force
+     * @return array
      */
     public function getFieldsWithOptions($param = null, $force = false)
     {
@@ -65,10 +83,13 @@ trait FieldProperties
         return $this->getFields($param, $force);
     }
 
-    /*
-     * Returns needed field
+    /**
+     * Returns needed field.
+     *
+     * @param  string $key
+     * @return array|null
      */
-    public function getField($key)
+    public function getField(string $key)
     {
         $fields = $this->getFields();
 
@@ -78,20 +99,27 @@ trait FieldProperties
         return null;
     }
 
-    /*
-     * Returns type of field
+    /**
+     * Returns type of field.
+     *
+     * @param  string  $key
+     * @return string
      */
-    public function getFieldType($key)
+    public function getFieldType(string $key)
     {
         $field = $this->getField($key);
 
         return $field['type'];
     }
 
-    /*
-     * Check column type
+    /**
+     * Check column type.
+     *
+     * @param  string  $key
+     * @param  string|array  $types
+     * @return bool
      */
-    public function isFieldType($key, $types)
+    public function isFieldType(string $key, $types)
     {
         if ( is_string($types) )
             $types = [ $types ];
@@ -99,10 +127,13 @@ trait FieldProperties
         return in_array( $this->getFieldType($key), $types);
     }
 
-    /*
-     * Returns maximum length of field
+    /**
+     * Returns maximum length of field.
+     *
+     * @param  string  $key
+     * @return int
      */
-    public function getFieldLength($key)
+    public function getFieldLength(string $key)
     {
         $field = $this->getField($key);
 
@@ -119,10 +150,15 @@ trait FieldProperties
         return 255;
     }
 
-    /*
-     * Returns if field has required
+    /**
+     * Returns if field has required.
+     *
+     * @param  string  $key
+     * @param  string|array  $params
+     * @param  mixed  $paramValue
+     * @return bool
      */
-    public function hasFieldParam($key, $params, $paramValue = null)
+    public function hasFieldParam(string $key, $params, $paramValue = null)
     {
         if (!$field = $this->getField($key))
             return false;
@@ -143,10 +179,14 @@ trait FieldProperties
         return false;
     }
 
-    /*
-     * Returns attribute of field
+    /**
+     * Returns attribute of field.
+     *
+     * @param  string  $key
+     * @param  string  $paramName
+     * @return mixed
      */
-    public function getFieldParam($key, $paramName)
+    public function getFieldParam(string $key, string $paramName)
     {
         if ( $this->hasFieldParam($key, $paramName) === false )
             return null;
@@ -156,52 +196,64 @@ trait FieldProperties
         return $field[$paramName];
     }
 
-    /*
-     * Field mutator for selects returns all options (also from db, etc...)
+    /**
+     * Field mutator for selects returns all options (also from db, etc...).
+     *
+     * @return $this
      */
     public function withAllOptions()
     {
         return $this->withOptions(true);
     }
 
-    /*
-     * Disable generate select options into fields
+    /**
+     * Disable generate select options into fields.
+     *
+     * @return $this
      */
     public function withoutOptions()
     {
         return $this->withOptions(false);
     }
 
-    /*
-     * Allow options
+    /**
+     * Allow options.
+     *
+     * @param  bool|array  $set
+     * @return $this
      */
-    public function withOptions( $set = null )
+    public function withOptions($set = null)
     {
         //We want all fields options
-        if ( $set === true ){
+        if ( $set === true ) {
             $this->withOptions = ['*'];
         }
 
         //We want specifics fields options
-        else if ( is_array($set) || $set === false ){
+        else if ( is_array($set) || $set === false ) {
             $this->withOptions = $set ?: [];
         }
 
         return $this;
     }
 
-    /*
-     * Returns allowed field options
+    /**
+     * Returns allowed field options.
+     *
+     * @return array
      */
     public function getAllowedOptions()
     {
         return $this->withOptions;
     }
 
-    /*
-     * Returns just base fields of model
+    /**
+     * Returns just base fields of model.
+     *
+     * @param  bool|null  $set
+     * @return bool
      */
-    public function justBaseFields( $set = null )
+    public function justBaseFields($set = null)
     {
         if ( $set === true || $set === false )
             $this->justBaseFields = $set;
@@ -209,25 +261,34 @@ trait FieldProperties
         return $this->justBaseFields;
     }
 
-    /*
-     * Save admin parent row into model
+    /**
+     * Save admin parent row into model.
+     *
+     * @param  Admin\Core\Eloquent\AdminModel  $row
+     * @return void
      */
-    public function withModelParentRow($row)
+    public function withModelParentRow(AdminModel $row)
     {
         $this->withParentRow = $row;
     }
 
-    /*
-     * Get admin parent row
+    /**
+     * Get admin parent row.
+     *
+     * @return Admin\Core\Eloquent\AdminModel|null
      */
     public function getModelParentRow()
     {
         return $this->withParentRow;
     }
 
-    /*
+    /**
      * Return specific value in multi localization field by selected language
-     * if translations are missing, returns default, or first available language
+     * if translations are missing, returns default, or first available language.
+     *
+     * @param  mixed  $object
+     * @param  string|null  $lang
+     * @return mixed
      */
     public function returnLocaleValue($object, $lang = null)
     {
@@ -243,14 +304,22 @@ trait FieldProperties
 
         //Return first available translated value in admin
         foreach ($object as $value) {
-            if ( !empty($value) || $value === 0 )
+            if ( !empty($value) || $value === 0 ) {
                 return $value;
+            }
         }
 
         return null;
     }
 
-    public function getSelectOption($field, $value = null)
+    /**
+     * Returns value of given key from options.
+     *
+     * @param  string  $field
+     * @param  string|int  $value
+     * @return string
+     */
+    public function getSelectOption(string $field, $value = null)
     {
         $options = $this->getProperty('options');
 
@@ -267,8 +336,9 @@ trait FieldProperties
     }
 
     /**
-     * Get migration column type
-     * @param  string $key
+     * Get migration column type.
+     *
+     * @param  string  $key
      * @return bool
      */
     private function getMigrationColumnType($key)
@@ -276,12 +346,14 @@ trait FieldProperties
         return Fields::getColumnType($this, $key);
     }
 
-    /*
-     * Returns short values of fields for content table of rows in administration
+    /**
+     * Returns short values of fields for content table of rows in administration.
+     *
+     * @return array
      */
     public function getColumnNames()
     {
-        $a = AdminCore::cache('models.'.$this->getTable().'.columns_names', function(){
+        return AdminCore::cache('models.'.$this->getTable().'.columns_names', function(){
             $fields = ['id'];
 
             //If has foreign key, add column name to base fields
@@ -315,7 +387,5 @@ trait FieldProperties
 
             return $fields;
         });
-
-        return $a;
     }
 }

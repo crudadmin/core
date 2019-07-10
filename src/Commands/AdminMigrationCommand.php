@@ -25,6 +25,11 @@ class AdminMigrationCommand extends MigrationBuilder
      */
     protected $description = 'Run the database migrations from all admin models';
 
+    /**
+     * Execute the console command.
+     *
+     * @return void
+     */
     public function handle()
     {
         $models = AdminCore::getAdminModels();
