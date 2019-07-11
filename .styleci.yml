@@ -1,2 +1,1 @@
-enabled:
-  - elseif
+preset: PSR2
