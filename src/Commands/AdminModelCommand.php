@@ -115,11 +115,11 @@ class AdminModelCommand extends GeneratorCommand
      */
     protected function getParentModelName()
     {
-        $camel = snake_case( basename( $this->getNameInput() ) );
+        $camel = snake_case(basename($this->getNameInput()));
 
-        $array = array_slice( explode('_', $camel), 0, -1 );
+        $array = array_slice(explode('_', $camel), 0, -1);
 
-        $parent = studly_case( str_singular( implode('_', $array) ) );
+        $parent = studly_case(str_singular(implode('_', $array)));
 
         return $parent;
     }
@@ -134,8 +134,9 @@ class AdminModelCommand extends GeneratorCommand
         $parent = $this->getParentModelName();
 
         //If creating model has not parent and is not belonging to any model
-        if ( ! AdminCore::hasAdminModel($parent) )
+        if (! AdminCore::hasAdminModel($parent)) {
             return 'null';
+        }
 
         return $parent.'::class';
     }
@@ -182,8 +183,9 @@ class AdminModelCommand extends GeneratorCommand
 
         //Format lines with field keys
         $lines = [];
-        foreach ($fields as $key => $field)
+        foreach ($fields as $key => $field) {
             $lines[] = "'$key' => '$field',";
+        }
 
         return $this->fixParameterSpacing(implode("\n", $lines), '        ');
     }

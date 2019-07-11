@@ -10,20 +10,21 @@ class DataStore
     private $store = [];
 
     /**
-     * Returns store data
+     * Returns store data.
      * @param  string|null $key
      * @return array
      */
     public function getStore($key = null)
     {
-        if ( $key )
+        if ($key) {
             return isset($this->store[$key]) ? $this->store[$key] : null;
+        }
 
         return $this->store;
     }
 
     /**
-     * Get property from store
+     * Get property from store.
      * @param  string $key
      * @param  mixed $default
      * @param  string $store
@@ -31,14 +32,15 @@ class DataStore
      */
     public function get($key, $default = null, $store = 'global')
     {
-        if ( $this->has($key, $store) )
+        if ($this->has($key, $store)) {
             return $this->store[$store][$key];
-        else
+        } else {
             return $default;
+        }
     }
 
     /**
-     * Save property with value into store
+     * Save property with value into store.
      * @param string $key
      * @param mixed $data
      * @param mixed $store
@@ -50,10 +52,10 @@ class DataStore
     }
 
     /**
-     * Checks if property exists in buffer
+     * Checks if property exists in buffer.
      * @param  string  $key
      * @param  string  $store
-     * @return boolean
+     * @return bool
      */
     public function has($key, $store = 'global')
     {
@@ -61,7 +63,7 @@ class DataStore
     }
 
     /**
-     * Push data into array store
+     * Push data into array store.
      * @param  string $key
      * @param  mixed $value
      * @param  mixed $arrayKey
@@ -70,19 +72,21 @@ class DataStore
      */
     public function push($key, $data, $arrayKey = null, $store = 'global')
     {
-        if ( !isset($this->store[$store]) || !array_key_exists($key, $this->store[$store]) || !is_array($this->store[$store][$key]) )
+        if (!isset($this->store[$store]) || !array_key_exists($key, $this->store[$store]) || !is_array($this->store[$store][$key])) {
             $this->store[$store][$key] = [];
+        }
 
         //Save unassociative value
-        if ( $arrayKey === null )
+        if ($arrayKey === null) {
             return $this->store[$store][$key][] = $data;
+        }
 
         //Save value with key
         return $this->store[$store][$key][$arrayKey] = $data;
     }
 
     /**
-     * Save data into instance. On second access data will be retrieved from storage
+     * Save data into instance. On second access data will be retrieved from storage.
      * @param  string  $key
      * @param  mixed  $data
      * @param  mixed  $store
@@ -90,12 +94,14 @@ class DataStore
      */
     public function cache($key, $data, $store = 'global')
     {
-        if ( $this->has($key, $store) )
+        if ($this->has($key, $store)) {
             return $this->get($key, null, $store);
+        }
 
         //If is passed data callable function
-        if ( is_callable($data) )
+        if (is_callable($data)) {
             $data = call_user_func($data);
+        }
 
         return $this->set($key, $data, $store);
     }

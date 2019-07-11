@@ -13,15 +13,15 @@ use Illuminate\Support\Facades\DB;
 trait SupportColumnsPosition
 {
     /**
-     * Add item into array into specific key position
+     * Add item into array into specific key position.
      * @param  array &$array
-     * @param  integer $key
+     * @param  int $key
      * @param  mixed $addItem
      * @return void
      */
-    function arrayAddAfterKey(array &$array, int $key, $addItem)
+    public function arrayAddAfterKey(array &$array, int $key, $addItem)
     {
-        if (($keyPos = array_search($key, array_keys($array))) === false){
+        if (($keyPos = array_search($key, array_keys($array))) === false) {
             $array[] = $addItem;
             return;
         }
@@ -31,20 +31,21 @@ trait SupportColumnsPosition
     }
 
     /**
-     * Get last column in table builder with correct order
+     * Get last column in table builder with correct order.
      * @param  array $columns
      * @param  array $onlyStaticColumn
      * @return array
      */
     private function getLastColumnInTable(array $columns, $onlyStaticColumn)
     {
-        $columnKeys = array_map(function($column){
+        $columnKeys = array_map(function ($column) {
             return $column->name;
         }, $columns);
 
         foreach ($columns as $key => $column) {
-            if ( ! $column->after )
+            if (! $column->after) {
                 continue;
+            }
 
             //Remove column we want to move
             unset($columns[$key]);
@@ -72,14 +73,14 @@ trait SupportColumnsPosition
     private function getWithoutStaticWithCorrectOrder(array $columns, array $staticNames)
     {
         //Get just field types columns
-        $columns = array_filter($columns, function($item) use($staticNames) {
+        $columns = array_filter($columns, function ($item) use ($staticNames) {
             return !in_array($item->name, $staticNames);
         });
 
         //Get changed columns with their keys
         $addedColumns = [];
         foreach ($columns as $key => $column) {
-            if ( $column->change !== true ) {
+            if ($column->change !== true) {
                 $addedColumns[$key] = $column;
             }
         }
@@ -93,14 +94,14 @@ trait SupportColumnsPosition
     }
 
     /**
-     * Set position in table of static column
+     * Set position in table of static column.
      * @param Blueprint $table
      * @param array $enabled
      * @param ColumnDefinition $column
      */
     private function setStaticColumnPosition(Blueprint $table, array $enabled, ColumnDefinition $column)
     {
-        $staticNames = array_map(function($class){
+        $staticNames = array_map(function ($class) {
             return $class->getColumn();
         }, $enabled);
 
@@ -111,12 +112,12 @@ trait SupportColumnsPosition
         $withoutStatic = $this->getWithoutStaticWithCorrectOrder($table->getColumns(), $staticNames);
 
         //Created columns without static types
-        $onlyStatic = array_filter($table->getColumns(), function($item) use($staticNames, $column) {
+        $onlyStatic = array_filter($table->getColumns(), function ($item) use ($staticNames, $column) {
             return in_array($item->name, $staticNames) && $column->name !== $item->name;
         });
 
         //Add after last column in table builder
-        if ( $addAfter = $this->getLastColumnInTable($withoutStatic, $onlyStatic) ){
+        if ($addAfter = $this->getLastColumnInTable($withoutStatic, $onlyStatic)) {
             $column->after($addAfter->name);
         }
     }

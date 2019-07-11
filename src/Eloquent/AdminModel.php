@@ -26,7 +26,7 @@ class AdminModel extends Model
 
     /**
      * Model Parent
-     * Eg. Articles::class,
+     * Eg. Articles::class,.
      *
      * @var  string
      */
@@ -119,8 +119,7 @@ class AdminModel extends Model
      */
     public function __construct(array $attributes = [])
     {
-        if ( AdminCore::isLoaded() )
-        {
+        if (AdminCore::isLoaded()) {
             //Add fillable fields
             $this->makeFillable();
 
@@ -141,8 +140,9 @@ class AdminModel extends Model
      */
     public function getMigrationDate()
     {
-        if ( !property_exists($this, 'migration_date') )
+        if (!property_exists($this, 'migration_date')) {
             return false;
+        }
 
         return $this->migration_date;
     }
@@ -158,11 +158,9 @@ class AdminModel extends Model
     public function __call($method, $parameters)
     {
         //Check if called method is not property, method of actual model or new query model
-        if (!method_exists($this, $method) && !$parameters && !method_exists(parent::newQuery(), $method))
-        {
+        if (!method_exists($this, $method) && !$parameters && !method_exists(parent::newQuery(), $method)) {
             //Checks for db relationship of childrens into actual model
-            if ( ($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method)) )
-            {
+            if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
                 return $this->checkIfIsRelationNull($relation);
             }
         }
@@ -195,24 +193,24 @@ class AdminModel extends Model
         $forceCheckRelation = false;
 
         // If is called field existing field
-        if ( ($field = $this->getField($key)) || ($field = $this->getField($key . '_id')) ) {
+        if (($field = $this->getField($key)) || ($field = $this->getField($key . '_id'))) {
             //Register file type response
-            if ( $field['type'] == 'file' && !$this->hasGetMutator($key)) {
-                if ( $file = parent::__get($key) ) {
+            if ($field['type'] == 'file' && !$this->hasGetMutator($key)) {
+                if ($file = parent::__get($key)) {
                     //If is multilanguage file/s
-                    if ( $this->hasFieldParam($key, ['locale'], true) ) {
+                    if ($this->hasFieldParam($key, ['locale'], true)) {
                         $file = $this->returnLocaleValue($file);
                     }
 
-                    if ( is_array($file) || $this->hasFieldParam($key, ['multiple'], true) ) {
+                    if (is_array($file) || $this->hasFieldParam($key, ['multiple'], true)) {
                         $files = [];
 
-                        if ( !is_array($file) ) {
+                        if (!is_array($file)) {
                             $file = [ $file ];
                         }
 
                         foreach ($file as $value) {
-                            if ( is_string($value) ) {
+                            if (is_string($value)) {
                                 $files[] = File::adminModelFile($this->getTable(), $key, $value);
                             }
                         }
@@ -227,14 +225,13 @@ class AdminModel extends Model
             }
 
             //Casts time value, because laravel does not casts time
-            else if ( $field['type'] == 'time' ) {
+            elseif ($field['type'] == 'time') {
                 return ($value = parent::__get($key)) ? Carbon::createFromFormat('H:i:s', $value) : null;
             }
 
             //If field has not relationship, then return field value... This condition is here for better framework performance
-            else if ( !array_key_exists('belongsTo', $field) && !array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id' ) {
-
-                if ( array_key_exists('locale', $field) && $field['locale'] === true ) {
+            elseif (!array_key_exists('belongsTo', $field) && !array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
+                if (array_key_exists('locale', $field) && $field['locale'] === true) {
                     $object = parent::__get($key);
 
                     return $this->returnLocaleValue($object);
@@ -247,26 +244,26 @@ class AdminModel extends Model
         }
 
         // Register this offen called properties for better performance
-        else if ( in_array($key, ['id', 'slug', 'created_at', 'published_at', 'deleted_at', 'pivot']) ) {
-            if ( $key != 'slug' || $this->sluggable == true && $key == 'slug' ) {
+        elseif (in_array($key, ['id', 'slug', 'created_at', 'published_at', 'deleted_at', 'pivot'])) {
+            if ($key != 'slug' || $this->sluggable == true && $key == 'slug') {
                 return parent::__get($key);
             }
         }
 
         //If is fields called from outside of class, then try to search relationship
-        if ( in_array($key, ['fields']) || $force == true ) {
+        if (in_array($key, ['fields']) || $force == true) {
             $forceCheckRelation = true;
         }
 
         // Checks for relationship
-        if ($forceCheckRelation === true || !property_exists($this, $key) && !method_exists($this, $key) && !array_key_exists($key, $this->attributes) && !$this->hasGetMutator($key) ) {
+        if ($forceCheckRelation === true || !property_exists($this, $key) && !method_exists($this, $key) && !array_key_exists($key, $this->attributes) && !$this->hasGetMutator($key)) {
             //If relations has been in buffer, but returns nullable value
-            if ( $relation = $this->returnAdminRelationship($key, true) ) {
+            if ($relation = $this->returnAdminRelationship($key, true)) {
                 return $this->checkIfIsRelationNull($relation);
             }
 
             //Checks for db relationship childrens into actual model
-            else if ( $relation = $this->checkForChildrenModels($key, true) ) {
+            elseif ($relation = $this->checkForChildrenModels($key, true)) {
                 return $this->checkIfIsRelationNull($relation);
             }
         }
@@ -281,10 +278,9 @@ class AdminModel extends Model
      */
     protected function makeFillable()
     {
-        foreach ($this->getFields() as $key => $field)
-        {
+        foreach ($this->getFields() as $key => $field) {
             //Skip column
-            if ( !($column = Fields::getColumnType($this, $key)) || !$column->hasColumn() ) {
+            if (!($column = Fields::getColumnType($this, $key)) || !$column->hasColumn()) {
                 continue;
             }
 
@@ -292,17 +288,17 @@ class AdminModel extends Model
         }
 
         //Add published_at property
-        if ( $this->publishable ) {
+        if ($this->publishable) {
             $this->fillable[] = 'published_at';
         }
 
         //If has relationship, then allow foreign key
-        if ( $this->belongsToModel != null ) {
+        if ($this->belongsToModel != null) {
             $this->fillable = array_merge(array_values($this->getForeignColumn()), $this->fillable);
         }
 
         //If is moddel sluggable
-        if ( $this->sluggable != null ) {
+        if ($this->sluggable != null) {
             $this->fillable[] = 'slug';
         }
     }
@@ -315,7 +311,7 @@ class AdminModel extends Model
     protected function makeDateable()
     {
         foreach ($this->getFields() as $key => $field) {
-            if ( $this->isFieldType($key, ['date', 'datetime']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true) ) {
+            if ($this->isFieldType($key, ['date', 'datetime']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
                 $this->dates[] = $key;
             }
         }
@@ -334,7 +330,7 @@ class AdminModel extends Model
     {
         foreach ($this->getFields() as $key => $field) {
             //Add cast attribute for fields with multiple select
-            if ( (
+            if ((
                      $this->isFieldType($key, ['select', 'file', 'date', 'time'])
                      && $this->hasFieldParam($key, 'multiple', true)
                  )
@@ -342,32 +338,21 @@ class AdminModel extends Model
                  || $this->hasFieldParam($key, 'locale')
              ) {
                 $this->casts[$key] = 'json';
-            }
-
-            else if ( $this->isFieldType($key, 'checkbox') ) {
+            } elseif ($this->isFieldType($key, 'checkbox')) {
                 $this->casts[$key] = 'boolean';
-            }
-
-            else if ( $this->isFieldType($key, 'integer') || $this->hasFieldParam($key, 'belongsTo') ) {
+            } elseif ($this->isFieldType($key, 'integer') || $this->hasFieldParam($key, 'belongsTo')) {
                 $this->casts[$key] = 'integer';
-            }
-
-            else if ( $this->isFieldType($key, 'decimal') ) {
+            } elseif ($this->isFieldType($key, 'decimal')) {
                 $this->casts[$key] = 'float';
-            }
-
-            else if ( $this->isFieldType($key, ['date']) ) {
+            } elseif ($this->isFieldType($key, ['date'])) {
                 $this->casts[$key] = 'date';
-            }
-
-            else if ( $this->isFieldType($key, ['datetime']) ) {
+            } elseif ($this->isFieldType($key, ['datetime'])) {
                 $this->casts[$key] = 'datetime';
             }
         }
 
         //Casts foreign keys
-        if ( is_array($relations = $this->getForeignColumn()) )
-        {
+        if (is_array($relations = $this->getForeignColumn())) {
             foreach ($relations as $key) {
                 $this->casts[$key] = 'integer';
             }
@@ -399,18 +384,17 @@ class AdminModel extends Model
     public function getProperty(string $property, $row = null)
     {
         //Translates
-        if ( in_array($property, ['name', 'title']) && $translate = trans($this->{$property}) ) {
+        if (in_array($property, ['name', 'title']) && $translate = trans($this->{$property})) {
             return $translate;
         }
 
         //Object / Array
         elseif (in_array($property, ['fields', 'active', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'deletable', 'layouts', 'belongsToModel'])) {
-
-            if ( method_exists($this, $property) ) {
+            if (method_exists($this, $property)) {
                 return $this->{$property}($row);
             }
 
-            if ( property_exists($this, $property) ) {
+            if (property_exists($this, $property)) {
                 return $this->{$property};
             }
 
@@ -427,6 +411,6 @@ class AdminModel extends Model
      */
     public function getSchema()
     {
-        return Schema::connection( $this->getProperty('connection') );
+        return Schema::connection($this->getProperty('connection'));
     }
 }

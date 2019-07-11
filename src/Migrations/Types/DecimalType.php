@@ -9,10 +9,10 @@ use Illuminate\Database\Schema\Blueprint;
 class DecimalType extends Type
 {
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -20,7 +20,7 @@ class DecimalType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key
@@ -32,8 +32,9 @@ class DecimalType extends Type
         $column = $table->decimal($key, 8, 2);
 
         //Check if is integer unsigned or not
-        if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0)
+        if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0) {
             $column->unsigned();
+        }
 
         return $column;
     }

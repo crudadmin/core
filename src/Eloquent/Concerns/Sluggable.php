@@ -23,7 +23,8 @@ trait Sluggable
      * @param  string  $url
      * @return  string
      */
-    private function toSlug($url) {
+    private function toSlug($url)
+    {
         $rules = [
             '´'=>'', 'ˇ'=>'', 'ä'=>'a', 'Ä'=>'A', 'á'=>'a', 'Á'=>'A', 'à'=>'a', 'À'=>'A', 'ã'=>'a',
             'Ã'=>'A', 'â'=>'a', 'Â'=>'A', 'č'=>'c', 'Č'=>'C', 'ć'=>'c', 'Ć'=>'C', 'ď'=>'d', 'Ď'=>'D',
@@ -56,7 +57,7 @@ trait Sluggable
      */
     private function getLocaleDifferences($slugs, $relatedSlug)
     {
-        if ( $this->hasLocalizedSlug() ) {
+        if ($this->hasLocalizedSlug()) {
             return array_filter(array_intersect_assoc($slugs, (array)json_decode($relatedSlug)));
         } else {
             return array_wrap($relatedSlug);
@@ -85,9 +86,10 @@ trait Sluggable
             $slugs[$key] = $newSlug . '-' . ($index + $i);
 
             $i++;
-        } while($this->where(function($query){
-            if ( $this->exists )
+        } while ($this->where(function ($query) {
+            if ($this->exists) {
                 $query->where($this->getKeyName(), '!=', $this->getKey());
+            }
         })->whereRaw($column . ' = ?', $slugs[$key])->count() > 0);
     }
 
@@ -109,7 +111,7 @@ trait Sluggable
             $index = last($array);
 
             //If slug has no increment yet
-            if ( ! is_numeric($index) || count( $array ) == 1 ){
+            if (! is_numeric($index) || count($array) == 1) {
                 $index = 1;
                 $withoutIndex = $array;
             } else {
@@ -131,13 +133,13 @@ trait Sluggable
      */
     private function setEmptySlugs($text)
     {
-        if ( $text && $this->hasLocalizedSlug() )
-        {
-            if ( ! $text && $text != 0 )
+        if ($text && $this->hasLocalizedSlug()) {
+            if (! $text && $text != 0) {
                 return $text;
+            }
 
             $text = (array)json_decode($text);
-        } else if ( $text ) {
+        } elseif ($text) {
             $text = array_wrap($text);
         }
 
@@ -157,21 +159,24 @@ trait Sluggable
         $text = $this->setEmptySlugs($text);
 
         //Bind translated slugs
-        foreach ($text as $key => $value)
-            $slugs[$key] = $this->toSlug( $value );
+        foreach ($text as $key => $value) {
+            $slugs[$key] = $this->toSlug($value);
+        }
 
         //Checks if some of localized slugs in database exists in other rows
-        $row = $this->where(function($query) use ($slugs){
+        $row = $this->where(function ($query) use ($slugs) {
             //If is simple string slug
-            if ( ! $this->hasLocalizedSlug() )
+            if (! $this->hasLocalizedSlug()) {
                 $query->where('slug', $slugs[0]);
+            }
 
             //Multilanguages slug
             else {
                 $i = 0;
                 foreach ($slugs as $key => $value) {
-                    if ( ! $value )
+                    if (! $value) {
                         continue;
+                    }
 
                     $query->{ $i == 0 ? 'whereRaw' : 'orWhereRaw' }('JSON_EXTRACT(slug, "$.'.$key.'") = ?', $value);
                     $i++;
@@ -180,14 +185,16 @@ trait Sluggable
         })->withTrashed()->limit(1);
 
         //If models exists, then skip slug owner
-        if ( $this->exists )
-            $row->where( $this->getKeyName(), '!=', $this->getKey() );
+        if ($this->exists) {
+            $row->where($this->getKeyName(), '!=', $this->getKey());
+        }
 
         $row = $row->get(['slug']);
 
         //If new slugs does not exists, then return new generated slug
-        if ( $row->count() == 0 )
+        if ($row->count() == 0) {
             return $this->castSlug(array_filter($slugs));
+        }
 
         //Generate new unique slug with increment
         $unique_slug = $this->makeUnique($slugs, $row->first()->slug);
@@ -204,9 +211,10 @@ trait Sluggable
      */
     private function castSlug($slugs)
     {
-        if ( $this->hasLocalizedSlug() ){
-            if ( is_array($slugs) )
+        if ($this->hasLocalizedSlug()) {
+            if (is_array($slugs)) {
                 return json_encode($slugs);
+            }
 
             return null;
         }
@@ -221,8 +229,9 @@ trait Sluggable
      */
     public function hasLocalizedSlug()
     {
-        if ( $this->hasLocalizedSlug !== null )
+        if ($this->hasLocalizedSlug !== null) {
             return $this->hasLocalizedSlug;
+        }
 
         $slugcolumn = $this->getProperty('sluggable');
 
@@ -241,13 +250,13 @@ trait Sluggable
         $slugcolumn = $this->getProperty('sluggable');
 
         //Set slug
-        if ( array_key_exists($slugcolumn, $array) )
-        {
+        if (array_key_exists($slugcolumn, $array)) {
             $slug = $this->makeSlug($array[ $slugcolumn ]);
 
             //If slug has been changed, then save previous slug state
-            if ( $this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug )
+            if ($this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug) {
                 $this->slugSnapshot();
+            }
 
             $this->attributes['slug'] = $slug;
         }
@@ -294,14 +303,13 @@ trait Sluggable
         $binding = [];
 
         //If is avaiable route key binding, and not exists in actual route
-        if ( $key && ! array_key_exists($key, $parameters) ) {
+        if ($key && ! array_key_exists($key, $parameters)) {
             abort(500, 'Unknown route identifier: '.$key);
         }
 
         //Rewrite wrong slug to correct from db
-        foreach ($parameters as $k => $value)
-        {
-            if ( $key == $k || (!$key && $value != $id && $value == $wrong ) ) {
+        foreach ($parameters as $k => $value) {
+            if ($key == $k || (!$key && $value != $id && $value == $wrong)) {
                 $binding[] = $slug;
             } else {
                 $binding[] = $value;
@@ -309,7 +317,7 @@ trait Sluggable
         }
 
         //Returns redirect
-        return redirect(action( '\\'.$current_controller, $binding ), 301);
+        return redirect(action('\\'.$current_controller, $binding), 301);
     }
 
     /**
@@ -324,19 +332,18 @@ trait Sluggable
     private function redirectWithWrongSlug($slug, $id, $key = null, $row)
     {
         //If is definer row where is slug saved
-        if ( is_numeric($id) )
-        {
+        if (is_numeric($id)) {
             $row = $this->where($this->getKeyName(), $id)->select(['slug'])->first();
 
             //Compare given slug and slug from db
-            if ($row && $row->slug != $slug)
-            {
-                throw new SluggableException( $this->buildFailedSlugResponse($row->slug, $slug, $id, $key) );
+            if ($row && $row->slug != $slug) {
+                throw new SluggableException($this->buildFailedSlugResponse($row->slug, $slug, $id, $key));
             }
         }
 
-        if ( $this->isAllowedHistorySlugs() )
+        if ($this->isAllowedHistorySlugs()) {
             $this->redirectWithSlugFromHistory($slug, $id, $key);
+        }
     }
 
     /**
@@ -359,8 +366,8 @@ trait Sluggable
                             $query->select(['id'])
                                   ->from($this->getTable())
                                   ->whereRaw($history_model->getTable().'.row_id = '.$this->getTable().'.id')
-                                  ->when($this->publishable, function($query){
-                                        $query->where('published_at', '!=', null)->whereRAW('published_at <= NOW()');
+                                  ->when($this->publishable, function ($query) {
+                                      $query->where('published_at', '!=', null)->whereRAW('published_at <= NOW()');
                                   })
                                   ->where('deleted_at', null);
                         })
@@ -368,14 +375,15 @@ trait Sluggable
                         ->select($this->getTable().'.slug')
                         ->first();
 
-        if ( ! $history_row )
+        if (! $history_row) {
             return;
+        }
 
         $history_row->hasLocalizedSlug = $this->hasLocalizedSlug();
 
         $newSlug = $history_row->getSlug();
 
-        throw new SluggableException( $this->buildFailedSlugResponse($newSlug, $slug, $id, $key) );
+        throw new SluggableException($this->buildFailedSlugResponse($newSlug, $slug, $id, $key));
     }
 
     /**
@@ -389,11 +397,11 @@ trait Sluggable
      */
     public function scopeWhereSlug($scope, $slugValue, $column = null)
     {
-        if ( ! $column ) {
+        if (! $column) {
             $column = 'slug';
         }
 
-        if ( ! $this->hasLocalizedSlug() ) {
+        if (! $this->hasLocalizedSlug()) {
             return $scope->where($column, $slugValue);
         }
 
@@ -405,10 +413,9 @@ trait Sluggable
         $scope->whereRaw('JSON_EXTRACT('.$column.', "$.'.$lang->slug.'") = ?', $slugValue);
 
         //If selected language is other than default
-        if ( $lang->getKey() != $default->getKey() )
-        {
+        if ($lang->getKey() != $default->getKey()) {
             //Then search also values in default language
-            $scope->orWhere(function($query) use($lang, $default, $slugValue, $column) {
+            $scope->orWhere(function ($query) use ($lang, $default, $slugValue, $column) {
                 $query->whereRaw('JSON_EXTRACT('.$column.', "$.'.$lang->slug.'") is NULL')
                       ->whereRaw('JSON_EXTRACT('.$column.', "$.'.$default->slug.'") = ?', $slugValue);
             });
@@ -457,15 +464,17 @@ trait Sluggable
      */
     public static function findBySlug($slug, $id = null, $key = null, array $columns = ['*'], $query = null)
     {
-        if ( is_array($id) )
+        if (is_array($id)) {
             $columns = $id;
-        else if ( ! is_string($id) )
+        } elseif (! is_string($id)) {
             $id = null;
+        }
 
         $row = ($query ?: new static)->whereSlug($slug)->first($columns);
 
-        if ( ! $row )
+        if (! $row) {
             (new static)->redirectWithWrongSlug($slug, $id, $key, $row);
+        }
 
         return $row;
     }
@@ -482,15 +491,17 @@ trait Sluggable
      */
     public static function findBySlugOrFail($slug, $id = null, $key = null, array $columns = ['*'], $query = null)
     {
-        if ( is_array($id) )
+        if (is_array($id)) {
             $columns = $id;
-        else if ( ! is_string($id) )
+        } elseif (! is_string($id)) {
             $id = null;
+        }
 
         $row = static::findBySlug($slug, $id, $key, $columns, $query);
 
-        if ( ! $row )
+        if (! $row) {
             abort(404);
+        }
 
         return $row;
     }
@@ -502,26 +513,28 @@ trait Sluggable
      */
     public function getSlug()
     {
-        if ( $this->hasLocalizedSlug() )
-        {
+        if ($this->hasLocalizedSlug()) {
             $slug = (array)json_decode($this->slug);
 
             $lang = Localization::get();
 
             //Return selected language slug
-            if ( array_key_exists($lang->slug, $slug) && $slug[$lang->slug] )
+            if (array_key_exists($lang->slug, $slug) && $slug[$lang->slug]) {
                 return $slug[$lang->slug];
+            }
 
             $default = Localization::getFirstLanguage();
 
             //Return default slug value
-            if ( $default->getKey() != $lang->getKey() && array_key_exists($default->slug, $slug) && $slug[$default->slug] )
+            if ($default->getKey() != $lang->getKey() && array_key_exists($default->slug, $slug) && $slug[$default->slug]) {
                 return $slug[$default->slug];
+            }
 
             //Return one of set slug from any language
             foreach (Localization::getLanguages() as $lang) {
-                if ( array_key_exists($lang->slug, $slug) && $slug[$lang->slug] )
+                if (array_key_exists($lang->slug, $slug) && $slug[$lang->slug]) {
                     return $slug[$lang->slug];
+                }
             }
 
             return null;

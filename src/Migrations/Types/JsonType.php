@@ -12,10 +12,10 @@ class JsonType extends Type
     use SupportJson;
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -23,7 +23,7 @@ class JsonType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key

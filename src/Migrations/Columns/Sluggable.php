@@ -10,9 +10,9 @@ class Sluggable extends Column
     public $column = 'slug';
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model)
     {
@@ -20,7 +20,7 @@ class Sluggable extends Column
     }
 
     /**
-     * Register static column
+     * Register static column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  bool         $update
@@ -32,42 +32,45 @@ class Sluggable extends Column
     }
 
     /**
-     * Add sluggable column support
+     * Add sluggable column support.
      * @param Blueprint  $table
      * @param AdminModel $model
-     * @param boolean    $updating
-     * @param boolean    $reloadSlugs
+     * @param bool    $updating
+     * @param bool    $reloadSlugs
      */
     protected function setSlug(Blueprint $table, AdminModel $model, $updating = false, $reloadSlugs = true)
     {
         $slugcolumn = $model->getProperty('sluggable');
 
-        if ( ! ($field = $model->getField($slugcolumn)) )
-        {
+        if (! ($field = $model->getField($slugcolumn))) {
             $this->getCommand()->line('<comment>+ Unknown slug column for</comment> <error>'.$slugcolumn.'</error> <comment>column</comment>');
 
             return;
         }
 
         //Set locale slug or normal
-        if ( $has_locale = $model->hasFieldParam($slugcolumn, 'locale', true) )
+        if ($has_locale = $model->hasFieldParam($slugcolumn, 'locale', true)) {
             $column = $this->setJsonColumn($table, $this->column, $model, $updating, true);
-        else
+        } else {
             $column = $table->string($this->column, $model->getFieldLength($slugcolumn));
+        }
 
         //If is creating new table or when slug index is missing
-        if ( !$has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index')) )
+        if (!$has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index'))) {
             $column->index();
+        }
 
-        if ( $has_locale && $updating === true && $this->hasIndex($model, $this->column, 'index') )
+        if ($has_locale && $updating === true && $this->hasIndex($model, $this->column, 'index')) {
             $this->dropIndex($model, $this->column, 'index');
+        }
 
         //If is field required
-        if( ! $model->hasFieldParam($slugcolumn , 'required') )
+        if (! $model->hasFieldParam($slugcolumn, 'required')) {
             $column->nullable();
+        }
 
         //If column has been added into existing table, then regenerate all slugs
-        if ( $reloadSlugs == true ) {
+        if ($reloadSlugs == true) {
             $this->updateSlugs($model);
         }
 
@@ -75,25 +78,23 @@ class Sluggable extends Column
     }
 
     /**
-     * Resave all rows in model for updating slug if needed
+     * Resave all rows in model for updating slug if needed.
      * @param  AdminModel $model
      * @return void
      */
     protected function updateSlugs(AdminModel $model)
     {
-        $this->registerAfterMigration($model, function() use ($model) {
+        $this->registerAfterMigration($model, function () use ($model) {
 
             //Get empty slugs
-            $empty_slugs = $model->withoutGlobalScopes()->where(function($query) use ($model) {
+            $empty_slugs = $model->withoutGlobalScopes()->where(function ($query) use ($model) {
                 //If some of localized slug value is empty
-                if ( $model->hasLocalizedSlug() )
-                {
+                if ($model->hasLocalizedSlug()) {
                     $languages = Localization::getLanguages(true);
 
                     //Check all available languages slugs
-                    foreach ($languages as $key => $lang)
-                    {
-                        $query->{ $key == 0 ? 'where' : 'orWhere' }(function($query) use($model, $lang) {
+                    foreach ($languages as $key => $lang) {
+                        $query->{ $key == 0 ? 'where' : 'orWhere' }(function ($query) use ($model, $lang) {
                             //If row has defined localized value, but slug is missing
                             $query->whereRaw('JSON_EXTRACT('.$this->column.', "$.'.$lang->slug.'") is NULL')
                                   ->whereRaw('JSON_EXTRACT('.$model->getProperty('sluggable').', "$.'.$lang->slug.'") is NOT NULL');
@@ -105,15 +106,14 @@ class Sluggable extends Column
                 else {
                     $query->whereNull($this->column)->orWhere($this->column, '');
                 }
-
             })->orWhere($this->column, null);
 
             //If has been found some empty slugs
-            if ( $empty_slugs->count() > 0 )
-            {
+            if ($empty_slugs->count() > 0) {
                 //Re-save models, and regenerate new slugs
-                foreach ($empty_slugs->select([$model->getKeyName(), $this->column, $model->getProperty('sluggable')])->get() as $row)
+                foreach ($empty_slugs->select([$model->getKeyName(), $this->column, $model->getProperty('sluggable')])->get() as $row) {
                     $row->save();
+                }
             }
         });
     }

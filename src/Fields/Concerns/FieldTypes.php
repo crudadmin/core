@@ -52,7 +52,7 @@ trait FieldTypes
     }
 
     /**
-     * Add column type
+     * Add column type.
      *
      * @param string|array  $classes.
      * @param bool  $before
@@ -62,11 +62,11 @@ trait FieldTypes
     {
         $add = [];
 
-        foreach (array_wrap($classes) as $class)
-        {
+        foreach (array_wrap($classes) as $class) {
             //If class does not exists in array
-            if ( in_array($class, $this->types) === false )
+            if (in_array($class, $this->types) === false) {
                 $add[] = $class;
+            }
         }
 
         //Add types at the beggining or at the end of array
@@ -84,20 +84,19 @@ trait FieldTypes
      */
     public function getColumnType(AdminModel $model, string $key)
     {
-        return Fields::cache('models.'.$model->getTable().'.columns_types.'.$key, function() use($model, $key) {
+        return Fields::cache('models.'.$model->getTable().'.columns_types.'.$key, function () use ($model, $key) {
             $classes = [];
 
-            foreach ($this->getColumnTypes() as $columnClass)
-            {
+            foreach ($this->getColumnTypes() as $columnClass) {
                 $columnClass = $this->bootColumnClass($columnClass);
 
                 //Check if given column is enabled
-                if ( $columnClass->isEnabled($model, $key) === true )
+                if ($columnClass->isEnabled($model, $key) === true) {
                     return $columnClass;
+                }
             }
 
             return null;
         });
     }
 }
-?>

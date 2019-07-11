@@ -15,7 +15,7 @@ trait MigrationSupport
     }
 
     /**
-     * DB doctrine fix for enum columns
+     * DB doctrine fix for enum columns.
      */
     private function fixEnumType()
     {
@@ -28,8 +28,7 @@ trait MigrationSupport
     protected function fixJsonType()
     {
         //Add json support
-        if ( ! DBType::hasType('json') )
-        {
+        if (! DBType::hasType('json')) {
             DBType::addType('json', \Doctrine\DBAL\Types\JsonArrayType::class);
             DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('json', 'string');
         }

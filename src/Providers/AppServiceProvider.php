@@ -66,17 +66,15 @@ class AppServiceProvider extends ServiceProvider
     public function registerFacades()
     {
         //Register facades
-        foreach ($this->facades as $alias => $facade)
-        {
+        foreach ($this->facades as $alias => $facade) {
             $this->app->bind($alias, $facade['helper']);
         }
 
         //Register aliasess
-        $this->app->booting(function() {
+        $this->app->booting(function () {
             $loader = \Illuminate\Foundation\AliasLoader::getInstance();
 
-            foreach ($this->facades as $facade)
-            {
+            foreach ($this->facades as $facade) {
                 $loader->alias($facade['classname'], $facade['facade']);
             }
         });

@@ -9,7 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 trait MigrationEvents
 {
     /**
-     * Register event migration
+     * Register event migration.
      * @param  object $model
      * @param  string $name
      * @param  $callback
@@ -35,7 +35,7 @@ trait MigrationEvents
     }
 
     /**
-     * Register event after specific migration
+     * Register event after specific migration.
      * @param  object/string $model
      * @param  $callback
      * @return void
@@ -46,7 +46,7 @@ trait MigrationEvents
     }
 
     /**
-     * Register event what will be fired when all migrations will be done
+     * Register event what will be fired when all migrations will be done.
      * @param  object/string $model
      * @param  $callback
      * @return void
@@ -62,8 +62,7 @@ trait MigrationEvents
     public function fireModelEvent($model, $method)
     {
         //Checks if model has some extre migrations on create
-        if ( method_exists($model, $method) )
-        {
+        if (method_exists($model, $method)) {
             $schema = $model->getSchema();
 
             $schema->table($model->getTable(), function (Blueprint $table) use ($model, $method, $schema) {

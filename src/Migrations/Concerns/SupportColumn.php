@@ -13,16 +13,15 @@ use Illuminate\Support\Facades\DB;
 trait SupportColumn
 {
     /**
-     * Register all static columns
+     * Register all static columns.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
-     * @param  bool|boolean $updating
+     * @param  bool|bool $updating
      * @return void
      */
     protected function registerStaticColumns(Blueprint $table, AdminModel $model, bool $updating = false)
     {
-        foreach ($enabled = Fields::getEnabledStaticFields($model) as $columnClass)
-        {
+        foreach ($enabled = Fields::getEnabledStaticFields($model) as $columnClass) {
             //Check if column does exists
             $columnExists = ($updating === false)
                             ? false
@@ -32,16 +31,17 @@ trait SupportColumn
             $column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists);
 
             //If column has not been registred
-            if ( !$column || $column === true )
+            if (!$column || $column === true) {
                 continue;
+            }
 
             //If column does exists
-            if ( $columnExists ) {
+            if ($columnExists) {
                 $column->change();
             }
 
             //If static column has been found, and does not exists in db and is updating
-            else if ( $updating ) {
+            elseif ($updating) {
                 $this->setStaticColumnPosition($table, $enabled, $column);
 
                 $this->line('<comment>+ Added column:</comment> '.$columnClass->column);
@@ -50,7 +50,7 @@ trait SupportColumn
     }
 
     /**
-     * Set all column types by registred classes
+     * Set all column types by registred classes.
      * @param Blueprint     $table
      * @param AdminModel    $model
      * @param string        $key
@@ -59,7 +59,7 @@ trait SupportColumn
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Unknown column type
-        if ( !($columnClass = Fields::getColumnType($model, $key)) ) {
+        if (!($columnClass = Fields::getColumnType($model, $key))) {
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
             return;
         }
@@ -68,8 +68,9 @@ trait SupportColumn
         $column = $columnClass->registerColumn($table, $model, $key, $updating);
 
         //If column has not been found, or we want skip column registration
-        if ( !$column || $column === true || $columnClass->hasColumn() == false )
+        if (!$column || $column === true || $columnClass->hasColumn() == false) {
             return;
+        }
 
         //Set nullable column
         $this->setNullable($model, $key, $column);
@@ -84,7 +85,7 @@ trait SupportColumn
     }
 
     /**
-     * Set nullable column
+     * Set nullable column.
      * @param  AdminModel       $model
      * @param  string           $key
      * @param  ColumnDefinition $column
@@ -92,12 +93,13 @@ trait SupportColumn
      */
     private function setNullable(AdminModel $model, string $key, ColumnDefinition $column)
     {
-        if ( ! $model->hasFieldParam($key, 'required') )
+        if (! $model->hasFieldParam($key, 'required')) {
             $column->nullable();
+        }
     }
 
     /**
-     * Set column index
+     * Set column index.
      * @param  AdminModel       $model
      * @param  string           $key
      * @param  ColumnDefinition $column
@@ -105,12 +107,13 @@ trait SupportColumn
      */
     private function setIndex(AdminModel $model, string $key, ColumnDefinition $column)
     {
-        if ( ! $model->hasFieldParam($key, 'index') )
+        if (! $model->hasFieldParam($key, 'index')) {
             return;
+        }
 
         //If index does exist already
         if (
-            !$model->getSchema()->hasTable( $model->getTable() ) ||
+            !$model->getSchema()->hasTable($model->getTable()) ||
             !$this->hasIndex($model, $key, 'index')
         ) {
             $column->index();
@@ -118,7 +121,7 @@ trait SupportColumn
     }
 
     /**
-     * Set default column value
+     * Set default column value.
      * @param  AdminModel       $model
      * @param  string           $key
      * @param  Type             $column
@@ -127,12 +130,12 @@ trait SupportColumn
     private function setDefault(AdminModel $model, string $key, ColumnDefinition $column, Type $columnClass)
     {
         //If field does not have default value
-        if ( ! $model->hasFieldParam($key, 'default') ) {
-            $column->default(NULL);
+        if (! $model->hasFieldParam($key, 'default')) {
+            $column->default(null);
         }
 
         //If column has own set default setter
-        if ( method_exists($columnClass, 'setDefault') ) {
+        if (method_exists($columnClass, 'setDefault')) {
             $columnClass->setDefault($column, $model, $key);
             return;
         }

@@ -38,7 +38,7 @@ class Group
     }
 
     /**
-     * Set id of group
+     * Set id of group.
      * @param  string $id
      * @return Group
      */
@@ -50,7 +50,7 @@ class Group
     }
 
     /**
-     * Set name of group
+     * Set name of group.
      * @param  $name
      * @return Group
      */
@@ -62,7 +62,7 @@ class Group
     }
 
     /**
-     * Make fields group
+     * Make fields group.
      * @param  array  $fields
      * @param  string $type
      * @return Group
@@ -73,7 +73,7 @@ class Group
     }
 
     /**
-     * Push fields parameters into every field in group
+     * Push fields parameters into every field in group.
      * @param string $params
      * @return Group
      */
@@ -85,7 +85,7 @@ class Group
     }
 
     /**
-     * Set type of group
+     * Set type of group.
      * @param $type string group/tab
      * @return Group
      */
@@ -96,4 +96,3 @@ class Group
         return $this;
     }
 }
-?>

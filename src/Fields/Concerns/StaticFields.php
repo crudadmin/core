@@ -39,10 +39,10 @@ trait StaticFields
      */
     public function addStaticColumn($classes)
     {
-        foreach (array_reverse(array_wrap($classes)) as $class)
-        {
-            if ( in_array($class, $this->staticColumns) )
+        foreach (array_reverse(array_wrap($classes)) as $class) {
+            if (in_array($class, $this->staticColumns)) {
                 continue;
+            }
 
             //Add into first position in array
             //because we want added columns behind of all static columns in database
@@ -58,20 +58,19 @@ trait StaticFields
      */
     public function getEnabledStaticFields(AdminModel $model)
     {
-        return Fields::cache('models.'.$model->getTable().'.static_columns.', function() use($model) {
+        return Fields::cache('models.'.$model->getTable().'.static_columns.', function () use ($model) {
             $classes = [];
 
-            foreach ($this->getStaticColumns() as $columnClass)
-            {
+            foreach ($this->getStaticColumns() as $columnClass) {
                 $columnClass = $this->bootColumnClass($columnClass);
 
                 //Check if given column is enabled
-                if ( $columnClass->isEnabled($model) === true )
+                if ($columnClass->isEnabled($model) === true) {
                     $classes[] = $columnClass;
+                }
             }
 
             return $classes;
         });
     }
 }
-?>

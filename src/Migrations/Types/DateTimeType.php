@@ -10,10 +10,10 @@ use Illuminate\Database\Schema\ColumnDefinition;
 class DateTimeType extends Type
 {
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -21,7 +21,7 @@ class DateTimeType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key
@@ -31,15 +31,14 @@ class DateTimeType extends Type
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
         //Check for correct values
-        if ( $update === true )
-        {
+        if ($update === true) {
             $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
 
             //If previoius column has not been datetime and has some value
             if (
                 ! in_array($type, ['date', 'datetime', 'time'])
                 && $this->getCommand()->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
-            ){
+            ) {
                 $model->getConnection()->table($model->getTable())->update([ $key => null ]);
             }
         }
@@ -50,7 +49,7 @@ class DateTimeType extends Type
     }
 
     /**
-     * Set default value
+     * Set default value.
      * @param ColumnDefinition $column
      * @param AdminModel       $model
      * @param string           $key
@@ -58,11 +57,13 @@ class DateTimeType extends Type
     public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
     {
         //If default value has not been set
-        if ( !($default = $model->getFieldParam($key, 'default')) )
+        if (!($default = $model->getFieldParam($key, 'default'))) {
             return;
+        }
 
         //Set default timestamp
-        if ( strtoupper($default) == 'CURRENT_TIMESTAMP' )
+        if (strtoupper($default) == 'CURRENT_TIMESTAMP') {
             $column->default(DB::raw('CURRENT_TIMESTAMP'));
+        }
     }
 }

@@ -17,7 +17,7 @@ class BelongsToAttributeMutator
     {
         $add = [];
 
-        if ( array_key_exists('belongsTo', $field) && substr($key, -3) != '_id' ) {
+        if (array_key_exists('belongsTo', $field) && substr($key, -3) != '_id') {
             $add[$key.'_id'] = $field;
         }
 
@@ -33,9 +33,8 @@ class BelongsToAttributeMutator
      */
     public function remove(array $field, string $key)
     {
-        if ( array_key_exists('belongsTo', $field) && substr($key, -3) != '_id' ) {
+        if (array_key_exists('belongsTo', $field) && substr($key, -3) != '_id') {
             return true;
         }
     }
 }
-?>

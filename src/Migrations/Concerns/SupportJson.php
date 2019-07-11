@@ -26,23 +26,22 @@ trait SupportJson
     }
 
     /**
-     * Set json column, also check mysql version
+     * Set json column, also check mysql version.
      * @param object        $table
      * @param string        $key
      * @param AdminModel    $model
-     * @param boolean       $update
-     * @param boolean       $localized
+     * @param bool       $update
+     * @param bool       $localized
      */
     private function setJsonColumn($table, $key, $model, $update = false, $localized = false)
     {
         $this->checkForCorrectMysqlVersion($model, 'file');
 
         //If is updating column and previous value is not json
-        if ( $update === true && $model->getSchema()->hasColumn($model->getTable(), $key) )
-        {
+        if ($update === true && $model->getSchema()->hasColumn($model->getTable(), $key)) {
             $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
 
-            if ( ! in_array($type, ['json', 'json_array']) && $localized === true ) {
+            if (! in_array($type, ['json', 'json_array']) && $localized === true) {
                 $this->updateToJsonColumn($model, $key, $type);
             }
         }
@@ -52,7 +51,7 @@ trait SupportJson
 
 
     /**
-     * Check if column in database under given model has invalid json values
+     * Check if column in database under given model has invalid json values.
      * @param  object  $model
      * @param  string  $key
      * @return Collection
@@ -69,7 +68,7 @@ trait SupportJson
     }
 
     /**
-     * Update existing non-json values into json values format for localization support
+     * Update existing non-json values into json values format for localization support.
      * @param  object $model
      * @param  string $key
      * @param  string $type
@@ -78,12 +77,14 @@ trait SupportJson
     private function updateToJsonColumn($model, $key, $type = null)
     {
         //Check if exists row in table,
-        if ( $model->getConnection()->table($model->getTable())->count() === 0 )
+        if ($model->getConnection()->table($model->getTable())->count() === 0) {
             return;
+        }
 
         //Check if database has unvalid values for correct json type application
-        if ( ($update = $this->hasInvalidValues($model, $key))->count() == 0 )
+        if (($update = $this->hasInvalidValues($model, $key))->count() == 0) {
             return;
+        }
 
         $languages = Localization::getLanguages(true);
 
@@ -96,19 +97,22 @@ trait SupportJson
             $this->getCommand()->line('<comment>'.$id.':</comment> '.$value.' <comment>=></comment> <info>{"'.$slug.'":"</info>'.$value.'<info>"}</info>');
         }
 
-        if ( $update->count() == 5 )
+        if ($update->count() == 5) {
             $this->getCommand()->line('<comment>...</comment>');
+        }
 
-        if ( ! $this->getCommand()->confirm('Would you like to update this '.($type ?: 'non-json').' values in database to translated format of JSON values?', true) )
+        if (! $this->getCommand()->confirm('Would you like to update this '.($type ?: 'non-json').' values in database to translated format of JSON values?', true)) {
             return;
+        }
 
-        if ( $languages->count() === 0 )
+        if ($languages->count() === 0) {
             $this->getCommand()->line('<error>You have no inserted languages to update '.$key.' column.</error>');
+        }
 
         $prefix = $languages->first()->slug;
 
-        $model->getConnection()->table( $model->getTable() )->whereRaw('NOT JSON_VALID(`'.$key.'`)')->update([
-            $key => DB::raw( 'CONCAT("{\"'.$prefix.'\": \"", REPLACE(REPLACE(REPLACE('.$key.', \'"\', \'\\\\"\'), \'\r\', \'\'), \'\n\', \'\'), "\"}")' )
+        $model->getConnection()->table($model->getTable())->whereRaw('NOT JSON_VALID(`'.$key.'`)')->update([
+            $key => DB::raw('CONCAT("{\"'.$prefix.'\": \"", REPLACE(REPLACE(REPLACE('.$key.', \'"\', \'\\\\"\'), \'\r\', \'\'), \'\n\', \'\'), "\"}")')
         ]);
     }
 }

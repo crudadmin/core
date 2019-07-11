@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 trait HasIndex
 {
     /**
-     * Returns foreign key name
+     * Returns foreign key name.
      * @param  AdminModel $model
      * @param  string     $key
      * @param  string     $prefix
@@ -20,21 +20,21 @@ trait HasIndex
     }
 
     /**
-     * Returns if table has index
+     * Returns if table has index.
      * @param  AdminModel $model
      * @param  string     $key
      * @param  string     $prefix
-     * @return integer
+     * @return int
      */
     protected function hasIndex(AdminModel $model, $key, $prefix = null)
     {
-        return count( $model->getConnection()->select(
+        return count($model->getConnection()->select(
             DB::raw(
                 'SHOW KEYS
                 FROM `'.$model->getTable().'`
                 WHERE Key_name=\''. $this->getIndexName($model, $key, $prefix) . '\''
             )
-        ) );
+        ));
     }
 
     /*
@@ -43,7 +43,7 @@ trait HasIndex
     protected function dropIndex($model, $key, $prefix = null)
     {
         return $model->getConnection()->select(
-            DB::raw( 'alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix) .'`' )
+            DB::raw('alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix) .'`')
         );
     }
 }

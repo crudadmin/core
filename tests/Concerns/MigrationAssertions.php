@@ -12,7 +12,7 @@ trait MigrationAssertions
     private $schema;
 
     /**
-     * Set schema
+     * Set schema.
      * @param Schema $schema
      */
     public function setSchema($schema)
@@ -21,7 +21,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Set schema
+     * Set schema.
      * @return Schema
      */
     public function getSchema()
@@ -30,7 +30,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Get doctrine schema
+     * Get doctrine schema.
      * @return SchemaManager
      */
     public function getDoctrineSchema()
@@ -42,7 +42,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Returns doctrine column
+     * Returns doctrine column.
      * @param  string $table
      * @param  string $column
      * @return Doctrine\DBAL\Schema\Column
@@ -63,7 +63,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if column is correct db type
+     * Check if column is correct db type.
      * @param  string $table
      * @param  string $column
      * @param  string $type
@@ -79,7 +79,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if column in database does exists
+     * Check if column in database does exists.
      * @param  string $table
      * @param  string $column
      * @return this
@@ -92,7 +92,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if column is NotNull
+     * Check if column is NotNull.
      * @param  string $table
      * @param  string $column
      * @param  bool   $isNull
@@ -108,7 +108,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if column length
+     * Check if column length.
      * @param  string $table
      * @param  string $column
      * @param  int    $length
@@ -124,7 +124,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if column is unsigned
+     * Check if column is unsigned.
      * @param  string $table
      * @param  string $column
      * @param  int    $length
@@ -140,7 +140,7 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if table has foreign key
+     * Check if table has foreign key.
      * @param  string $table
      * @param  string $key
      * @return this
@@ -155,14 +155,14 @@ trait MigrationAssertions
     }
 
     /**
-     * Check if table has foreign key
+     * Check if table has foreign key.
      * @param  string $table
      * @param  string $key
      * @return this
      */
     public function assertHasForeignKey($table, string $key)
     {
-        $keys = array_map(function($key){
+        $keys = array_map(function ($key) {
             return $key->getName();
         }, $this->getDoctrineSchema()->listTableForeignKeys($table));
 

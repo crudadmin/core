@@ -27,15 +27,15 @@ abstract class Type extends MigrationDefinition
     }
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     abstract public function isEnabled(AdminModel $model, string $key);
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key

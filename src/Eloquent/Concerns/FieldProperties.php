@@ -33,14 +33,14 @@ trait FieldProperties
     /**
      * Returns just base fields in getAdminAttributes.
      *
-     * @var boolean
+     * @var bool
      */
     protected $justBaseFields = false;
 
     /**
      * Skip belongsToMany properties in getAdminModelAttributes.
      *
-     * @var boolean
+     * @var bool
      */
     protected $skipBelongsToMany = false;
 
@@ -48,20 +48,20 @@ trait FieldProperties
      * Return fields converted from string (key:value|otherkey:othervalue) into array format.
      *
      * @param  Admin\Core\Eloquent\AdminModel|null  $param
-     * @param  boolean  $force
+     * @param  bool  $force
      * @return array
      */
     public function getFields($param = null, $force = false)
     {
         $with_options = count($this->withOptions) > 0;
 
-        if ( $param !== null || $with_options === true )
+        if ($param !== null || $with_options === true) {
             $force = true;
+        }
 
         //Field mutations
-        if ( $this->_fields == null || $force == true )
-        {
-            $this->_fields = Fields::getFields( $this, $param, $force );
+        if ($this->_fields == null || $force == true) {
+            $this->_fields = Fields::getFields($this, $param, $force);
 
             $this->withoutOptions();
         }
@@ -73,7 +73,7 @@ trait FieldProperties
      * Return all model fields with options.
      *
      * @param  Admin\Core\Eloquent\AdminModel  $param
-     * @param  boolean  $force
+     * @param  bool  $force
      * @return array
      */
     public function getFieldsWithOptions($param = null, $force = false)
@@ -93,8 +93,9 @@ trait FieldProperties
     {
         $fields = $this->getFields();
 
-        if ( array_key_exists($key, $fields) )
+        if (array_key_exists($key, $fields)) {
             return $fields[$key];
+        }
 
         return null;
     }
@@ -121,10 +122,11 @@ trait FieldProperties
      */
     public function isFieldType(string $key, $types)
     {
-        if ( is_string($types) )
+        if (is_string($types)) {
             $types = [ $types ];
+        }
 
-        return in_array( $this->getFieldType($key), $types);
+        return in_array($this->getFieldType($key), $types);
     }
 
     /**
@@ -137,14 +139,14 @@ trait FieldProperties
     {
         $field = $this->getField($key);
 
-        if ( $this->isFieldType($key, ['file', 'password']) )
-        {
+        if ($this->isFieldType($key, ['file', 'password'])) {
             return 255;
         }
 
         //Return maximum defined value
-        if ( array_key_exists('max', $field) )
+        if (array_key_exists('max', $field)) {
             return $field['max'];
+        }
 
         //Return default maximum value
         return 255;
@@ -160,16 +162,16 @@ trait FieldProperties
      */
     public function hasFieldParam(string $key, $params, $paramValue = null)
     {
-        if (!$field = $this->getField($key))
+        if (!$field = $this->getField($key)) {
             return false;
+        }
 
         foreach (array_wrap($params) as $paramName) {
-            if ( array_key_exists($paramName, $field) )
-            {
-                if ( $paramValue !== null )
-                {
-                    if ( $field[$paramName] === $paramValue )
+            if (array_key_exists($paramName, $field)) {
+                if ($paramValue !== null) {
+                    if ($field[$paramName] === $paramValue) {
                         return true;
+                    }
                 } else {
                     return true;
                 }
@@ -188,8 +190,9 @@ trait FieldProperties
      */
     public function getFieldParam(string $key, string $paramName)
     {
-        if ( $this->hasFieldParam($key, $paramName) === false )
+        if ($this->hasFieldParam($key, $paramName) === false) {
             return null;
+        }
 
         $field = $this->getField($key);
 
@@ -225,12 +228,12 @@ trait FieldProperties
     public function withOptions($set = null)
     {
         //We want all fields options
-        if ( $set === true ) {
+        if ($set === true) {
             $this->withOptions = ['*'];
         }
 
         //We want specifics fields options
-        else if ( is_array($set) || $set === false ) {
+        elseif (is_array($set) || $set === false) {
             $this->withOptions = $set ?: [];
         }
 
@@ -255,8 +258,9 @@ trait FieldProperties
      */
     public function justBaseFields($set = null)
     {
-        if ( $set === true || $set === false )
+        if ($set === true || $set === false) {
             $this->justBaseFields = $set;
+        }
 
         return $this->justBaseFields;
     }
@@ -294,17 +298,18 @@ trait FieldProperties
     {
         $slug = $lang ?: Localization::get()->slug;
 
-        if ( ! $object || ! is_array($object) )
+        if (! $object || ! is_array($object)) {
             return null;
+        }
 
         //If row has saved actual value
-        if ( array_key_exists($slug, $object) && (!empty($object[$slug]) || $object[$slug] === 0) ){
+        if (array_key_exists($slug, $object) && (!empty($object[$slug]) || $object[$slug] === 0)) {
             return $object[$slug];
         }
 
         //Return first available translated value in admin
         foreach ($object as $value) {
-            if ( !empty($value) || $value === 0 ) {
+            if (!empty($value) || $value === 0) {
                 return $value;
             }
         }
@@ -323,14 +328,16 @@ trait FieldProperties
     {
         $options = $this->getProperty('options');
 
-        if ( is_null($value) )
+        if (is_null($value)) {
             $value = $this->{$field};
+        }
 
         if (
             ! array_key_exists($field, $options)
             || ! array_key_exists($value, $options[$field])
-        )
+        ) {
             return null;
+        }
 
         return $options[$field][$value];
     }
@@ -353,11 +360,11 @@ trait FieldProperties
      */
     public function getColumnNames()
     {
-        return Fields::cache('models.'.$this->getTable().'.columns_names', function(){
+        return Fields::cache('models.'.$this->getTable().'.columns_names', function () {
             $fields = ['id'];
 
             //If has foreign key, add column name to base fields
-            if ( $this->getForeignColumn() ) {
+            if ($this->getForeignColumn()) {
                 $fields = array_merge($fields, array_values($this->getForeignColumn()));
             }
 
@@ -365,12 +372,13 @@ trait FieldProperties
                 $columnType = $this->getMigrationColumnType($key);
 
                 //Skip column types without database column representation
-                if ( $columnType && $columnType->hasColumn() )
+                if ($columnType && $columnType->hasColumn()) {
                     $fields[] = $key;
+                }
             }
 
             //Insert skipped columns
-            if ( is_array($this->skipDropping) ) {
+            if (is_array($this->skipDropping)) {
                 foreach ($this->skipDropping as $key) {
                     $fields[] = $key;
                 }
@@ -378,7 +386,7 @@ trait FieldProperties
 
             //Get register static columns from migrations
             //_order, published_at, deleted_at etc...
-            $staticColumns = array_map(function($columnClass){
+            $staticColumns = array_map(function ($columnClass) {
                 return $columnClass->getColumn();
             }, Fields::getEnabledStaticFields($this));
 

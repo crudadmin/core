@@ -45,17 +45,19 @@ class FieldsMutationBuilder
     public function after($selector_key, $fields)
     {
         //Add group
-        if ( $fields instanceof Group )
-        {
+        if ($fields instanceof Group) {
             $this->after[$selector_key][] = $fields;
         }
 
         //Or set of fields
-        else foreach ($fields as $key => $field) {
-            if ( is_numeric($key) && $field instanceof Group )
-                $this->after[$selector_key][] = $field;
-            else
-                $this->after[$selector_key][$key] = $field;
+        else {
+            foreach ($fields as $key => $field) {
+                if (is_numeric($key) && $field instanceof Group) {
+                    $this->after[$selector_key][] = $field;
+                } else {
+                    $this->after[$selector_key][$key] = $field;
+                }
+            }
         }
 
         return $this;
@@ -67,17 +69,19 @@ class FieldsMutationBuilder
     public function before($selector_key, $fields)
     {
         //Add group
-        if ( $fields instanceof Group )
-        {
+        if ($fields instanceof Group) {
             $this->before[$selector_key][] = $fields;
         }
 
         //Or set of fields
-        else foreach ($fields as $key => $field) {
-            if ( is_numeric($key) && $field instanceof Group )
-                $this->before[$selector_key][] = $field;
-            else
-                $this->before[$selector_key][$key] = $field;
+        else {
+            foreach ($fields as $key => $field) {
+                if (is_numeric($key) && $field instanceof Group) {
+                    $this->before[$selector_key][] = $field;
+                } else {
+                    $this->before[$selector_key][$key] = $field;
+                }
+            }
         }
 
         return $this;
@@ -89,9 +93,11 @@ class FieldsMutationBuilder
     public function remove($selector_key)
     {
         //Remove multiple fields/groups
-        if ( is_array($selector_key) )
-            foreach ($selector_key as $key)
+        if (is_array($selector_key)) {
+            foreach ($selector_key as $key) {
                 $this->remove[] = $key;
+            }
+        }
 
         //Remove single item
         else {
@@ -115,14 +121,15 @@ class FieldsMutationBuilder
     public function push($fields, $type = 'push')
     {
         //Push group or fields
-        if ( $fields instanceof Group )
-        {
+        if ($fields instanceof Group) {
             $this->{$type}[] = $fields;
         }
 
         //Push fields set
-        else foreach ($fields as $key => $field) {
-            $this->{$type}[$key] = $field;
+        else {
+            foreach ($fields as $key => $field) {
+                $this->{$type}[$key] = $field;
+            }
         }
 
         return $this;
@@ -149,8 +156,9 @@ class FieldsMutationBuilder
      */
     public function pushBefore($selector_key, $fields = null)
     {
-        if ( is_null($fields) && (is_array($selector_key) || is_object($selector_key)) )
+        if (is_null($fields) && (is_array($selector_key) || is_object($selector_key))) {
             return $this->push($selector_key, 'push_before');
+        }
 
         return $this->before($selector_key, $fields);
     }
@@ -175,10 +183,12 @@ class FieldsMutationBuilder
      */
     private function applyMultipleCallbacks(&$property, $key, $callback)
     {
-         //Remove multiple fields/groups
-        if ( is_array($key) )
-            foreach ($key as $k)
+        //Remove multiple fields/groups
+        if (is_array($key)) {
+            foreach ($key as $k) {
                 $property[$k] = $callback;
+            }
+        }
 
         //Remove single item
         else {
@@ -188,4 +198,3 @@ class FieldsMutationBuilder
         return $this;
     }
 }
-?>

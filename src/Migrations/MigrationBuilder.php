@@ -47,58 +47,56 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Generate CrudAdmin migrations
+     * Generate CrudAdmin migrations.
      * @return void
      */
     protected function migrate($models)
     {
         $migrated = 0;
 
-        foreach ($models as $model)
-        {
-            $migration = function() use ($model) {
+        foreach ($models as $model) {
+            $migration = function () use ($model) {
                 $this->generateMigration($model);
             };
 
             //Check if migration is out of date from cache
-            if ( $this->isOutOfDate($model, $migration) )
+            if ($this->isOutOfDate($model, $migration)) {
                 continue;
+            }
 
             $migrated++;
         }
 
-        if ( $migrated === 0 ) {
+        if ($migrated === 0) {
             return $this->line('<info>Noting to migrate.</info>');
         }
 
         /*
          * Run events migrations from buffer
          */
-        foreach ($models as $model)
-        {
+        foreach ($models as $model) {
             $this->fireMigrationEvents($model, 'fire_after_all');
         }
     }
 
     /**
-     * Generate laravel migratons
+     * Generate laravel migratons.
      * @return void
      */
     protected function generateMigration($model)
     {
         $this->fireModelEvent($model, 'beforeMigrate');
 
-        if ( $model->getSchema()->hasTable( $model->getTable() ) )
-        {
-            $this->updateTable( $model );
+        if ($model->getSchema()->hasTable($model->getTable())) {
+            $this->updateTable($model);
         } else {
-            $this->createTable( $model );
+            $this->createTable($model);
         }
 
         $this->fireModelEvent($model, 'afterMigrate');
 
         //Checks if model has some extre migrations on create
-        $this->registerAfterAllMigrations($model, function($table) use( $model ) {
+        $this->registerAfterAllMigrations($model, function ($table) use ($model) {
             $this->fireModelEvent($model, 'onMigrateEnd');
         });
 
@@ -107,14 +105,14 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Skip creating of static columns
+     * Skip creating of static columns.
      * @param  string     $key
      * @param  AdminModel $model
      * @return bool
      */
     private function skipField(string $key, AdminModel $model)
     {
-        $staticColumns = array_map(function($columnClass){
+        $staticColumns = array_map(function ($columnClass) {
             return $columnClass->getColumn();
         }, Fields::getEnabledStaticFields($model));
 
@@ -122,12 +120,12 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Create table from model
+     * Create table from model.
      * @return void
      */
     protected function createTable($model)
     {
-        $model->getSchema()->create( $model->getTable() , function (Blueprint $table) use ($model) {
+        $model->getSchema()->create($model->getTable(), function (Blueprint $table) use ($model) {
 
             //Increment
             $table->increments('id');
@@ -135,10 +133,10 @@ class MigrationBuilder extends Command
             //Add relationships with other models
             $this->addRelationships($table, $model);
 
-            foreach ($model->getFields() as $key => $value)
-            {
-                if ( $this->skipField($key, $model) )
+            foreach ($model->getFields() as $key => $value) {
+                if ($this->skipField($key, $model)) {
                     continue;
+                }
 
                 $this->registerColumn($table, $model, $key);
             }
@@ -151,7 +149,7 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Update existing table
+     * Update existing table.
      * @return void
      */
     protected function updateTable($model)
@@ -169,14 +167,14 @@ class MigrationBuilder extends Command
             //because this columns does not exists in database yet
             $exceptDoesntExistinging = [];
 
-            foreach ($model->getFields() as $key => $value)
-            {
-                if ( $this->skipField($key, $model) )
+            foreach ($model->getFields() as $key => $value) {
+                if ($this->skipField($key, $model)) {
                     continue;
+                }
 
                 //Checks if table has column and update it if can...
-                if ( $model->getSchema()->hasColumn($model->getTable(), $key) ) {
-                    if ( $column = $this->registerColumn($table, $model, $key, true) ) {
+                if ($model->getSchema()->hasColumn($model->getTable(), $key)) {
+                    if ($column = $this->registerColumn($table, $model, $key, true)) {
                         $column->change();
                     }
                 } else {
@@ -185,18 +183,19 @@ class MigrationBuilder extends Command
 
                     $addColumns[] = [
                         'key' => $key,
-                        'callback' => function($exceptDoesntExistinging) use ($table, $model, $key, $value){
-                            if ( $column = $this->registerColumn($table, $model, $key) )
-                            {
+                        'callback' => function ($exceptDoesntExistinging) use ($table, $model, $key, $value) {
+                            if ($column = $this->registerColumn($table, $model, $key)) {
                                 $previous_column = $this->getPreviousColumn($model, $key, $exceptDoesntExistinging);
 
                                 //Add creating column after previous existing field in fields position
-                                if ( $model->getSchema()->hasColumn($model->getTable(), $previous_column) )
+                                if ($model->getSchema()->hasColumn($model->getTable(), $previous_column)) {
                                     $column->after($previous_column);
+                                }
 
                                 //If column does not exists, then add before deleted_at column
-                                else if ( $model->getSchema()->hasColumn($model->getTable(), 'deleted_at') )
+                                elseif ($model->getSchema()->hasColumn($model->getTable(), 'deleted_at')) {
                                     $column->after('id');
+                                }
                             }
 
                             return $column;
@@ -206,17 +205,17 @@ class MigrationBuilder extends Command
             }
 
             //Add columns in reversed order
-            for ( $i = count($addColumns) - 1; $i >= 0; $i-- )
-            {
+            for ($i = count($addColumns) - 1; $i >= 0; $i--) {
                 //if no column has been added, then remove column from array for messages
-                if ( !($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ])) ) {
+                if (!($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ]))) {
                     unset($addColumns[$i]);
                 }
             }
 
             //Which columns has been successfully added
-            foreach ($addColumns as $row)
+            foreach ($addColumns as $row) {
                 $this->line('<comment>+ Added column:</comment> '.$row['key']);
+            }
 
             //Register static columns
             $this->registerStaticColumns($table, $model, true);
@@ -226,7 +225,7 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Automatic columns dropping
+     * Automatic columns dropping.
      * @param  Blueprint  $table
      * @param  AdminModel $model
      * @return void
@@ -236,18 +235,14 @@ class MigrationBuilder extends Command
         $columnNames = $model->getColumnNames();
 
         //Removes unnecessary columns
-        foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column)
-        {
-            if ( ! in_array($column, $columnNames) && ! in_array($column, (array)$model->getProperty('skipDropping')) )
-            {
+        foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column) {
+            if (! in_array($column, $columnNames) && ! in_array($column, (array)$model->getProperty('skipDropping'))) {
                 $this->line('<comment>+ Unknown column:</comment> '.$column);
 
                 $auto_drop = $this->option('auto-drop', false);
 
-                if ( $auto_drop === true || $this->confirm('Do you want drop this column? [y|N]') )
-                {
-                    if ( $this->hasIndex($model, $column) )
-                    {
+                if ($auto_drop === true || $this->confirm('Do you want drop this column? [y|N]')) {
+                    if ($this->hasIndex($model, $column)) {
                         $this->dropIndex($model, $column);
                     }
 
@@ -260,7 +255,7 @@ class MigrationBuilder extends Command
     }
 
     /**
-     * Returns field before given field, if is given field first, returns last field
+     * Returns field before given field, if is given field first, returns last field.
      * @param  AdminModel $model
      * @param  string     $findKey
      * @param  array      $exceptDoesntExistinging
@@ -271,9 +266,8 @@ class MigrationBuilder extends Command
         $last = 'id';
         $i = 0;
 
-        foreach ($model->getFields() as $key => $item)
-        {
-            if ( $key == $findKey ) {
+        foreach ($model->getFields() as $key => $item) {
+            if ($key == $findKey) {
                 return $i == 0 ? 'id' : $last;
             }
 
@@ -295,6 +289,6 @@ class MigrationBuilder extends Command
     //Returns schema with correct connection
     protected function getSchema($model)
     {
-        return Schema::connection( $model->getProperty('connection') );
+        return Schema::connection($model->getProperty('connection'));
     }
 }

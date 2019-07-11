@@ -11,10 +11,10 @@ use Illuminate\Database\Schema\ColumnDefinition;
 class BelongsToType extends Type
 {
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -22,7 +22,7 @@ class BelongsToType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key
@@ -36,35 +36,35 @@ class BelongsToType extends Type
         $parent = AdminCore::getModelByTable($properties[0]);
 
         //If table in belongsTo relation does not exists
-        if ( ! $parent )
-        {
+        if (! $parent) {
             $this->getCommand()->line('<error>Table '.$properties[0].' does not exists.</error>');
             die;
         }
 
         //Skip adding new foreign key if exists from belongsToModel property
-        if ( $this->isForeignInBelongsToModel($table, $key) )
+        if ($this->isForeignInBelongsToModel($table, $key)) {
             return true;
+        }
 
         //If foreign key in table exists
         $keyExists = 0;
 
         //Check if actual table and key exists
-        if ( $tableExists = $model->getSchema()->hasTable($model->getTable()) ) {
+        if ($tableExists = $model->getSchema()->hasTable($model->getTable())) {
             $keyExists = $this->hasIndex($model, $key);
         }
 
         //If table has not foreign column
-        if ( $keyExists == 0 )
-        {
+        if ($keyExists == 0) {
             //Checks if table has already inserted rows which won't allow insert foreign key without NULL value
-            if ( $tableExists === true && $model->count() > 0 && $model->hasFieldParam($key, 'required', true) ) {
+            if ($tableExists === true && $model->count() > 0 && $model->hasFieldParam($key, 'required', true)) {
                 $this->checkForReferenceTable($model, $key, $properties[0]);
             }
 
-            $this->registerAfterAllMigrations($model, function($table) use ($key, $properties, $model, $parent){
-                if ( $parent->getSchema()->hasTable( $parent->getTable() ) )
+            $this->registerAfterAllMigrations($model, function ($table) use ($key, $properties, $model, $parent) {
+                if ($parent->getSchema()->hasTable($parent->getTable())) {
                     $table->foreign($key)->references($properties[2])->on($properties[0]);
+                }
             });
         }
 
@@ -72,21 +72,21 @@ class BelongsToType extends Type
     }
 
     /**
-     * Set default value
+     * Set default value.
      * @param ColumnDefinition $column
      * @param AdminModel       $model
      * @param string           $key
      */
     public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
     {
-        $column->default(NULL);
+        $column->default(null);
     }
 
     /**
-     * Check if column is also foreign key from belongsToModel property
+     * Check if column is also foreign key from belongsToModel property.
      * @param  string  $table
      * @param  string  $key
-     * @return boolean
+     * @return bool
      */
     private function isForeignInBelongsToModel($table, $key)
     {

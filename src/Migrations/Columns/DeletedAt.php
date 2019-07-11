@@ -10,9 +10,9 @@ class DeletedAt extends Column
     public $column = 'deleted_at';
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model)
     {
@@ -20,7 +20,7 @@ class DeletedAt extends Column
     }
 
     /**
-     * Register static column
+     * Register static column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  bool         $update
@@ -29,8 +29,9 @@ class DeletedAt extends Column
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
         //Add Sluggable column support
-        if ( $columnExists )
+        if ($columnExists) {
             return;
+        }
 
         return $table->softDeletes($this->column);
     }
