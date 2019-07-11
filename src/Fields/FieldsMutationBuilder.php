@@ -5,56 +5,56 @@ namespace Admin\Core\Fields;
 class FieldsMutationBuilder
 {
     /**
-     * Add fields or groups before field
+     * Add fields or groups before field.
      *
      * @var array
      */
     public $after = [];
 
     /**
-     * Add fields or groups after field
+     * Add fields or groups after field.
      *
      * @var array
      */
     public $before = [];
 
     /**
-     * Remove fields from array
+     * Remove fields from array.
      *
      * @var array
      */
     public $remove = [];
 
     /**
-     * Add items at the end
+     * Add items at the end.
      *
      * @var  array
      */
     public $push = [];
 
     /**
-     * Add items at the beggining
+     * Add items at the beggining.
      *
      * @var  array
      */
     public $push_before = [];
 
     /**
-     * Modify group settings
+     * Modify group settings.
      *
      * @var  array
      */
     public $groups = [];
 
     /**
-     * Modify fields
+     * Modify fields.
      *
      * @var  array
      */
     public $fields = [];
 
     /**
-     * Register adding fields after key
+     * Register adding fields after key.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group  $fields
@@ -82,7 +82,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Register adding fields before key
+     * Register adding fields before key.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group  $fields
@@ -110,7 +110,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Remove fields from model
+     * Remove fields from model.
      *
      * @param  string|array  $selectorKey
      * @return $this
@@ -133,7 +133,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Added alias for removing/deleting fields/groups
+     * Added alias for removing/deleting fields/groups.
      *
      * @param  array|string  $selectorKey
      * @return $this
@@ -144,7 +144,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Add fields into end of model
+     * Add fields into end of model.
      *
      * @param  array  $fields
      * @param  string  $type
@@ -168,7 +168,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Add group modification callback mutator
+     * Add group modification callback mutator.
      *
      * @param  string|array  $id
      * @param  closure  $callback
@@ -180,7 +180,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Add field modification callback mutator
+     * Add field modification callback mutator.
      *
      * @param  string|array  $key
      * @param  closure  $callback
@@ -192,7 +192,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Shortcuts, aliases
+     * Shortcuts, aliases.
      *
      * @param  string|array  $selectorKey
      * @param  array|Admin\Core\Fields\Group|string  $fields
@@ -208,7 +208,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Push field or fields or group after given field
+     * Push field or fields or group after given field.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group|string  $fields
@@ -220,7 +220,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Push field or fields or group before given field
+     * Push field or fields or group before given field.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group|string  $fields
@@ -232,7 +232,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Push field or fields or group after given fiedl
+     * Push field or fields or group after given fiedl.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group|string  $fields
@@ -244,7 +244,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Apply single callback or multiple callback from multiple keys
+     * Apply single callback or multiple callback from multiple keys.
      *
      * @param  array  &$property
      * @param  string|array  $key
