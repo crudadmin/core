@@ -1,1 +1,2 @@
 preset: laravel
+not_operator_with_space: false
