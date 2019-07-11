@@ -13,6 +13,7 @@ use Admin\Core\Helpers\File;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Schema;
+use Fields;
 
 class AdminModel extends Model
 {
@@ -283,7 +284,7 @@ class AdminModel extends Model
         foreach ($this->getFields() as $key => $field)
         {
             //Skip column
-            if ( array_key_exists('belongsToMany', $field) ) {
+            if ( !($column = Fields::getColumnType($this, $key)) || !$column->hasColumn() ) {
                 continue;
             }
 
@@ -291,7 +292,9 @@ class AdminModel extends Model
         }
 
         //Add published_at property
-        $this->fillable[] = 'published_at';
+        if ( $this->publishable ) {
+            $this->fillable[] = 'published_at';
+        }
 
         //If has relationship, then allow foreign key
         if ( $this->belongsToModel != null ) {

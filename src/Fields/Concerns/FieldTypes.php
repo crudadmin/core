@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Fields\Concerns;
 
+use Fields;
+use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Types;
 
@@ -72,18 +74,20 @@ trait FieldTypes
      */
     public function getColumnType(AdminModel $model, string $key)
     {
-        $classes = [];
+        return Fields::cache('models.'.$model->getTable().'.columns_types.'.$key, function() use($model, $key) {
+            $classes = [];
 
-        foreach ($this->getColumnTypes() as $columnClass)
-        {
-            $columnClass = $this->bootColumnClass($columnClass);
+            foreach ($this->getColumnTypes() as $columnClass)
+            {
+                $columnClass = $this->bootColumnClass($columnClass);
 
-            //Check if given column is enabled
-            if ( $columnClass->isEnabled($model, $key) === true )
-                return $columnClass;
-        }
+                //Check if given column is enabled
+                if ( $columnClass->isEnabled($model, $key) === true )
+                    return $columnClass;
+            }
 
-        return null;
+            return null;
+        });
     }
 }
 ?>

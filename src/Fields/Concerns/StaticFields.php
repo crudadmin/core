@@ -2,6 +2,7 @@
 
 namespace Admin\Core\Fields\Concerns;
 
+use Fields;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Columns;
 
@@ -50,18 +51,20 @@ trait StaticFields
      */
     public function getEnabledStaticFields(AdminModel $model)
     {
-        $classes = [];
+        return Fields::cache('models.'.$model->getTable().'.static_columns.', function() use($model) {
+            $classes = [];
 
-        foreach ($this->getStaticColumns() as $columnClass)
-        {
-            $columnClass = $this->bootColumnClass($columnClass);
+            foreach ($this->getStaticColumns() as $columnClass)
+            {
+                $columnClass = $this->bootColumnClass($columnClass);
 
-            //Check if given column is enabled
-            if ( $columnClass->isEnabled($model) === true )
-                $classes[] = $columnClass;
-        }
+                //Check if given column is enabled
+                if ( $columnClass->isEnabled($model) === true )
+                    $classes[] = $columnClass;
+            }
 
-        return $classes;
+            return $classes;
+        });
     }
 }
 ?>

@@ -3,20 +3,22 @@
 namespace Admin\Core\Fields;
 
 use AdminCore;
-use Admin\Core\Migrations\Concerns\MigrationDefinition;
+use Admin\Core\Contracts\DataStore;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Concerns\FieldTypes;
 use Admin\Core\Fields\Concerns\HasAttributes;
 use Admin\Core\Fields\Concerns\HasMutations;
 use Admin\Core\Fields\Concerns\StaticFields;
 use Admin\Core\Fields\Mutations\MutationRule;
+use Admin\Core\Migrations\Concerns\MigrationDefinition;
 
 class Fields extends MigrationDefinition
 {
     use FieldTypes,
         StaticFields,
         HasMutations,
-        HasAttributes;
+        HasAttributes,
+        DataStore;
 
     /*
      * Model fields

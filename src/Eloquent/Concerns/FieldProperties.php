@@ -353,7 +353,7 @@ trait FieldProperties
      */
     public function getColumnNames()
     {
-        return AdminCore::cache('models.'.$this->getTable().'.columns_names', function(){
+        return Fields::cache('models.'.$this->getTable().'.columns_names', function(){
             $fields = ['id'];
 
             //If has foreign key, add column name to base fields
