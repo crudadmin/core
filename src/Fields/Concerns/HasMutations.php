@@ -7,8 +7,10 @@ use Admin\Core\Fields\Mutations;
 
 trait HasMutations
 {
-    /*
-     * This mutations will be applied into field in admin model
+    /**
+     * This mutations will be applied into field in admin model.
+     *
+     * @var array
      */
     protected $mutations = [
         Mutations\FieldToArray::class,
@@ -17,16 +19,21 @@ trait HasMutations
         Mutations\BelongsToAttributeMutator::class
     ];
 
-    /*
-     * Get mutations list
+    /**
+     * Get mutations list.
+     *
+     * @return array
      */
     public function getMutations()
     {
         return $this->mutations;
     }
 
-    /*
+    /**
      * Add new mutation into list
+     *
+     * @param  array|string  $namespace
+     * @return void
      */
     public function addMutation($namespace)
     {

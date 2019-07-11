@@ -8,8 +8,10 @@ use Admin\Core\Migrations\Columns;
 
 trait StaticFields
 {
-    /*
-     * Registred static column types
+    /**
+     * Registred static column types.
+     *
+     * @var array
      */
     public $staticColumns = [
         Columns\Sluggable::class,
@@ -20,7 +22,9 @@ trait StaticFields
     ];
 
     /**
-     * Get static column
+     * Get static column.
+     *
+     * @return array
      */
     public function getStaticColumns()
     {
@@ -28,8 +32,10 @@ trait StaticFields
     }
 
     /**
-     * Add static column (one or multiple at once)
-     * @param string/array $class
+     * Add static column (one or multiple at once).
+     *
+     * @param  array|string  $classes
+     * @return void
      */
     public function addStaticColumn($classes)
     {
@@ -45,8 +51,9 @@ trait StaticFields
     }
 
     /**
-     * Returns enabled static fields for each model
-     * @param  AdminModel $model
+     * Returns enabled static fields for each model.
+     *
+     * @param  Admin\Core\Eloquent\AdminModel $model
      * @return array
      */
     public function getEnabledStaticFields(AdminModel $model)

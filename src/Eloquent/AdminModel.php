@@ -310,7 +310,7 @@ class AdminModel extends Model
     /**
      * Set date fields.
      *
-     * @return  void
+     * @return void
      */
     protected function makeDateable()
     {

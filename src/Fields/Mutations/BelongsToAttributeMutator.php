@@ -6,10 +6,14 @@ class BelongsToAttributeMutator
 {
     public $attributes = ['belongsTo', 'belongsToMany'];
 
-    /*
-     * Create new field with correct relation key name
+    /**
+     * Create new field with correct relation key name.
+     *
+     * @param  array  $field
+     * @param  string  $key
+     * @return array
      */
-    public function create( $field, $key )
+    public function create(array $field, string $key)
     {
         $add = [];
 
@@ -20,10 +24,14 @@ class BelongsToAttributeMutator
         return $add;
     }
 
-    /*
-     * Remove old name of field
+    /**
+     * Remove old belongsTo field with wrong name without _id prefix after column.
+     *
+     * @param  array  $field
+     * @param  string  $key
+     * @return bool|array|string
      */
-    public function remove($field, $key)
+    public function remove(array $field, string $key)
     {
         if ( array_key_exists('belongsTo', $field) && substr($key, -3) != '_id' ) {
             return true;

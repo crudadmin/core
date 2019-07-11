@@ -6,7 +6,13 @@ use Fields;
 
 class AddGlobalRules
 {
-    public function update( $field )
+    /**
+     * Add additional parameter rules into exact types from additional config.
+     *
+     * @param  array  $field
+     * @return array
+     */
+    public function update(array $field)
     {
         $global_rules = config('admin.global_rules', []);
 

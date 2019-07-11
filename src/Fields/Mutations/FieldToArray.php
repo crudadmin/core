@@ -4,6 +4,12 @@ namespace Admin\Core\Fields\Mutations;
 
 class FieldToArray
 {
+    /**
+     * Bind value of each key from format "attribute:value" or "attribute".
+     *
+     * @param  array  $row
+     * @return mixed
+     */
     protected function bindValue($row)
     {
         $count = count($row);
@@ -18,7 +24,13 @@ class FieldToArray
             return implode(array_slice($row, 1), ':');
     }
 
-    public function update( $field )
+    /**
+     * Update field entity and change string format into array format.
+     *
+     * @param  array  $field
+     * @return array
+     */
+    public function update($field)
     {
         $data = [];
 

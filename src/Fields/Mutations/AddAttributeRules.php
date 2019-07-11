@@ -6,7 +6,13 @@ use Fields;
 
 class AddAttributeRules
 {
-    public function update( $field )
+    /**
+     * Merge conditionaly given fields with additional parameters from config files.
+     *
+     * @param  array  $field
+     * @return array
+     */
+    public function update(array $field)
     {
         $custom_rules = config('admin.custom_rules', []);
 

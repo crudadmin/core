@@ -9,8 +9,10 @@ use Admin\Core\Migrations\Types;
 
 trait FieldTypes
 {
-    /*
-     * Registered column types
+    /**
+     * Registered column types.
+     *
+     * @var array
      */
     public $types = [
         Types\BelongsToType::class,
@@ -26,7 +28,9 @@ trait FieldTypes
     ];
 
     /**
-     * Get column types
+     * Get column types.
+     *
+     * @return array
      */
     public function getColumnTypes()
     {
@@ -38,7 +42,9 @@ trait FieldTypes
      * Sometimes you need apply field with same rules
      * as other fields, but with additional parameter.
      * In this case this function will help you.
-     * @param string/array $class
+     *
+     * @param string/array $classes
+     * @return void
      */
     public function addColumnTypeBefore($classes)
     {
@@ -47,7 +53,10 @@ trait FieldTypes
 
     /**
      * Add column type
-     * @param string/array $class
+     *
+     * @param string|array  $classes.
+     * @param bool  $before
+     * @return void
      */
     public function addColumnType($classes, $before = false)
     {
@@ -67,10 +76,11 @@ trait FieldTypes
 
 
     /**
-     * Returns enabled column type of given field
-     * @param  AdminModel $model
-     * @param  string     $key
-     * @return Type
+     * Returns enabled column type of given field.
+     *
+     * @param  AdminModel  $model
+     * @param  string  $key
+     * @return Admin\Core\Migrations\Types\Type|null
      */
     public function getColumnType(AdminModel $model, string $key)
     {
