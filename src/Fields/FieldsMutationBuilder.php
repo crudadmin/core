@@ -232,7 +232,7 @@ class FieldsMutationBuilder
     }
 
     /**
-     * Push field or fields or group after given fiedl.
+     * Push field or fields or group after given field.
      *
      * @param  string  $selectorKey
      * @param  array|Admin\Core\Fields\Group|string  $fields
