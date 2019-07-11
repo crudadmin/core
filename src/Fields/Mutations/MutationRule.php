@@ -96,4 +96,3 @@ class MutationRule
         return $this->postUpdate;
     }
 }
-?>

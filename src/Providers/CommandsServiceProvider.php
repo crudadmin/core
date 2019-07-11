@@ -7,7 +7,8 @@ use Admin\Core\Commands\AdminModelCommand;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 
-class CommandsServiceProvider extends ServiceProvider {
+class CommandsServiceProvider extends ServiceProvider
+{
 
     /**
      * Register the service provider.

@@ -35,13 +35,12 @@ trait HasAttributes
      */
     public function addAttribute($attribute)
     {
-        foreach (array_wrap($attribute) as $attr)
-        {
-            if ( in_array($attr, $this->attributes) )
+        foreach (array_wrap($attribute) as $attr) {
+            if (in_array($attr, $this->attributes)) {
                 continue;
+            }
 
-           $this->attributes[] = $attr;
+            $this->attributes[] = $attr;
         }
     }
 }
-?>

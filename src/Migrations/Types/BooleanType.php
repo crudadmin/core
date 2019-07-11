@@ -9,10 +9,10 @@ use Illuminate\Database\Schema\Blueprint;
 class BooleanType extends Type
 {
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -20,7 +20,7 @@ class BooleanType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key

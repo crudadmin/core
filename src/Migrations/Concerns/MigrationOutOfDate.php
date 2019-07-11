@@ -8,18 +8,17 @@ use Cache;
 trait MigrationOutOfDate
 {
     /**
-     * Check if AdminModel is up to date
+     * Check if AdminModel is up to date.
      * @param  object  $model
      * @param  closure  $migration
-     * @return boolean
+     * @return bool
      */
     protected function isOutOfDate(AdminModel $model, $migration)
     {
         $path = (new \ReflectionClass($model))->getFileName();
 
         //If file class does not exists
-        if ( ! file_exists($path) )
-        {
+        if (! file_exists($path)) {
             //Migrate
             call_user_func($migration);
 
@@ -30,8 +29,9 @@ trait MigrationOutOfDate
 
         $hash = md5_file($path);
 
-        if ( $this->option('force') === false && Cache::get($namespace) == $hash )
+        if ($this->option('force') === false && Cache::get($namespace) == $hash) {
             return true;
+        }
 
         //Migrate
         call_user_func($migration);
@@ -41,5 +41,4 @@ trait MigrationOutOfDate
 
         return false;
     }
-
 }

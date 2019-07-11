@@ -33,7 +33,7 @@ trait OrchestraSetup
     }
 
     /**
-     * Setup default admin environment
+     * Setup default admin environment.
      * @param  \IllumcreateApplicationinate\Foundation\Application  $app
      */
     protected function setAdminEnvironmentSetUp($app)
@@ -52,8 +52,9 @@ trait OrchestraSetup
         $app['config']->set('admin.app_namespace', 'Admin\Core\Tests\App');
 
         //Register all admin models by default
-        if ( $this->loadAllAdminModels === true )
+        if ($this->loadAllAdminModels === true) {
             $this->registerAllAdminModels();
+        }
     }
 
     /**
@@ -88,10 +89,11 @@ trait OrchestraSetup
      */
     protected function deleteFileOrDirectory($path)
     {
-        if ( is_dir($path) )
+        if (is_dir($path)) {
             File::deleteDirectory($path);
-        else
+        } else {
             @unlink($path);
+        }
     }
 
     /*

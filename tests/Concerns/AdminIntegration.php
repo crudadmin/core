@@ -31,7 +31,7 @@ trait AdminIntegration
     }
 
     /**
-     * Return object of class
+     * Return object of class.
      * @param  string/object $model
      * @return object
      */

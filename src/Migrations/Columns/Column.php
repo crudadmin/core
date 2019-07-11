@@ -27,14 +27,14 @@ abstract class Column extends MigrationDefinition
     }
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
-     * @return boolean
+     * @return bool
      */
     abstract public function isEnabled(AdminModel $model);
 
     /**
-     * Register static column
+     * Register static column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  bool         $update

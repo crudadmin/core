@@ -1,6 +1,6 @@
 <?php
 
-if ( ! function_exists('trim_end') ) {
+if (! function_exists('trim_end')) {
     function trim_end($string, $trim)
     {
         while (substr($string, -strlen($trim)) == $trim) {
@@ -10,5 +10,3 @@ if ( ! function_exists('trim_end') ) {
         return $string;
     }
 }
-
-?>

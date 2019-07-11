@@ -56,7 +56,7 @@ trait DataStore
      *
      * @param  string  $key
      * @param  string  $store
-     * @return boolean
+     * @return bool
      */
     public function has($key)
     {

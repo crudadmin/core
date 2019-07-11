@@ -78,7 +78,7 @@ class Fields extends MigrationDefinition
      */
     private function bootColumnClass($columnClass)
     {
-        if ( is_string($columnClass) ) {
+        if (is_string($columnClass)) {
             $columnClass = new $columnClass;
         }
 
@@ -96,11 +96,11 @@ class Fields extends MigrationDefinition
      */
     protected function isFieldGroup($field)
     {
-        if ( is_string($field) ) {
+        if (is_string($field)) {
             return false;
         }
 
-        if ( $field instanceof Group ) {
+        if ($field instanceof Group) {
             return $field;
         }
 
@@ -187,7 +187,7 @@ class Fields extends MigrationDefinition
     private function removeOptions(array $fields)
     {
         foreach ($fields as $key => $field) {
-            if ( array_key_exists('options', $field) ) {
+            if (array_key_exists('options', $field)) {
                 $fields[$key]['options'] = [];
             }
         }
@@ -203,7 +203,7 @@ class Fields extends MigrationDefinition
      */
     private function setCompletedState(string $table)
     {
-        if ( ! in_array($table, $this->loaded_fields) ) {
+        if (! in_array($table, $this->loaded_fields)) {
             $this->loaded_fields[] = $table;
         }
     }
@@ -216,7 +216,7 @@ class Fields extends MigrationDefinition
      */
     private function setUncompletedState(string $table)
     {
-        if ( in_array($table, $this->loaded_fields) ) {
+        if (in_array($table, $this->loaded_fields)) {
             unset($this->loaded_fields[array_search($table, $this->loaded_fields)]);
         }
     }
@@ -250,13 +250,13 @@ class Fields extends MigrationDefinition
             return $fields;
         }
 
-        foreach ($updates as $mutation)
-        {
+        foreach ($updates as $mutation) {
             $key = $mutation->getKey();
 
             //Skip removed columns
-            if ( ! array_key_exists($key, $fields) )
+            if (! array_key_exists($key, $fields)) {
                 continue;
+            }
 
             $field = $mutation->getPostUpdate()($fields, $fields[$key], $key, $model);
 
@@ -279,7 +279,7 @@ class Fields extends MigrationDefinition
     {
         $builder = new FieldsMutationBuilder;
 
-        if ( method_exists($model, 'mutateFields') ) {
+        if (method_exists($model, 'mutateFields')) {
             $model->mutateFields($builder, $param);
         }
 
@@ -320,7 +320,7 @@ class Fields extends MigrationDefinition
     private function insertInto(string $where, string $key, array $fields, $mutationBuilder)
     {
         foreach ($mutationBuilder->{$where} as $positionKey => $add_before) {
-            if ( $key === $positionKey ) {
+            if ($key === $positionKey) {
                 foreach ($add_before as $addKey => $add_field) {
                     $fields = $this->pushFieldOrGroup($fields, $addKey, $add_field, $mutationBuilder);
                 }
@@ -341,15 +341,15 @@ class Fields extends MigrationDefinition
      */
     private function pushFieldOrGroup($fields, string $key, $field, $mutationBuilder)
     {
-        if ( $this->isFieldGroup($field) ) {
+        if ($this->isFieldGroup($field)) {
             //If group is removed
-            if ( $field->id && in_array($field->id, $mutationBuilder->remove, true) ) {
+            if ($field->id && in_array($field->id, $mutationBuilder->remove, true)) {
                 return $fields;
             }
 
             $group = $this->mutateGroup($field, $mutationBuilder);
 
-            if ( is_numeric($key) ) {
+            if (is_numeric($key)) {
                 $fields[] = $group;
             } else {
                 $fields[$key] = $group;
@@ -376,7 +376,7 @@ class Fields extends MigrationDefinition
         $mutationBuilder = $this->mutationBuilder[$model->getTable()];
 
         //Push new fields, groups... or replace existing fields. Into first level of fields
-        if ( ! $parentGroup ) {
+        if (! $parentGroup) {
             $fields = $this->pushFields($fields, $mutationBuilder, 'push_before');
         }
 
@@ -385,15 +385,16 @@ class Fields extends MigrationDefinition
             $fields = $this->insertInto('before', $key, $fields, $mutationBuilder);
 
             //Add if is not removed
-            if ( ! in_array($key, $mutationBuilder->remove, true) )
+            if (! in_array($key, $mutationBuilder->remove, true)) {
                 $fields = $this->pushFieldOrGroup($fields, $key, $field, $mutationBuilder);
+            }
 
             //Add after field
             $fields = $this->insertInto('after', $key, $fields, $mutationBuilder);
         }
 
         //Push new fields, groups... or replace existing fields. Into first level of fields
-        if ( ! $parentGroup ) {
+        if (! $parentGroup) {
             $fields = $this->pushFields($fields, $mutationBuilder);
         }
 
@@ -430,16 +431,16 @@ class Fields extends MigrationDefinition
     private function manageGroupFields(AdminModel $model, string $key, $field, $parentGroup = null)
     {
         //If is group
-        if ( $group = $this->isFieldGroup($field) ) {
+        if ($group = $this->isFieldGroup($field)) {
             //If group name is not set
-            if ( ! $group->name && !is_numeric($key) ) {
+            if (! $group->name && !is_numeric($key)) {
                 $group->name = $key;
             }
 
             $fields = [];
 
             //Actual group will inherit parent groups add-ons
-            if ( $parentGroup && count($parentGroup->add) > 0 ) {
+            if ($parentGroup && count($parentGroup->add) > 0) {
                 $group->add = array_merge($group->add, $parentGroup->add);
             }
 
@@ -453,7 +454,7 @@ class Fields extends MigrationDefinition
                 $mutation = $this->manageGroupFields($model, $field_key, $field_from_group, $group);
 
                 //If is group in fields list
-                if ( $mutation instanceof Group ) {
+                if ($mutation instanceof Group) {
                     $fields[] = $mutation;
 
                     $mutation_previous = $this->fields[$model->getTable()];
@@ -472,13 +473,13 @@ class Fields extends MigrationDefinition
             $group->fields = $fields;
 
             //Register group into buffer
-            if ( ! $parentGroup ) {
+            if (! $parentGroup) {
                 $this->registerGroup($group, $model);
             }
 
             return $group;
         } else {
-            if ( $parentGroup && count($parentGroup->add) > 0 ) {
+            if ($parentGroup && count($parentGroup->add) > 0) {
                 $field = $this->pushParams($field, $parentGroup->add);
             }
 
@@ -497,7 +498,7 @@ class Fields extends MigrationDefinition
     {
         $table = $model->getTable();
 
-        if ( ! array_key_exists($table, $this->groups) ) {
+        if (! array_key_exists($table, $this->groups)) {
             return false;
         }
 
@@ -531,14 +532,15 @@ class Fields extends MigrationDefinition
         $table = $model->getTable();
 
         //Field mutations
-        foreach ($this->mutations as $namespace)
-        {
+        foreach ($this->mutations as $namespace) {
             //Skip namespaces
-            if ( in_array($namespace, $skip) )
+            if (in_array($namespace, $skip)) {
                 continue;
+            }
 
-            if ( $response = $this->mutate($namespace, $field, $key, $model) )
+            if ($response = $this->mutate($namespace, $field, $key, $model)) {
                 $field = $response;
+            }
 
             //Update and register field
             $this->fields[$table][$key] = $field;
@@ -548,7 +550,7 @@ class Fields extends MigrationDefinition
         $this->mutateField($field, $key, $table);
 
         //If field need to be removed
-        if ( in_array($key, (array)$this->remove[$table]) ) {
+        if (in_array($key, (array)$this->remove[$table])) {
             unset($this->fields[$table][$key]);
         }
 
@@ -566,7 +568,7 @@ class Fields extends MigrationDefinition
     private function mutateField($field, string $key, string $table)
     {
         //Mutate field by mutation builder
-        if ( ! array_key_exists($key, $this->mutationBuilder[$table]->fields) ) {
+        if (! array_key_exists($key, $this->mutationBuilder[$table]->fields)) {
             return;
         }
 
@@ -595,7 +597,7 @@ class Fields extends MigrationDefinition
     {
         $mutation = new $namespace;
 
-        if ( $mutation instanceof MutationRule ) {
+        if ($mutation instanceof MutationRule) {
             $mutation->setFields($this->fields[$model->getTable()]);
             $mutation->setField($field);
             $mutation->setKey($key);
@@ -646,7 +648,7 @@ class Fields extends MigrationDefinition
      */
     protected function registerProperties($mutation)
     {
-        if ( property_exists($mutation, 'attributes') ) {
+        if (property_exists($mutation, 'attributes')) {
             $this->addAttribute($mutation->attributes);
         }
     }
@@ -663,7 +665,7 @@ class Fields extends MigrationDefinition
     protected function updateFields($mutation, &$field, $key, $model)
     {
         //Updating field
-        if ( ! method_exists($mutation, 'update') ) {
+        if (! method_exists($mutation, 'update')) {
             return;
         }
 
@@ -686,14 +688,11 @@ class Fields extends MigrationDefinition
      */
     protected function createFields($mutation, $field, $key, $model)
     {
-        if ( method_exists($mutation, 'create') )
-        {
+        if (method_exists($mutation, 'create')) {
             $response = $mutation->create($field, $key, $model);
 
-            if ( is_array($response) )
-            {
-                foreach ((array)$response as $key => $field)
-                {
+            if (is_array($response)) {
+                foreach ((array)$response as $key => $field) {
                     //Register field with all mutations, actual mutation will be skipped
                     $this->registerField($field, $key, $model, [ get_class($mutation) ]);
                 }
@@ -712,19 +711,18 @@ class Fields extends MigrationDefinition
      */
     protected function removeFields($mutation, $field, $key, $model)
     {
-        if ( method_exists($mutation, 'remove') )
-        {
+        if (method_exists($mutation, 'remove')) {
             $response = $mutation->remove($field, $key, $model);
 
             //Get model table name
             $table = $model->getTable();
 
             //Remove acutal key
-            if ( $response === true ) {
+            if ($response === true) {
                 $this->remove[$table][] = $key;
-            } elseif ( is_string( $response ) ) {
+            } elseif (is_string($response)) {
                 $this->remove[$table][] = $response;
-            } elseif ( is_array($response) ){
+            } elseif (is_array($response)) {
                 foreach ($response as $key) {
                     $this->remove[$table][] = $key;
                 }
@@ -732,4 +730,3 @@ class Fields extends MigrationDefinition
         }
     }
 }
-?>

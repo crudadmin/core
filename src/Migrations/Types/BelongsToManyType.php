@@ -15,10 +15,10 @@ class BelongsToManyType extends Type
     public $hasColumn = false;
 
     /**
-     * Check if can apply given column
+     * Check if can apply given column.
      * @param  AdminModel  $model
      * @param  string      $key
-     * @return boolean
+     * @return bool
      */
     public function isEnabled(AdminModel $model, string $key)
     {
@@ -26,7 +26,7 @@ class BelongsToManyType extends Type
     }
 
     /**
-     * Register column
+     * Register column.
      * @param  Blueprint    $table
      * @param  AdminModel   $model
      * @param  string       $key
@@ -45,29 +45,27 @@ class BelongsToManyType extends Type
         //but only with migrateToPivot parameter
         $pivot_rows = $this->getPivotRowsFromSingleRelation($model, $singularColumn, $properties);
 
-        $this->registerAfterAllMigrations($model, function() use($table, $model, $key, $properties, $pivot_rows, $singularColumn) {
+        $this->registerAfterAllMigrations($model, function () use ($table, $model, $key, $properties, $pivot_rows, $singularColumn) {
             //If pivot table does not exists
-            if ( ! $model->getSchema()->hasTable( $properties[3] ) )
-            {
+            if (! $model->getSchema()->hasTable($properties[3])) {
                 //Create pivot table
-                $model->getSchema()->create( $properties[3] , function (Blueprint $table) use ( $model, $properties ) {
+                $model->getSchema()->create($properties[3], function (Blueprint $table) use ($model, $properties) {
                     //Increment
                     $table->increments('id');
 
                     //Add integer reference for owner table
-                    $table->integer( $properties[6] )->unsigned();
-                    $table->foreign( $properties[6], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[6]) )->references($model->getKeyName())->on( $model->getTable() );
+                    $table->integer($properties[6])->unsigned();
+                    $table->foreign($properties[6], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
 
                     //Add integer reference for belongs to table
-                    $table->integer( $properties[7] )->unsigned();
-                    $table->foreign( $properties[7], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[7]) )->references($properties[2])->on( $properties[0] );
+                    $table->integer($properties[7])->unsigned();
+                    $table->foreign($properties[7], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
                 });
 
                 $this->getCommand()->line('<comment>Created table:</comment> '.$properties[3]);
 
                 //Sync data from previous belongsTo relation into belongsToMany
-                if ( count($pivot_rows) > 0 )
-                {
+                if (count($pivot_rows) > 0) {
                     $model->{$key}()->sync($pivot_rows);
 
                     $this->getCommand()->line('<comment>Imported rows ('.count($pivot_rows).'):</comment> from <info>'.$singularColumn.'</info> into pivot <info>'.$properties[3].'</info> table');
@@ -75,16 +73,14 @@ class BelongsToManyType extends Type
             } else {
                 $this->getCommand()->line('<info>Checked table:</info> '.$properties[3]);
 
-                if ( ! $model->getSchema()->hasColumn($properties[3], 'id') )
-                {
-                    $model->getSchema()->table( $properties[3] , function (Blueprint $table) use ( $model, $properties ) {
+                if (! $model->getSchema()->hasColumn($properties[3], 'id')) {
+                    $model->getSchema()->table($properties[3], function (Blueprint $table) use ($model, $properties) {
                         //Increment
                         $table->increments('id')->first();
                     });
 
                     $this->getCommand()->line('<comment>+ Added column:</comment> id');
                 }
-
             }
         });
 
@@ -92,7 +88,7 @@ class BelongsToManyType extends Type
     }
 
     /**
-     * Return rows from previous existing column of belongsTo relation
+     * Return rows from previous existing column of belongsTo relation.
      * @param  AdminModel $model
      * @param  string $singularColumn
      * @param  array $properties
@@ -104,14 +100,14 @@ class BelongsToManyType extends Type
         if (
             !$model->getField($singularColumn)
             && $model->getSchema()->hasColumn($model->getTable(), $singularColumn)
-            && !$model->getSchema()->hasTable( $properties[3] )
+            && !$model->getSchema()->hasTable($properties[3])
          ) {
             return $model->withoutGlobalScopes()
                          ->select([ $model->getKeyName(), $singularColumn ])
                          ->whereNotNull($singularColumn)
                          ->get()
-                         ->map(function($item) use($singularColumn, $properties) {
-                            return [
+                         ->map(function ($item) use ($singularColumn, $properties) {
+                             return [
                                 $properties[6] => $item->getKey(),
                                 $properties[7] => $item->{$singularColumn},
                             ];
@@ -122,7 +118,7 @@ class BelongsToManyType extends Type
     }
 
     /**
-     * Create foreign key index name
+     * Create foreign key index name.
      * @param  string $table
      * @param  string $key
      * @return string
@@ -133,8 +129,7 @@ class BelongsToManyType extends Type
 
         $table = preg_replace('/_+/', '_', $table);
 
-        foreach((array)explode('_', $table) as $t)
-        {
+        foreach ((array)explode('_', $table) as $t) {
             //Get first letter and last letter from table name
             $table_index .= $t[0].$t[strlen($t) - 1];
         }

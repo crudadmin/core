@@ -30,17 +30,15 @@ trait HasMutations
     }
 
     /**
-     * Add new mutation into list
+     * Add new mutation into list.
      *
      * @param  array|string  $namespace
      * @return void
      */
     public function addMutation($namespace)
     {
-        foreach (array_wrap($namespace) as $namespace)
-        {
+        foreach (array_wrap($namespace) as $namespace) {
             $this->mutations[] = $namespace;
         }
     }
 }
-?>

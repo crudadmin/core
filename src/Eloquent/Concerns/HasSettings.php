@@ -13,7 +13,8 @@ trait HasSettings
      * @param  string  $separator
      * @return void
      */
-    private function assignArrayByPath(&$arr, string $path, $value, $separator='.') {
+    private function assignArrayByPath(&$arr, string $path, $value, $separator='.')
+    {
         $keys = explode($separator, $path);
 
         foreach ($keys as $key) {
@@ -22,8 +23,7 @@ trait HasSettings
 
         $row = [];
 
-        if ( is_array($value) )
-        {
+        if (is_array($value)) {
             foreach ($value as $k => $v) {
                 //Create multidimensional array
                 $this->assignArrayByPath($row, $k, $v);
@@ -46,8 +46,7 @@ trait HasSettings
 
         $data = [];
 
-        foreach ($settings as $path => $value)
-        {
+        foreach ($settings as $path => $value) {
             $row = [];
 
             //Create multidimensional array

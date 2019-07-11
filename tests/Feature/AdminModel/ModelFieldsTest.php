@@ -29,7 +29,6 @@ class ModelFieldsTest extends TestCase
             'field11', 'field12', 'field13', 'field14', 'field15', 'field16', 'field17', 'field18', 'field19',
             'field20', 'field21', 'field22', 'field23', 'field24', 'field25', 'field26', 'field27', 'field28'
         ]);
-
     }
 
     /** @test */
