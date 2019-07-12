@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Tests\Feature\Migrations;
 
-use Admin\Core\Tests\Concerns\DropDatabase;
 use Admin\Core\Tests\TestCase;
+use Admin\Core\Tests\Concerns\DropDatabase;
 
 class CreateTablesTest extends TestCase
 {

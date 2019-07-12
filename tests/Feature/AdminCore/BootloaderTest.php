@@ -3,9 +3,9 @@
 namespace Admin\Core\Tests\Feature\Bootloader;
 
 use AdminCore;
+use Admin\Core\Tests\TestCase;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Tests\App\OtherModels\Blog;
-use Admin\Core\Tests\TestCase;
 
 class BootloaderTest extends TestCase
 {
@@ -31,7 +31,7 @@ class BootloaderTest extends TestCase
             '2019-05-03 14:12:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsRelation',
             '2019-05-03 15:12:04' => 'Admin\Core\Tests\App\Models\Fields\FieldsMutator',
             '2019-05-04 12:10:04' => 'Admin\Core\Tests\App\Models\Articles\Article',
-            '2019-05-04 12:10:15' => 'Admin\Core\Tests\App\Models\Articles\ArticlesComment'
+            '2019-05-04 12:10:15' => 'Admin\Core\Tests\App\Models\Articles\ArticlesComment',
         ]);
     }
 
@@ -43,7 +43,7 @@ class BootloaderTest extends TestCase
 
         $this->assertEquals(AdminCore::getAdminModelNamespaces(), [
             '2019-05-03 13:10:04' => 'Admin\Core\Tests\App\OtherModels\Blog',
-            '2019-05-03 14:11:02' => 'Admin\Core\Tests\App\OtherModels\BlogsImage'
+            '2019-05-03 14:11:02' => 'Admin\Core\Tests\App\OtherModels\BlogsImage',
         ]);
     }
 
@@ -71,7 +71,6 @@ class BootloaderTest extends TestCase
     {
         $this->assertTrue(AdminCore::isAdminModel(new Blog));
     }
-
 
     /** @test */
     public function check_if_has_admin_model()

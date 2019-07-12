@@ -2,11 +2,10 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Illuminate\Contracts\Validation\Factory;
-use Admin\Exceptions\SluggableException;
-use Admin\Models\SluggableHistory;
-use Localization;
 use Route;
+use Localization;
+use Admin\Models\SluggableHistory;
+use Admin\Exceptions\SluggableException;
 
 trait Sluggable
 {
@@ -35,7 +34,7 @@ trait Sluggable
             'Õ'=>'O', 'ő'=>'o', 'Ő'=>'O', 'ř'=>'r', 'Ř'=>'R', 'ŕ'=>'r', 'Ŕ'=>'R', 'š'=>'s', 'Š'=>'S',
             'ś'=>'s', 'Ś'=>'S', 'ť'=>'t', 'Ť'=>'T', 'ú'=>'u', 'Ú'=>'U', 'ů'=>'u', 'Ů'=>'U', 'ü'=>'u',
             'Ü'=>'U', 'ù'=>'u', 'Ù'=>'U', 'ũ'=>'u', 'Ũ'=>'U', 'û'=>'u', 'Û'=>'U', 'ý'=>'y', 'Ý'=>'Y',
-            'ž'=>'z', 'Ž'=>'Z', 'ź'=>'z', 'Ź'=>'Z'
+            'ž'=>'z', 'Ž'=>'Z', 'ź'=>'z', 'Ź'=>'Z',
         ];
 
         $url = trim($url);
@@ -58,7 +57,7 @@ trait Sluggable
     private function getLocaleDifferences($slugs, $relatedSlug)
     {
         if ($this->hasLocalizedSlug()) {
-            return array_filter(array_intersect_assoc($slugs, (array)json_decode($relatedSlug)));
+            return array_filter(array_intersect_assoc($slugs, (array) json_decode($relatedSlug)));
         } else {
             return array_wrap($relatedSlug);
         }
@@ -77,20 +76,20 @@ trait Sluggable
     {
         $newSlug = implode('-', $withoutIndex);
 
-        $column = $this->hasLocalizedSlug() ?  'JSON_EXTRACT(slug, "$.'.$key.'")' : 'slug';
+        $column = $this->hasLocalizedSlug() ? 'JSON_EXTRACT(slug, "$.'.$key.'")' : 'slug';
 
         $i = 1;
 
         //Return original slugs
         do {
-            $slugs[$key] = $newSlug . '-' . ($index + $i);
+            $slugs[$key] = $newSlug.'-'.($index + $i);
 
             $i++;
         } while ($this->where(function ($query) {
             if ($this->exists) {
                 $query->where($this->getKeyName(), '!=', $this->getKey());
             }
-        })->whereRaw($column . ' = ?', $slugs[$key])->count() > 0);
+        })->whereRaw($column.' = ?', $slugs[$key])->count() > 0);
     }
 
     /**
@@ -138,7 +137,7 @@ trait Sluggable
                 return $text;
             }
 
-            $text = (array)json_decode($text);
+            $text = (array) json_decode($text);
         } elseif ($text) {
             $text = array_wrap($text);
         }
@@ -216,7 +215,7 @@ trait Sluggable
                 return json_encode($slugs);
             }
 
-            return null;
+            return;
         }
 
         return is_array($slugs) ? $slugs[0] : null;
@@ -251,7 +250,7 @@ trait Sluggable
 
         //Set slug
         if (array_key_exists($slugcolumn, $array)) {
-            $slug = $this->makeSlug($array[ $slugcolumn ]);
+            $slug = $this->makeSlug($array[$slugcolumn]);
 
             //If slug has been changed, then save previous slug state
             if ($this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug) {
@@ -309,7 +308,7 @@ trait Sluggable
 
         //Rewrite wrong slug to correct from db
         foreach ($parameters as $k => $value) {
-            if ($key == $k || (!$key && $value != $id && $value == $wrong)) {
+            if ($key == $k || (! $key && $value != $id && $value == $wrong)) {
                 $binding[] = $slug;
             } else {
                 $binding[] = $value;
@@ -329,7 +328,7 @@ trait Sluggable
      * @param  Admin\Core\Eloquent\AdminModel  $row
      * @return  void
      */
-    private function redirectWithWrongSlug($slug, $id, $key = null, $row)
+    private function redirectWithWrongSlug($slug, $id, $key, $row)
     {
         //If is definer row where is slug saved
         if (is_numeric($id)) {
@@ -354,14 +353,14 @@ trait Sluggable
      * @param  string  $key
      * @return  void
      */
-    private function redirectWithSlugFromHistory($slug, $id = null, $key)
+    private function redirectWithSlugFromHistory($slug, $id, $key)
     {
         $history_model = new SluggableHistory;
         $history_model->hasLocalizedSlug = $this->hasLocalizedSlug();
 
         $history_row = $history_model
                         ->where('table', $this->getTable())
-                        ->whereSlug($slug, $history_model->getTable() . '.' . $history_model->getSlugColumnName($this))
+                        ->whereSlug($slug, $history_model->getTable().'.'.$history_model->getSlugColumnName($this))
                         ->whereExists(function ($query) use ($history_model) {
                             $query->select(['id'])
                                   ->from($this->getTable())
@@ -514,7 +513,7 @@ trait Sluggable
     public function getSlug()
     {
         if ($this->hasLocalizedSlug()) {
-            $slug = (array)json_decode($this->slug);
+            $slug = (array) json_decode($this->slug);
 
             $lang = Localization::get();
 
@@ -537,7 +536,7 @@ trait Sluggable
                 }
             }
 
-            return null;
+            return;
         }
 
         return $this->slug;

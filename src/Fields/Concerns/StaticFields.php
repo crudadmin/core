@@ -3,8 +3,8 @@
 namespace Admin\Core\Fields\Concerns;
 
 use Fields;
-use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Columns;
+use Admin\Core\Eloquent\AdminModel;
 
 trait StaticFields
 {

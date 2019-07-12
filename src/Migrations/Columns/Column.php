@@ -2,11 +2,11 @@
 
 namespace Admin\Core\Migrations\Columns;
 
-use Admin\Core\Migrations\Concerns\HasIndex;
-use Admin\Core\Migrations\Concerns\MigrationDefinition;
-use Admin\Core\Migrations\Concerns\MigrationEvents;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
+use Admin\Core\Migrations\Concerns\HasIndex;
+use Admin\Core\Migrations\Concerns\MigrationEvents;
+use Admin\Core\Migrations\Concerns\MigrationDefinition;
 
 abstract class Column extends MigrationDefinition
 {

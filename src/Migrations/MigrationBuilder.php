@@ -3,12 +3,11 @@
 namespace Admin\Core\Migrations;
 
 use Fields;
-use AdminCore;
-use Admin\Core\Eloquent\AdminModel;
-use Illuminate\Console\Command;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Filesystem\Filesystem;
 use Schema;
+use Illuminate\Console\Command;
+use Admin\Core\Eloquent\AdminModel;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Database\Schema\Blueprint;
 
 class MigrationBuilder extends Command
 {
@@ -207,7 +206,7 @@ class MigrationBuilder extends Command
             //Add columns in reversed order
             for ($i = count($addColumns) - 1; $i >= 0; $i--) {
                 //if no column has been added, then remove column from array for messages
-                if (!($column = call_user_func_array($addColumns[$i]['callback'], [ $exceptDoesntExistinging ]))) {
+                if (! ($column = call_user_func_array($addColumns[$i]['callback'], [$exceptDoesntExistinging]))) {
                     unset($addColumns[$i]);
                 }
             }
@@ -236,7 +235,7 @@ class MigrationBuilder extends Command
 
         //Removes unnecessary columns
         foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column) {
-            if (! in_array($column, $columnNames) && ! in_array($column, (array)$model->getProperty('skipDropping'))) {
+            if (! in_array($column, $columnNames) && ! in_array($column, (array) $model->getProperty('skipDropping'))) {
                 $this->line('<comment>+ Unknown column:</comment> '.$column);
 
                 $auto_drop = $this->option('auto-drop', false);
@@ -277,7 +276,7 @@ class MigrationBuilder extends Command
             //and also check if previous position of field does exists in database
             if (
                 ($columnClass = Fields::getColumnType($model, $key)) && $columnClass->hasColumn()
-                && !in_array($key, $exceptDoesntExistinging)
+                && ! in_array($key, $exceptDoesntExistinging)
             ) {
                 $last = $key;
             }

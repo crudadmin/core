@@ -13,7 +13,7 @@ trait HasSettings
      * @param  string  $separator
      * @return void
      */
-    private function assignArrayByPath(&$arr, string $path, $value, $separator='.')
+    private function assignArrayByPath(&$arr, string $path, $value, $separator = '.')
     {
         $keys = explode($separator, $path);
 
@@ -42,7 +42,7 @@ trait HasSettings
      */
     public function getModelSettings($separator = '.', &$arr = [])
     {
-        $settings = (array)$this->getProperty('settings');
+        $settings = (array) $this->getProperty('settings');
 
         $data = [];
 

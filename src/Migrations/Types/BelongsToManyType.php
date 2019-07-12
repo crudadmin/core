@@ -2,8 +2,6 @@
 
 namespace Admin\Core\Migrations\Types;
 
-use AdminCore;
-use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -39,7 +37,7 @@ class BelongsToManyType extends Type
 
         $singularColumn = ($migrateToPivot = $model->getFieldParam($key, 'migrateToPivot')) && is_string($migrateToPivot)
                            ? $migrateToPivot
-                           : (trim_end(str_singular($key), '_id') . '_id');
+                           : (trim_end(str_singular($key), '_id').'_id');
 
         //Get pivot rows from belongsTo column relation, and move this data into belongsToMany relation
         //but only with migrateToPivot parameter
@@ -98,12 +96,12 @@ class BelongsToManyType extends Type
     {
         //If singular column exists in table and has not been deleted yet and pivot table does not exists
         if (
-            !$model->getField($singularColumn)
+            ! $model->getField($singularColumn)
             && $model->getSchema()->hasColumn($model->getTable(), $singularColumn)
-            && !$model->getSchema()->hasTable($properties[3])
+            && ! $model->getSchema()->hasTable($properties[3])
          ) {
             return $model->withoutGlobalScopes()
-                         ->select([ $model->getKeyName(), $singularColumn ])
+                         ->select([$model->getKeyName(), $singularColumn])
                          ->whereNotNull($singularColumn)
                          ->get()
                          ->map(function ($item) use ($singularColumn, $properties) {
@@ -129,7 +127,7 @@ class BelongsToManyType extends Type
 
         $table = preg_replace('/_+/', '_', $table);
 
-        foreach ((array)explode('_', $table) as $t) {
+        foreach ((array) explode('_', $table) as $t) {
             //Get first letter and last letter from table name
             $table_index .= $t[0].$t[strlen($t) - 1];
         }

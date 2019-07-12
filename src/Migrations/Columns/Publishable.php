@@ -2,9 +2,9 @@
 
 namespace Admin\Core\Migrations\Columns;
 
+use Illuminate\Support\Facades\DB;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 
 class Publishable extends Column
 {

@@ -2,9 +2,9 @@
 
 namespace Admin\Core\Providers;
 
+use Admin\Core\Fields;
 use Admin\Core\Facades;
 use Admin\Core\Helpers;
-use Admin\Core\Fields;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

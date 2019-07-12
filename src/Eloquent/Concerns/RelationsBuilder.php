@@ -4,8 +4,8 @@ namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
 use Illuminate\Support\Str;
-use \Illuminate\Database\Eloquent\Collection;
-use \Illuminate\Database\Eloquent\Model as BaseModel;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model as BaseModel;
 
 trait RelationsBuilder
 {
@@ -19,7 +19,7 @@ trait RelationsBuilder
      */
     protected function getAdminRelationKey(string $method)
     {
-        return '$relations.' . $this->getTable() . '.' . $method .'.'. ($this->exists ? $this->getKey() : 'global');
+        return '$relations.'.$this->getTable().'.'.$method.'.'.($this->exists ? $this->getKey() : 'global');
     }
 
     /**
@@ -84,9 +84,9 @@ trait RelationsBuilder
         $relation = $this->getRelationFromCache($method);
 
         //If is in relation buffer saved collection and not admin relation object
-        if (!is_array($relation) || !array_key_exists('type', $relation)) {
+        if (! is_array($relation) || ! array_key_exists('type', $relation)) {
             //If is saved collection, and requested is also collection
-            if (!(($is_collection = $relation instanceof Collection) && $get === false)) {
+            if (! (($is_collection = $relation instanceof Collection) && $get === false)) {
                 return $relation;
             }
 
@@ -99,7 +99,7 @@ trait RelationsBuilder
         //If is in relation buffer saved admin relation object
         else {
             //Returns relationship builder
-            if ($get === false || (!$this->exists && !parent::relationLoaded($method))) {
+            if ($get === false || (! $this->exists && ! parent::relationLoaded($method))) {
                 //Save old collection when is generating new object
                 if ($relation['relation'] instanceof Collection) {
                     $this->saveCollection = $relation['relation'];
@@ -165,9 +165,9 @@ trait RelationsBuilder
      */
     private function returnByBelongsTo(string $method, $get, $models, $methodSnake)
     {
-        if ($this->hasFieldParam($methodSnake . '_id', 'belongsTo')) {
+        if ($this->hasFieldParam($methodSnake.'_id', 'belongsTo')) {
             //Get edited field key
-            $field_key = $methodSnake . '_id';
+            $field_key = $methodSnake.'_id';
 
             //Get related table
             $foreign_table = explode(',', $this->getFieldParam($field_key, 'belongsTo'))[0];
@@ -202,7 +202,7 @@ trait RelationsBuilder
             //If needed method is matched with end of parent model from belongsToModel relation
             if (last(explode('_', snake_case($basename))) == $method) {
                 return $this->relationResponse($method, 'belongsTo', $namespace, $get, [
-                    4 => $this->getForeignColumn((new $namespace)->getTable())
+                    4 => $this->getForeignColumn((new $namespace)->getTable()),
                 ]);
             }
         }
@@ -307,7 +307,7 @@ trait RelationsBuilder
                             $keyLower = strtolower(str_replace('_', '', $keyLower));
 
                             //Check if actual model name is same with property name in singular mode, but compare just last model convention name
-                            if (substr(strtolower($thisBasename), - strlen($keyLower)) == $keyLower) {
+                            if (substr(strtolower($thisBasename), -strlen($keyLower)) == $keyLower) {
                                 return $this->relationResponse($method, 'hasMany', $path, $get, $properties);
                             }
                         }
@@ -332,7 +332,7 @@ trait RelationsBuilder
                     $relationType = 'hasOne';
                 }
 
-                return $this->relationResponse($method, $relationType, $path, $get, [ 4 => $this->getForeignColumn($model->getTable()) ]);
+                return $this->relationResponse($method, $relationType, $path, $get, [4 => $this->getForeignColumn($model->getTable())]);
             }
         }
 
@@ -349,7 +349,7 @@ trait RelationsBuilder
     {
         $items = array_filter(is_array($this->belongsToModel)
                     ? $this->belongsToModel
-                    : [ $this->belongsToModel ]);
+                    : [$this->belongsToModel]);
 
         if ($baseName !== true) {
             return $items;
@@ -372,7 +372,7 @@ trait RelationsBuilder
      * @param  array  $properties
      * @return bool|Illuminate\Database\Eloquent\Relations\Relation
      */
-    protected function relationResponse(string $method, $relationType = false, $path, $get = false, $properties = [])
+    protected function relationResponse(string $method, $relationType, $path, $get = false, $properties = [])
     {
         $relation = false;
 
@@ -425,7 +425,7 @@ trait RelationsBuilder
     public function getForeignColumn($table = null)
     {
         if ($this->belongsToModel == null) {
-            return null;
+            return;
         }
 
         $columns = [];
@@ -433,7 +433,7 @@ trait RelationsBuilder
         foreach (array_wrap($this->belongsToModel) as $parent) {
             $model_table_name = Str::snake(class_basename($parent));
 
-            $columns[ str_plural($model_table_name) ] = $model_table_name . '_id';
+            $columns[str_plural($model_table_name)] = $model_table_name.'_id';
         }
 
         //Returns
@@ -480,18 +480,18 @@ trait RelationsBuilder
             //Table names in singular
             $tables = [
                 str_singular($this->getTable()),
-                str_singular($properties[0])
+                str_singular($properties[0]),
             ];
 
             //Pivot table name
-            $pivot_table = $tables[1] . '_' . $tables[0] . '_' . $key;
+            $pivot_table = $tables[1].'_'.$tables[0].'_'.$key;
 
             //Add pivot table into properties
             $properties[] = $pivot_table;
             $properties[] = $tables[0];
             $properties[] = $tables[1];
-            $properties[] = $tables[0] . '_id';
-            $properties[] = $tables[1] . '_id';
+            $properties[] = $tables[0].'_id';
+            $properties[] = $tables[1].'_id';
         } else {
             $properties[] = str_singular($properties[0]);
             $properties[] = $key;

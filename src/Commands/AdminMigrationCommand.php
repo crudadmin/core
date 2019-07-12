@@ -2,10 +2,10 @@
 
 namespace Admin\Core\Commands;
 
-use Admin\Core\Migrations\MigrationBuilder;
-use Illuminate\Console\ConfirmableTrait;
-use Symfony\Component\Console\Input\InputOption;
 use AdminCore;
+use Illuminate\Console\ConfirmableTrait;
+use Admin\Core\Migrations\MigrationBuilder;
+use Symfony\Component\Console\Input\InputOption;
 
 class AdminMigrationCommand extends MigrationBuilder
 {

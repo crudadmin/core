@@ -17,7 +17,7 @@ trait DropDatabase
         $tables = DB::select('SHOW TABLES');
 
         foreach ($tables as $table) {
-            $table = array_values((array)$table)[0];
+            $table = array_values((array) $table)[0];
             Schema::drop($table);
         }
 

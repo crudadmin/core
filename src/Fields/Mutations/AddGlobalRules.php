@@ -17,7 +17,7 @@ class AddGlobalRules
         $global_rules = config('admin.global_rules', []);
 
         //If is not set field type, default will be string
-        if (!array_key_exists('type', $field)) {
+        if (! array_key_exists('type', $field)) {
             $field['type'] = 'string';
         }
 

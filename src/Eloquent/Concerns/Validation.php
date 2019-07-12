@@ -2,14 +2,13 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Validator;
-use Admin\Exceptions\ValidationException;
-use Localization;
 use Fields;
+use Validator;
+use Localization;
+use Admin\Exceptions\ValidationException;
 
 trait Validation
 {
-
     /**
      * Makes properties keys and values from array to string format.
      *
@@ -25,12 +24,12 @@ trait Validation
                 $data[] = $key;
             } elseif (is_array($value)) {
                 foreach ($value as $item) {
-                    $data[] = $key . ':' . $item;
+                    $data[] = $key.':'.$item;
                 }
             } elseif (is_object($value)) {
                 $data[] = $value;
             } elseif ($value !== false && ($is_string = (is_string($value) || is_numeric($value)))) {
-                $data[] = $is_string ? $key . ':' . $value : $key;
+                $data[] = $is_string ? $key.':'.$value : $key;
             }
         }
 
@@ -97,9 +96,9 @@ trait Validation
             //language is not available, then apply for all langs...
             if ($has_locale = $this->hasFieldParam($orig_key, 'locale')) {
                 if ($default_language) {
-                    $key = $orig_key . '.' . $default_language->slug;
+                    $key = $orig_key.'.'.$default_language->slug;
                 } else {
-                    $key = $orig_key . '.*';
+                    $key = $orig_key.'.*';
                 }
             }
 
@@ -108,17 +107,17 @@ trait Validation
                 $is_multiple = $this->hasFieldParam($orig_key, 'array', true)
                 && $this->isFieldType($key, ['file', 'date', 'time'])
             ) {
-                $key = $key . '.*';
+                $key = $key.'.*';
             }
 
             //If field is not required
-            if (!$this->hasFieldParam($orig_key, 'required')) {
+            if (! $this->hasFieldParam($orig_key, 'required')) {
                 $field['nullable'] = true;
             }
 
             //If is existing row is file type and required file already exists
             if ($row
-                && !empty($row[$orig_key])
+                && ! empty($row[$orig_key])
                 && $this->hasFieldParam($orig_key, 'required')
                 && $this->isFieldType($orig_key, 'file')
             ) {
@@ -141,8 +140,8 @@ trait Validation
 
                         //Apply also for multiple files support
                         $field_key = $is_multiple
-                                        ? $orig_key . '.'. $lang->slug . '.*'
-                                        : $orig_key . '.'. $lang->slug;
+                                        ? $orig_key.'.'.$lang->slug.'.*'
+                                        : $orig_key.'.'.$lang->slug;
 
                         $data[$field_key] = $lang_rules;
                     }

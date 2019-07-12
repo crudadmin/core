@@ -20,7 +20,7 @@ trait HasChildrens
         $method_singular = strtolower(str_singular($method));
 
         //Child model name
-        $child_model_name = strtolower(str_plural($basename_class) . $method_singular);
+        $child_model_name = strtolower(str_plural($basename_class).$method_singular);
 
         //Check if exists child with model name
         $relation = AdminCore::hasAdminModel($child_model_name)

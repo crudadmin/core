@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
-use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Support\Facades\DB;
+use Admin\Core\Eloquent\AdminModel;
 
 trait HasIndex
 {
@@ -16,7 +16,7 @@ trait HasIndex
      */
     protected function getIndexName(AdminModel $model, $key, $prefix = null)
     {
-        return $model->getTable().'_'.$key.'_'.($prefix ? : 'foreign');
+        return $model->getTable().'_'.$key.'_'.($prefix ?: 'foreign');
     }
 
     /**
@@ -32,7 +32,7 @@ trait HasIndex
             DB::raw(
                 'SHOW KEYS
                 FROM `'.$model->getTable().'`
-                WHERE Key_name=\''. $this->getIndexName($model, $key, $prefix) . '\''
+                WHERE Key_name=\''.$this->getIndexName($model, $key, $prefix).'\''
             )
         ));
     }
@@ -43,7 +43,7 @@ trait HasIndex
     protected function dropIndex($model, $key, $prefix = null)
     {
         return $model->getConnection()->select(
-            DB::raw('alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix) .'`')
+            DB::raw('alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix).'`')
         );
     }
 }

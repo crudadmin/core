@@ -102,7 +102,7 @@ trait MigrationAssertions
     {
         $dbNull = $this->getDoctrineColumn($table, $column)->getNotNull();
 
-        PHPUnit::assertEquals($isNull, $dbNull, "Column $column does not match excepted NULL value [".($isNull ? 'true' : 'false')."] with db value [".($dbNull ? 'true' : 'false')."]");
+        PHPUnit::assertEquals($isNull, $dbNull, "Column $column does not match excepted NULL value [".($isNull ? 'true' : 'false').'] with db value ['.($dbNull ? 'true' : 'false').']');
 
         return $this;
     }
@@ -134,7 +134,7 @@ trait MigrationAssertions
     {
         $dbUnsigned = $this->getDoctrineColumn($table, $column)->getUnsigned();
 
-        PHPUnit::assertEquals($unsigned, $dbUnsigned, "Column $column does not match excepted unsigned [[".($unsigned ? 'true' : 'false')."]] with db value [[".($dbUnsigned ? 'true' : 'false')."]]");
+        PHPUnit::assertEquals($unsigned, $dbUnsigned, "Column $column does not match excepted unsigned [[".($unsigned ? 'true' : 'false').']] with db value [['.($dbUnsigned ? 'true' : 'false').']]');
 
         return $this;
     }

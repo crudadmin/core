@@ -2,10 +2,9 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use AdminCore;
-use Admin\Core\Eloquent\AdminModel;
 use Fields;
 use Localization;
+use Admin\Core\Eloquent\AdminModel;
 
 trait FieldProperties
 {
@@ -96,8 +95,6 @@ trait FieldProperties
         if (array_key_exists($key, $fields)) {
             return $fields[$key];
         }
-
-        return null;
     }
 
     /**
@@ -123,7 +120,7 @@ trait FieldProperties
     public function isFieldType(string $key, $types)
     {
         if (is_string($types)) {
-            $types = [ $types ];
+            $types = [$types];
         }
 
         return in_array($this->getFieldType($key), $types);
@@ -162,7 +159,7 @@ trait FieldProperties
      */
     public function hasFieldParam(string $key, $params, $paramValue = null)
     {
-        if (!$field = $this->getField($key)) {
+        if (! $field = $this->getField($key)) {
             return false;
         }
 
@@ -191,7 +188,7 @@ trait FieldProperties
     public function getFieldParam(string $key, string $paramName)
     {
         if ($this->hasFieldParam($key, $paramName) === false) {
-            return null;
+            return;
         }
 
         $field = $this->getField($key);
@@ -299,22 +296,20 @@ trait FieldProperties
         $slug = $lang ?: Localization::get()->slug;
 
         if (! $object || ! is_array($object)) {
-            return null;
+            return;
         }
 
         //If row has saved actual value
-        if (array_key_exists($slug, $object) && (!empty($object[$slug]) || $object[$slug] === 0)) {
+        if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
             return $object[$slug];
         }
 
         //Return first available translated value in admin
         foreach ($object as $value) {
-            if (!empty($value) || $value === 0) {
+            if (! empty($value) || $value === 0) {
                 return $value;
             }
         }
-
-        return null;
     }
 
     /**
@@ -336,7 +331,7 @@ trait FieldProperties
             ! array_key_exists($field, $options)
             || ! array_key_exists($value, $options[$field])
         ) {
-            return null;
+            return;
         }
 
         return $options[$field][$value];

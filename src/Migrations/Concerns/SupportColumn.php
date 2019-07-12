@@ -3,12 +3,11 @@
 namespace Admin\Core\Migrations\Concerns;
 
 use Fields;
-use AdminCore;
-use Admin\Core\Migrations\Types\Type;
+use Illuminate\Support\Facades\DB;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Types\Type;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
-use Illuminate\Support\Facades\DB;
 
 trait SupportColumn
 {
@@ -31,7 +30,7 @@ trait SupportColumn
             $column = $columnClass->registerStaticColumn($table, $model, $updating, $columnExists);
 
             //If column has not been registred
-            if (!$column || $column === true) {
+            if (! $column || $column === true) {
                 continue;
             }
 
@@ -59,8 +58,9 @@ trait SupportColumn
     protected function registerColumn(Blueprint $table, AdminModel $model, $key, $updating = false)
     {
         //Unknown column type
-        if (!($columnClass = Fields::getColumnType($model, $key))) {
+        if (! ($columnClass = Fields::getColumnType($model, $key))) {
             $this->line('<comment>+ Unknown field type</comment> <error>'.$model->getFieldType($key).'</error> <comment>in field</comment> <error>'.$key.'</error>');
+
             return;
         }
 
@@ -68,7 +68,7 @@ trait SupportColumn
         $column = $columnClass->registerColumn($table, $model, $key, $updating);
 
         //If column has not been found, or we want skip column registration
-        if (!$column || $column === true || $columnClass->hasColumn() == false) {
+        if (! $column || $column === true || $columnClass->hasColumn() == false) {
             return;
         }
 
@@ -113,8 +113,8 @@ trait SupportColumn
 
         //If index does exist already
         if (
-            !$model->getSchema()->hasTable($model->getTable()) ||
-            !$this->hasIndex($model, $key, 'index')
+            ! $model->getSchema()->hasTable($model->getTable()) ||
+            ! $this->hasIndex($model, $key, 'index')
         ) {
             $column->index();
         }
@@ -137,6 +137,7 @@ trait SupportColumn
         //If column has own set default setter
         if (method_exists($columnClass, 'setDefault')) {
             $columnClass->setDefault($column, $model, $key);
+
             return;
         }
 

@@ -54,7 +54,6 @@ class MutationRule
         $this->field = $field;
     }
 
-
     /**
      * Set key of mutated field.
      *

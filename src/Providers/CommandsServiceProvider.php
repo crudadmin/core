@@ -2,14 +2,12 @@
 
 namespace Admin\Core\Providers;
 
-use Admin\Core\Commands\AdminMigrationCommand;
-use Admin\Core\Commands\AdminModelCommand;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
+use Admin\Core\Commands\AdminModelCommand;
+use Admin\Core\Commands\AdminMigrationCommand;
 
 class CommandsServiceProvider extends ServiceProvider
 {
-
     /**
      * Register the service provider.
      *

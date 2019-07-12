@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
-use Illuminate\Support\Facades\DB;
 use Localization;
+use Illuminate\Support\Facades\DB;
 
 trait SupportJson
 {
@@ -12,10 +12,10 @@ trait SupportJson
      */
     public function checkForCorrectMysqlVersion($model, $type = null)
     {
-        $pdo     = $model->getConnection()->getPdo();
+        $pdo = $model->getConnection()->getPdo();
         $version = $pdo->query('select version()')->fetchColumn();
 
-        (float)$version = mb_substr($version, 0, 6);
+        (float) $version = mb_substr($version, 0, 6);
 
         //Compare of mysql versions
         if (version_compare($version, '5.7.0', '<')) {
@@ -49,7 +49,6 @@ trait SupportJson
         return $table->json($key)->platformOptions([]);
     }
 
-
     /**
      * Check if column in database under given model has invalid json values.
      * @param  object  $model
@@ -60,7 +59,7 @@ trait SupportJson
     {
         $query = $model->getConnection()
                       ->table($model->getTable())
-                      ->select([ $model->getKeyName(), $key ])
+                      ->select([$model->getKeyName(), $key])
                       ->whereNotNull($key)
                       ->take(5);
 
@@ -112,7 +111,7 @@ trait SupportJson
         $prefix = $languages->first()->slug;
 
         $model->getConnection()->table($model->getTable())->whereRaw('NOT JSON_VALID(`'.$key.'`)')->update([
-            $key => DB::raw('CONCAT("{\"'.$prefix.'\": \"", REPLACE(REPLACE(REPLACE('.$key.', \'"\', \'\\\\"\'), \'\r\', \'\'), \'\n\', \'\'), "\"}")')
+            $key => DB::raw('CONCAT("{\"'.$prefix.'\": \"", REPLACE(REPLACE(REPLACE('.$key.', \'"\', \'\\\\"\'), \'\r\', \'\'), \'\n\', \'\'), "\"}")'),
         ]);
     }
 }

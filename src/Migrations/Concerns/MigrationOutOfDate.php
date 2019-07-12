@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
-use Admin\Core\Eloquent\AdminModel;
 use Cache;
+use Admin\Core\Eloquent\AdminModel;
 
 trait MigrationOutOfDate
 {
@@ -25,7 +25,7 @@ trait MigrationOutOfDate
             return false;
         }
 
-        $namespace = 'admin_migrations.' . md5(get_class($model));
+        $namespace = 'admin_migrations.'.md5(get_class($model));
 
         $hash = md5_file($path);
 
