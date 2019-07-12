@@ -2,7 +2,6 @@
 
 namespace Admin\Core\Fields\Concerns;
 
-use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Mutations;
 
 trait HasMutations
@@ -16,7 +15,7 @@ trait HasMutations
         Mutations\FieldToArray::class,
         Mutations\AddGlobalRules::class,
         Mutations\AddAttributeRules::class,
-        Mutations\BelongsToAttributeMutator::class
+        Mutations\BelongsToAttributeMutator::class,
     ];
 
     /**

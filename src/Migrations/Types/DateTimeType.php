@@ -2,7 +2,6 @@
 
 namespace Admin\Core\Migrations\Types;
 
-use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
@@ -39,7 +38,7 @@ class DateTimeType extends Type
                 ! in_array($type, ['date', 'datetime', 'time'])
                 && $this->getCommand()->confirm('You are updating '.$key.' column from non-date "'.$type.'" type to datetime type. Would you like to update this non-date values to null values?')
             ) {
-                $model->getConnection()->table($model->getTable())->update([ $key => null ]);
+                $model->getConnection()->table($model->getTable())->update([$key => null]);
             }
         }
 
@@ -57,7 +56,7 @@ class DateTimeType extends Type
     public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
     {
         //If default value has not been set
-        if (!($default = $model->getFieldParam($key, 'default'))) {
+        if (! ($default = $model->getFieldParam($key, 'default'))) {
             return;
         }
 

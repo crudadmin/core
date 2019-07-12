@@ -2,7 +2,6 @@
 
 namespace Admin\Core\Migrations\Types;
 
-use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 

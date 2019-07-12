@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Tests\Feature\Model;
 
-use Admin\Core\Tests\App\Models\Fields\FieldsType;
 use Admin\Core\Tests\TestCase;
+use Admin\Core\Tests\App\Models\Fields\FieldsType;
 
 class ModelFieldsTypesTest extends TestCase
 {
@@ -24,7 +24,7 @@ class ModelFieldsTypesTest extends TestCase
             'title' => 'this is my field description',
             'type' => 'string',
             'required' => true,
-            'max' => '255'
+            'max' => '255',
         ]);
     }
 
@@ -34,7 +34,7 @@ class ModelFieldsTypesTest extends TestCase
         $this->assertEquals($this->model->getField('text'), [
             'name' => 'my text field',
             'type' => 'text',
-            'required' => true
+            'required' => true,
         ]);
     }
 
@@ -44,7 +44,7 @@ class ModelFieldsTypesTest extends TestCase
         $this->assertEquals($this->model->getField('longtext'), [
             'name' => 'my longtext field',
             'type' => 'longtext',
-            'required' => true
+            'required' => true,
         ]);
     }
 
@@ -56,7 +56,7 @@ class ModelFieldsTypesTest extends TestCase
             'type' => 'integer',
             'required' => true,
             'integer' => true,
-            'max' => '4294967295'
+            'max' => '4294967295',
         ]);
     }
 
@@ -67,7 +67,7 @@ class ModelFieldsTypesTest extends TestCase
             'name' => 'my decimal field',
             'type' => 'decimal',
             'required' => true,
-            'numeric' => true
+            'numeric' => true,
         ]);
     }
 
@@ -80,7 +80,7 @@ class ModelFieldsTypesTest extends TestCase
             'required' => true,
             'max' => '10240',
             'file' => true,
-            'nullable' => true
+            'nullable' => true,
         ]);
     }
 
@@ -92,7 +92,7 @@ class ModelFieldsTypesTest extends TestCase
             'type' => 'date',
             'required' => true,
             'date_format' => 'd.m.Y',
-            'nullable' => true
+            'nullable' => true,
         ]);
     }
 
@@ -104,7 +104,7 @@ class ModelFieldsTypesTest extends TestCase
             'type' => 'datetime',
             'required' => true,
             'date_format' => 'd.m.Y H:i',
-            'nullable' => true
+            'nullable' => true,
         ]);
     }
 
@@ -116,7 +116,7 @@ class ModelFieldsTypesTest extends TestCase
             'type' => 'time',
             'required' => true,
             'date_format' => 'H:i',
-            'nullable' => true
+            'nullable' => true,
         ]);
     }
 
@@ -126,7 +126,7 @@ class ModelFieldsTypesTest extends TestCase
         $this->assertEquals($this->model->getField('checkbox'), [
             'name' => 'my checkbox field',
             'type' => 'checkbox',
-            'boolean' => true
+            'boolean' => true,
         ]);
     }
 }

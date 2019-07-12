@@ -3,8 +3,6 @@
 namespace Admin\Core\Tests\App\Models\Fields;
 
 use Admin\Core\Eloquent\AdminModel;
-use Admin\Core\Fields\Group;
-use Admin\Tests\App\Models\Articles\Article;
 
 class FieldsRelation extends AdminModel
 {

@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Tests\App\Models\Fields;
 
-use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Group;
+use Admin\Core\Eloquent\AdminModel;
 
 class FieldsMutator extends AdminModel
 {

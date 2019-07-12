@@ -2,11 +2,11 @@
 
 namespace Admin\Core\Commands;
 
+use AdminCore;
+use Carbon\Carbon;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputOption;
-use Carbon\Carbon;
-use AdminCore;
 
 class AdminModelCommand extends GeneratorCommand
 {
@@ -221,7 +221,7 @@ class AdminModelCommand extends GeneratorCommand
     protected function getOptions()
     {
         $options = [
-            ['name', '', InputOption::VALUE_OPTIONAL, 'Model name in administration']
+            ['name', '', InputOption::VALUE_OPTIONAL, 'Model name in administration'],
         ];
 
         /*

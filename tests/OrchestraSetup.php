@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Tests;
 
-use Admin\Core\Providers\AppServiceProvider;
 use Illuminate\Support\Facades\File;
+use Admin\Core\Providers\AppServiceProvider;
 
 trait OrchestraSetup
 {
@@ -102,7 +102,7 @@ trait OrchestraSetup
     public function registerAllAdminModels()
     {
         config()->set('admin.models', [
-            'Admin\Core\Tests\App\Models' => $this->getAppPath('Models')
+            'Admin\Core\Tests\App\Models' => $this->getAppPath('Models'),
         ]);
     }
 }

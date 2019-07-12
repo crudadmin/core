@@ -2,18 +2,18 @@
 
 namespace Admin\Core\Eloquent;
 
+use Fields;
+use Schema;
 use AdminCore;
-use Admin\Core\Eloquent\Concerns\FieldProperties;
-use Admin\Core\Eloquent\Concerns\HasChildrens;
-use Admin\Core\Eloquent\Concerns\HasSettings;
-use Admin\Core\Eloquent\Concerns\RelationsBuilder;
+use Carbon\Carbon;
+use Admin\Core\Helpers\File;
+use Illuminate\Database\Eloquent\Model;
 use Admin\Core\Eloquent\Concerns\Sluggable;
 use Admin\Core\Eloquent\Concerns\Validation;
-use Admin\Core\Helpers\File;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Schema;
-use Fields;
+use Admin\Core\Eloquent\Concerns\HasSettings;
+use Admin\Core\Eloquent\Concerns\HasChildrens;
+use Admin\Core\Eloquent\Concerns\FieldProperties;
+use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 
 class AdminModel extends Model
 {
@@ -140,7 +140,7 @@ class AdminModel extends Model
      */
     public function getMigrationDate()
     {
-        if (!property_exists($this, 'migration_date')) {
+        if (! property_exists($this, 'migration_date')) {
             return false;
         }
 
@@ -158,7 +158,7 @@ class AdminModel extends Model
     public function __call($method, $parameters)
     {
         //Check if called method is not property, method of actual model or new query model
-        if (!method_exists($this, $method) && !$parameters && !method_exists(parent::newQuery(), $method)) {
+        if (! method_exists($this, $method) && ! $parameters && ! method_exists(parent::newQuery(), $method)) {
             //Checks for db relationship of childrens into actual model
             if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
                 return $this->checkIfIsRelationNull($relation);
@@ -193,9 +193,9 @@ class AdminModel extends Model
         $forceCheckRelation = false;
 
         // If is called field existing field
-        if (($field = $this->getField($key)) || ($field = $this->getField($key . '_id'))) {
+        if (($field = $this->getField($key)) || ($field = $this->getField($key.'_id'))) {
             //Register file type response
-            if ($field['type'] == 'file' && !$this->hasGetMutator($key)) {
+            if ($field['type'] == 'file' && ! $this->hasGetMutator($key)) {
                 if ($file = parent::__get($key)) {
                     //If is multilanguage file/s
                     if ($this->hasFieldParam($key, ['locale'], true)) {
@@ -205,8 +205,8 @@ class AdminModel extends Model
                     if (is_array($file) || $this->hasFieldParam($key, ['multiple'], true)) {
                         $files = [];
 
-                        if (!is_array($file)) {
-                            $file = [ $file ];
+                        if (! is_array($file)) {
+                            $file = [$file];
                         }
 
                         foreach ($file as $value) {
@@ -221,7 +221,7 @@ class AdminModel extends Model
                     }
                 }
 
-                return null;
+                return;
             }
 
             //Casts time value, because laravel does not casts time
@@ -230,7 +230,7 @@ class AdminModel extends Model
             }
 
             //If field has not relationship, then return field value... This condition is here for better framework performance
-            elseif (!array_key_exists('belongsTo', $field) && !array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
+            elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
                 if (array_key_exists('locale', $field) && $field['locale'] === true) {
                     $object = parent::__get($key);
 
@@ -256,7 +256,7 @@ class AdminModel extends Model
         }
 
         // Checks for relationship
-        if ($forceCheckRelation === true || !property_exists($this, $key) && !method_exists($this, $key) && !array_key_exists($key, $this->attributes) && !$this->hasGetMutator($key)) {
+        if ($forceCheckRelation === true || ! property_exists($this, $key) && ! method_exists($this, $key) && ! array_key_exists($key, $this->attributes) && ! $this->hasGetMutator($key)) {
             //If relations has been in buffer, but returns nullable value
             if ($relation = $this->returnAdminRelationship($key, true)) {
                 return $this->checkIfIsRelationNull($relation);
@@ -280,7 +280,7 @@ class AdminModel extends Model
     {
         foreach ($this->getFields() as $key => $field) {
             //Skip column
-            if (!($column = Fields::getColumnType($this, $key)) || !$column->hasColumn()) {
+            if (! ($column = Fields::getColumnType($this, $key)) || ! $column->hasColumn()) {
                 continue;
             }
 
@@ -319,7 +319,6 @@ class AdminModel extends Model
         //Add dates
         $this->dates[] = 'published_at';
     }
-
 
     /**
      * Set selectbox field to automatic json format.
@@ -398,7 +397,7 @@ class AdminModel extends Model
                 return $this->{$property};
             }
 
-            return null;
+            return;
         }
 
         return $this->{$property};

@@ -3,9 +3,8 @@
 namespace Admin\Core\Fields\Concerns;
 
 use Fields;
-use AdminCore;
-use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Types;
+use Admin\Core\Eloquent\AdminModel;
 
 trait FieldTypes
 {
@@ -74,7 +73,6 @@ trait FieldTypes
                                         : array_merge($this->types, $add);
     }
 
-
     /**
      * Returns enabled column type of given field.
      *
@@ -95,8 +93,6 @@ trait FieldTypes
                     return $columnClass;
                 }
             }
-
-            return null;
         });
     }
 }

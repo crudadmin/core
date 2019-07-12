@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Helpers;
 
-use File as BaseFile;
 use Image;
+use File as BaseFile;
 
 class File
 {
@@ -69,7 +69,7 @@ class File
             return $this;
         }
 
-        return new static($this->directory . '/' . $key . '/' . $this->filename);
+        return new static($this->directory.'/'.$key.'/'.$this->filename);
     }
 
     /*
@@ -87,7 +87,7 @@ class File
      */
     public static function adminModelFile($model, $field, $file)
     {
-        return new static('uploads/' . $model . '/' . $field . '/' . $file);
+        return new static('uploads/'.$model.'/'.$field.'/'.$file);
     }
 
     /*
@@ -106,7 +106,7 @@ class File
 
     public static function getHash($path)
     {
-        return sha1(md5('!$%' . sha1(env('APP_KEY')) . $path));
+        return sha1(md5('!$%'.sha1(env('APP_KEY')).$path));
     }
 
     /*
@@ -116,7 +116,7 @@ class File
     {
         //If is possible open file in browser, then return right path of file and not downloading path
         if ($displayableInBrowser) {
-            if (in_array($this->extension, (array)$displayableInBrowser)) {
+            if (in_array($this->extension, (array) $displayableInBrowser)) {
                 return $this->url;
             }
         }
@@ -124,7 +124,7 @@ class File
         $path = substr($this->path, 8);
         $action = action('\Admin\Controllers\DownloadController@signedDownload', self::getHash($path));
 
-        return $action . '?file=' . urlencode($path);
+        return $action.'?file='.urlencode($path);
     }
 
     /*
@@ -132,8 +132,8 @@ class File
      */
     public static function paramsMutator($name, $params)
     {
-        if (!is_array($params)) {
-            $params = [ $params ];
+        if (! is_array($params)) {
+            $params = [$params];
         }
 
         //Automatic aspect ratio in resizing image with one parameter
@@ -163,7 +163,7 @@ class File
     public function image($mutators = [], $directory = null, $force = false, $return_object = false, $webp = true)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
-        if ($this->extension == 'svg' || !file_exists($this->path)) {
+        if ($this->extension == 'svg' || ! file_exists($this->path)) {
             return $this;
         }
 
@@ -176,12 +176,12 @@ class File
             $first_value = array_first($mutators);
 
             foreach ($first_value as $key => $mutator) {
-                if (!is_string($mutator) && !is_numeric($mutator)) {
+                if (! is_string($mutator) && ! is_numeric($mutator)) {
                     $first_value[$key] = 0;
                 }
             }
 
-            $hash = key($mutators) . '-' . implode('x', $first_value);
+            $hash = key($mutators).'-'.implode('x', $first_value);
         }
 
         //Correct trim directory name
@@ -192,7 +192,7 @@ class File
         $cache_path = self::adminModelCachePath($directory.'/'.$hash);
 
         //Filepath
-        $filepath = $cache_path . '/' . $this->filename;
+        $filepath = $cache_path.'/'.$this->filename;
 
         //Create directory if is missing
         static::makeDirs($cache_path);
@@ -208,7 +208,7 @@ class File
         elseif ($force === false) {
             //Save temporary file with properties for next resizing
             if (! file_exists($filepath.'.temp')) {
-                file_put_contents($filepath . '.temp', json_encode([
+                file_put_contents($filepath.'.temp', json_encode([
                     'original_path' => $this->path,
                     'mutators' => $mutators,
                 ]));
@@ -267,7 +267,7 @@ class File
         }
 
         return $this->image([
-            $action => [ $width, $height ],
+            $action => [$width, $height],
         ], $directory, $force, false, $webp);
     }
 
@@ -340,7 +340,7 @@ class File
     {
         if ($bytes > 0) {
             $unit = intval(log($bytes, 1024));
-            $units = array('B', 'KB', 'MB', 'GB');
+            $units = ['B', 'KB', 'MB', 'GB'];
 
             if (array_key_exists($unit, $units) === true) {
                 return sprintf('%d %s', $bytes / pow(1024, $unit), $units[$unit]);

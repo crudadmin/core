@@ -2,9 +2,6 @@
 
 namespace Admin\Core\Tests\Concerns;
 
-use Admin\Core\Tests\Concerns\DropDatabase;
-use Admin\Core\Tests\Concerns\DropUploads;
-
 trait AdminIntegration
 {
     /**

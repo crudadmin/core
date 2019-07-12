@@ -3,12 +3,8 @@
 namespace Admin\Core\Migrations\Concerns;
 
 use Fields;
-use AdminCore;
-use Admin\Core\Migrations\Types\Type;
-use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
-use Illuminate\Support\Facades\DB;
 
 trait SupportColumnsPosition
 {
@@ -23,6 +19,7 @@ trait SupportColumnsPosition
     {
         if (($keyPos = array_search($key, array_keys($array))) === false) {
             $array[] = $addItem;
+
             return;
         }
 
@@ -74,7 +71,7 @@ trait SupportColumnsPosition
     {
         //Get just field types columns
         $columns = array_filter($columns, function ($item) use ($staticNames) {
-            return !in_array($item->name, $staticNames);
+            return ! in_array($item->name, $staticNames);
         });
 
         //Get changed columns with their keys

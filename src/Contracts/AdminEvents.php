@@ -46,11 +46,11 @@ trait AdminEvents
     {
         $events = AdminCore::get('events', []);
 
-        if (!isset($events[$name])) {
+        if (! isset($events[$name])) {
             return;
         }
 
-        foreach ((array)$events[$name] as $key => $closure) {
+        foreach ((array) $events[$name] as $key => $closure) {
             call_user_func_array($closure, $args);
         }
     }

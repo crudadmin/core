@@ -3,10 +3,10 @@
 namespace Admin\Core\Tests\Feature\Migrations;
 
 use AdminCore;
-use Admin\Core\Tests\App\Models\Articles\Article;
-use Admin\Core\Tests\Concerns\DropDatabase;
 use Admin\Core\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
+use Admin\Core\Tests\Concerns\DropDatabase;
+use Admin\Core\Tests\App\Models\Articles\Article;
 
 class StaticColumnsTest extends TestCase
 {

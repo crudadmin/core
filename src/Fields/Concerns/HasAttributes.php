@@ -2,7 +2,6 @@
 
 namespace Admin\Core\Fields\Concerns;
 
-use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Mutations;
 
 trait HasAttributes
@@ -14,7 +13,7 @@ trait HasAttributes
      */
     protected $attributes = [
          'name', 'type', 'resize', 'locale', 'default', 'unique_db',
-         'index', 'unsigned', 'imaginary', 'migrateToPivot'
+         'index', 'unsigned', 'imaginary', 'migrateToPivot',
     ];
 
     /**

@@ -2,8 +2,8 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
-use Illuminate\Support\Facades\DB;
 use AdminCore;
+use Illuminate\Support\Facades\DB;
 
 trait SupportRelations
 {
@@ -68,7 +68,7 @@ trait SupportRelations
             }
 
             if ($parent->getConnection() != $model->getConnection()) {
-                $this->line('<comment>+ Skipped foreign relationship:</comment> '.$foreignColumn . ' <comment>( different db connections )</comment> ');
+                $this->line('<comment>+ Skipped foreign relationship:</comment> '.$foreignColumn.' <comment>( different db connections )</comment> ');
                 continue;
             }
 
@@ -77,7 +77,6 @@ trait SupportRelations
             });
         }
     }
-
 
     /**
      * Checks if table has already inserted rows which won't allow insert foreign key without NULL value.
@@ -100,7 +99,7 @@ trait SupportRelations
             do {
                 $requestedId = $this->ask('Which id would you like define for existing rows?');
 
-                if (!is_numeric($requestedId)) {
+                if (! is_numeric($requestedId)) {
                     continue;
                 }
 
@@ -112,7 +111,7 @@ trait SupportRelations
 
             //Register event after this migration will be done
             $this->registerAfterMigration($model, function () use ($model, $key, $requestedId) {
-                DB::connection($model->getConnectionName())->table($model->getTable())->update([ $key => $requestedId ]);
+                DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
             });
         } else {
             $this->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');

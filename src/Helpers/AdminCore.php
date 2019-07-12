@@ -2,11 +2,11 @@
 
 namespace Admin\Core\Helpers;
 
-use Admin\Core\Contracts\AdminEvents;
 use Admin\Core\Contracts\DataStore;
 use Admin\Core\Eloquent\AdminModel;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Log;
+use Admin\Core\Contracts\AdminEvents;
+use Illuminate\Filesystem\Filesystem;
 
 class AdminCore
 {
@@ -93,8 +93,6 @@ class AdminCore
                 return new $path;
             }
         }
-
-        return null;
     }
 
     /**
@@ -134,7 +132,7 @@ class AdminCore
         $files = $this->getNamespaceFiles($basepath);
 
         foreach ($files as $key => $file) {
-            $model = $this->fromFilePathToNamespace((string)$file, $basepath, $namespace);
+            $model = $this->fromFilePathToNamespace((string) $file, $basepath, $namespace);
 
             //If is not same class with filename
             if (! class_exists($model)) {
@@ -176,7 +174,6 @@ class AdminCore
 
         return array_unique($files);
     }
-
 
     /**
      * Returns all available model namespaces.
@@ -294,7 +291,7 @@ class AdminCore
     {
         foreach (array_wrap($namespaces) as $namespace) {
             //Checks if is admin model without initializing of class
-            if (!is_a($namespace, AdminModel::class, true)) {
+            if (! is_a($namespace, AdminModel::class, true)) {
                 continue;
             }
 
@@ -312,7 +309,7 @@ class AdminCore
                     return;
                 }
 
-                $error = 'In '.__class__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
+                $error = 'In '.__CLASS__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
 
                 Log::error($error);
                 abort(500, $error);

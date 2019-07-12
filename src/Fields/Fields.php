@@ -2,14 +2,12 @@
 
 namespace Admin\Core\Fields;
 
-use AdminCore;
 use Admin\Core\Contracts\DataStore;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Concerns\FieldTypes;
-use Admin\Core\Fields\Concerns\HasAttributes;
 use Admin\Core\Fields\Concerns\HasMutations;
 use Admin\Core\Fields\Concerns\StaticFields;
-use Admin\Core\Fields\FieldsMutationBuilder;
+use Admin\Core\Fields\Concerns\HasAttributes;
 use Admin\Core\Fields\Mutations\MutationRule;
 use Admin\Core\Migrations\Concerns\MigrationDefinition;
 
@@ -298,7 +296,7 @@ class Fields extends MigrationDefinition
         if (
             ! $group->id
             || count($mutationBuilder->groups) == 0
-            || !array_key_exists($group->id, $mutationBuilder->groups)
+            || ! array_key_exists($group->id, $mutationBuilder->groups)
         ) {
             return $group;
         }
@@ -433,7 +431,7 @@ class Fields extends MigrationDefinition
         //If is group
         if ($group = $this->isFieldGroup($field)) {
             //If group name is not set
-            if (! $group->name && !is_numeric($key)) {
+            if (! $group->name && ! is_numeric($key)) {
                 $group->name = $key;
             }
 
@@ -550,7 +548,7 @@ class Fields extends MigrationDefinition
         $this->mutateField($field, $key, $table);
 
         //If field need to be removed
-        if (in_array($key, (array)$this->remove[$table])) {
+        if (in_array($key, (array) $this->remove[$table])) {
             unset($this->fields[$table][$key]);
         }
 
@@ -581,7 +579,7 @@ class Fields extends MigrationDefinition
 
         $this->mutationBuilder[$table]->fields[$key]($field);
 
-        $this->fields[$table][$key] = (array)$field;
+        $this->fields[$table][$key] = (array) $field;
     }
 
     /**
@@ -692,9 +690,9 @@ class Fields extends MigrationDefinition
             $response = $mutation->create($field, $key, $model);
 
             if (is_array($response)) {
-                foreach ((array)$response as $key => $field) {
+                foreach ((array) $response as $key => $field) {
                     //Register field with all mutations, actual mutation will be skipped
-                    $this->registerField($field, $key, $model, [ get_class($mutation) ]);
+                    $this->registerField($field, $key, $model, [get_class($mutation)]);
                 }
             }
         }

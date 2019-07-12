@@ -56,7 +56,7 @@ class Sluggable extends Column
         }
 
         //If is creating new table or when slug index is missing
-        if (!$has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index'))) {
+        if (! $has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index'))) {
             $column->index();
         }
 

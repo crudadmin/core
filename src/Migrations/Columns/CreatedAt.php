@@ -4,7 +4,6 @@ namespace Admin\Core\Migrations\Columns;
 
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 
 class CreatedAt extends Column
 {

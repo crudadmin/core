@@ -2,10 +2,9 @@
 
 namespace Admin\Core\Migrations\Types;
 
-use Admin\Core\Migrations\Concerns\SupportJson;
-use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
+use Admin\Core\Migrations\Concerns\SupportJson;
 
 class JsonType extends Type
 {

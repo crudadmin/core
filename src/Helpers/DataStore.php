@@ -72,7 +72,7 @@ class DataStore
      */
     public function push($key, $data, $arrayKey = null, $store = 'global')
     {
-        if (!isset($this->store[$store]) || !array_key_exists($key, $this->store[$store]) || !is_array($this->store[$store][$key])) {
+        if (! isset($this->store[$store]) || ! array_key_exists($key, $this->store[$store]) || ! is_array($this->store[$store][$key])) {
             $this->store[$store][$key] = [];
         }
 

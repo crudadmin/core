@@ -3,7 +3,6 @@
 namespace Admin\Core\Migrations\Types;
 
 use AdminCore;
-use Admin\Core\Migrations\Types\Type;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
