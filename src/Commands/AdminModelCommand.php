@@ -207,7 +207,10 @@ class AdminModelCommand extends GeneratorCommand
             //Change tabulator instead of space
             $line = str_replace("\t", $spaces, $line);
 
-            $lines[$key] = ($line ? $spaces : '').$line;
+            if ( substr($line, 0, 2) == "/*" )
+                $lines[$key] = ($line ? substr($spaces, 0, -1) : '').$line;
+            else
+                $lines[$key] = ($line ? $spaces : '').$line;
         }
 
         return implode("\n", $lines);
