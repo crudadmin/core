@@ -104,7 +104,7 @@ class AdminModelCommand extends GeneratorCommand
         $stub = str_replace('DummyParameters', $this->getStubParameters(), $stub);
 
         $stub = str_replace('DummyFields', $this->getStubFields(), $stub);
-
+        dd($stub);
         return $this;
     }
 
@@ -202,15 +202,15 @@ class AdminModelCommand extends GeneratorCommand
         $lines = explode("\n", $stub);
 
         foreach ($lines as $key => $line) {
-            $line = trim($line, ' ');
+            //Remove every tabulator which consists of 4 characters
+            while (substr($line, 0, 4) == '    ') {
+                $line = substr($line, 4);
+            }
 
             //Change tabulator instead of space
             $line = str_replace("\t", $spaces, $line);
 
-            if ( substr($line, 0, 2) == "/*" )
-                $lines[$key] = ($line ? substr($spaces, 0, -1) : '').$line;
-            else
-                $lines[$key] = ($line ? $spaces : '').$line;
+            $lines[$key] = ($line ? $spaces : '').$line;
         }
 
         return implode("\n", $lines);
