@@ -3,10 +3,14 @@
 namespace Admin\Core\Migrations\Columns;
 
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SupportJson;
 use Illuminate\Database\Schema\Blueprint;
+use Localization;
 
 class Sluggable extends Column
 {
+    use SupportJson;
+
     public $column = 'slug';
 
     /**
