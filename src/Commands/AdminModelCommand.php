@@ -104,7 +104,7 @@ class AdminModelCommand extends GeneratorCommand
         $stub = str_replace('DummyParameters', $this->getStubParameters(), $stub);
 
         $stub = str_replace('DummyFields', $this->getStubFields(), $stub);
-        dd($stub);
+
         return $this;
     }
 
