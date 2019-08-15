@@ -265,10 +265,10 @@ trait FieldProperties
     /**
      * Save admin parent row into model.
      *
-     * @param  Admin\Core\Eloquent\AdminModel  $row
+     * @param  Admin\Core\Eloquent\AdminModel|null  $row
      * @return void
      */
-    public function withModelParentRow(AdminModel $row)
+    public function withModelParentRow($row)
     {
         $this->withParentRow = $row;
     }
