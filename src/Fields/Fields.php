@@ -112,7 +112,7 @@ class Fields extends MigrationDefinition
      * @param  array  $add
      * @return array
      */
-    protected function pushParams(array $field, array $add)
+    protected function pushParams($field, array $add)
     {
         foreach ($add as $params) {
             $field = (new Mutations\FieldToArray)->update($field) + (new Mutations\FieldToArray)->update($params);
