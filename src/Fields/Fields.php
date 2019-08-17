@@ -529,6 +529,10 @@ class Fields extends MigrationDefinition
     {
         $table = $model->getTable();
 
+        //If no field is present, if is null or empty array value
+        if ( ! $field )
+            return $this->fields[$table];
+
         //Field mutations
         foreach ($this->mutations as $namespace) {
             //Skip namespaces
