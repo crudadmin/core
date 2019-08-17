@@ -290,6 +290,11 @@ class AdminCore
     public function registerModel($namespaces, $sort = true)
     {
         foreach (array_wrap($namespaces) as $namespace) {
+            //Check if model with same class name already exists, if yes, skip it...
+            if ( $this->hasAdminModel(class_basename($namespace)) ) {
+                continue;
+            }
+
             //Checks if is admin model without initializing of class
             if (! is_a($namespace, AdminModel::class, true)) {
                 continue;
@@ -299,14 +304,14 @@ class AdminCore
 
             //Check if is valid admin model with correct migration date
             if (! $this->isAdminModel($model)) {
-                return;
+                continue;
             }
 
             //If model with migration date already exists
             if (array_key_exists($model->getMigrationDate(), $this->get('namespaces', []))) {
                 //If duplicite model which is actual loaded is extented parent of loaded child, then just skip adding this model
                 if ($this->get('models', [])[$model->getMigrationDate()] instanceof $model) {
-                    return;
+                    continue;
                 }
 
                 $error = 'In '.__CLASS__.' line '.__LINE__.': Model name '.$model->getTable().' has migration date '.$model->getMigrationDate().' wich already exists in other model '.$this->get('models', [])[$model->getMigrationDate()]->getTable().'.';
