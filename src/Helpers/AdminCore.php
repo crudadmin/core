@@ -192,7 +192,9 @@ class AdminCore
             }
 
             $path = $this->getModelsPath($path);
-            $path = $this->makeRecursivePath($path);
+
+            if ( $path != app_path() )
+                $path = $this->makeRecursivePath($path);
 
             //Register path if does not exists
             if (! in_array($path, $paths)) {
