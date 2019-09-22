@@ -232,7 +232,8 @@ trait Sluggable
             return $this->hasLocalizedSlug;
         }
 
-        $slugcolumn = $this->getProperty('sluggable');
+        if ( !($slugcolumn = $this->getProperty('sluggable')))
+            return;
 
         return $this->hasLocalizedSlug = $this->hasFieldParam($slugcolumn, 'locale', true);
     }
