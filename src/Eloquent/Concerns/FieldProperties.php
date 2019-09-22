@@ -27,7 +27,7 @@ trait FieldProperties
      *
      * @var Admin\Core\Eloquent\AdminModel|null
      */
-    protected $withParentRow = null;
+    protected $parentRow = null;
 
     /**
      * Returns just base fields in getAdminAttributes.
@@ -268,9 +268,11 @@ trait FieldProperties
      * @param  Admin\Core\Eloquent\AdminModel|null  $row
      * @return void
      */
-    public function withModelParentRow($row)
+    public function setParentRow($row)
     {
-        $this->withParentRow = $row;
+        $this->parentRow = $row;
+
+        return $this;
     }
 
     /**
@@ -278,9 +280,9 @@ trait FieldProperties
      *
      * @return Admin\Core\Eloquent\AdminModel|null
      */
-    public function getModelParentRow()
+    public function getParentRow()
     {
-        return $this->withParentRow;
+        return $this->parentRow;
     }
 
     /**
