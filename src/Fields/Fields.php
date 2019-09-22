@@ -92,7 +92,7 @@ class Fields extends MigrationDefinition
      * @param  string|array|Admin\Core\Fields\Group  $field
      * @return bool
      */
-    protected function isFieldGroup($field)
+    public function isFieldGroup($field)
     {
         if (is_string($field)) {
             return false;

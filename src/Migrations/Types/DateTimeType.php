@@ -4,7 +4,6 @@ namespace Admin\Core\Migrations\Types;
 
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema\ColumnDefinition;
 
 class DateTimeType extends Type
 {
@@ -49,11 +48,11 @@ class DateTimeType extends Type
 
     /**
      * Set default value.
-     * @param ColumnDefinition $column
+     * @param mixed $column
      * @param AdminModel       $model
      * @param string           $key
      */
-    public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
+    public function setDefault($column, AdminModel $model, string $key)
     {
         //If default value has not been set
         if (! ($default = $model->getFieldParam($key, 'default'))) {

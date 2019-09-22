@@ -4,7 +4,6 @@ namespace Admin\Core\Migrations\Concerns;
 
 use Fields;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema\ColumnDefinition;
 
 trait SupportColumnsPosition
 {
@@ -94,9 +93,9 @@ trait SupportColumnsPosition
      * Set position in table of static column.
      * @param Blueprint $table
      * @param array $enabled
-     * @param ColumnDefinition $column
+     * @param mixed $column
      */
-    private function setStaticColumnPosition(Blueprint $table, array $enabled, ColumnDefinition $column)
+    private function setStaticColumnPosition(Blueprint $table, array $enabled, $column)
     {
         $staticNames = array_map(function ($class) {
             return $class->getColumn();

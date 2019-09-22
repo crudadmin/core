@@ -5,7 +5,6 @@ namespace Admin\Core\Migrations\Types;
 use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema\ColumnDefinition;
 
 class BelongsToType extends Type
 {
@@ -72,11 +71,11 @@ class BelongsToType extends Type
 
     /**
      * Set default value.
-     * @param ColumnDefinition $column
+     * @param mixed $column
      * @param AdminModel       $model
      * @param string           $key
      */
-    public function setDefault(ColumnDefinition $column, AdminModel $model, string $key)
+    public function setDefault($column, AdminModel $model, string $key)
     {
         $column->default(null);
     }

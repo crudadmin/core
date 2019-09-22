@@ -83,6 +83,16 @@ trait FieldProperties
     }
 
     /**
+     * Return registered groups for given model.
+     *
+     * @return array
+     */
+    public function getFieldsGroups()
+    {
+        return Fields::getFieldsGroups($this);
+    }
+
+    /**
      * Returns needed field.
      *
      * @param  string $key

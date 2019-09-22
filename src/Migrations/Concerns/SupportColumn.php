@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Types\Type;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema\ColumnDefinition;
+use Illuminate\Database\Schema;
 
 trait SupportColumn
 {
@@ -88,10 +88,10 @@ trait SupportColumn
      * Set nullable column.
      * @param  AdminModel       $model
      * @param  string           $key
-     * @param  ColumnDefinition $column
+     * @param  mixed $column
      * @return void
      */
-    private function setNullable(AdminModel $model, string $key, ColumnDefinition $column)
+    private function setNullable(AdminModel $model, string $key, $column)
     {
         if (! $model->hasFieldParam($key, 'required')) {
             $column->nullable();
@@ -102,10 +102,10 @@ trait SupportColumn
      * Set column index.
      * @param  AdminModel       $model
      * @param  string           $key
-     * @param  ColumnDefinition $column
+     * @param  mixed $column
      * @return void
      */
-    private function setIndex(AdminModel $model, string $key, ColumnDefinition $column)
+    private function setIndex(AdminModel $model, string $key, $column)
     {
         if (! $model->hasFieldParam($key, 'index')) {
             return;
@@ -127,7 +127,7 @@ trait SupportColumn
      * @param  Type             $column
      * @return void
      */
-    private function setDefault(AdminModel $model, string $key, ColumnDefinition $column, Type $columnClass)
+    private function setDefault(AdminModel $model, string $key, $column, Type $columnClass)
     {
         //If field does not have default value
         if (! $model->hasFieldParam($key, 'default')) {
