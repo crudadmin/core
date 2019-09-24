@@ -82,15 +82,17 @@ trait FieldTypes
      */
     public function getColumnType(AdminModel $model, string $key)
     {
-        $classes = [];
+        return $this->cache($model->getKey() . '.fields.type.'.$key, function() use ($model, $key) {
+            $classes = [];
 
-        foreach ($this->getColumnTypes() as $columnClass) {
-            $columnClass = $this->bootColumnClass($columnClass);
+            foreach ($this->getColumnTypes() as $columnClass) {
+                $columnClass = $this->bootColumnClass($columnClass);
 
-            //Check if given column is enabled
-            if ($columnClass->isEnabled($model, $key) === true) {
-                return $columnClass;
+                //Check if given column is enabled
+                if ($columnClass->isEnabled($model, $key) === true) {
+                    return $columnClass;
+                }
             }
-        }
+        });
     }
 }
