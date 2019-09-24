@@ -4,10 +4,13 @@ namespace Admin\Core\Migrations\Types;
 
 use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SupportRelations;
 use Illuminate\Database\Schema\Blueprint;
 
 class BelongsToType extends Type
 {
+    use SupportRelations;
+
     /**
      * Check if can apply given column.
      * @param  AdminModel  $model

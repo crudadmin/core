@@ -60,7 +60,7 @@ trait SupportRelations
                         $this->checkForReferenceTable($model, $foreignColumn, $parent->getTable());
                     }
 
-                    $this->line('<comment>+ Added column:</comment> '.$foreignColumn);
+                    $this->getCommand()->line('<comment>+ Added column:</comment> '.$foreignColumn);
                 }
             } elseif ($updating === true) {
                 $column->change();
@@ -68,7 +68,7 @@ trait SupportRelations
             }
 
             if ($parent->getConnection() != $model->getConnection()) {
-                $this->line('<comment>+ Skipped foreign relationship:</comment> '.$foreignColumn.' <comment>( different db connections )</comment> ');
+                $this->getCommand()->line('<comment>+ Skipped foreign relationship:</comment> '.$foreignColumn.' <comment>( different db connections )</comment> ');
                 continue;
             }
 
@@ -87,13 +87,13 @@ trait SupportRelations
      */
     protected function checkForReferenceTable($model, $key, $referenceTable)
     {
-        $this->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table.</comment>');
-        $this->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
+        $this->getCommand()->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table.</comment>');
+        $this->getCommand()->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
 
         $referenceTableIds = AdminCore::getModelByTable($referenceTable)->take(10)->select('id')->pluck('id');
 
         if (count($referenceTableIds) > 0) {
-            $this->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode($referenceTableIds->toArray(), ', '));
+            $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode($referenceTableIds->toArray(), ', '));
 
             //Define ids for existing rows
             do {
@@ -104,7 +104,7 @@ trait SupportRelations
                 }
 
                 if (AdminCore::getModelByTable($referenceTable)->where('id', $requestedId)->count() == 0) {
-                    $this->line('<error>Id #'.$requestedId.' does not exists.</error>');
+                    $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
                     $requestedId = false;
                 }
             } while (! is_numeric($requestedId));
@@ -114,7 +114,7 @@ trait SupportRelations
                 DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
             });
         } else {
-            $this->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');
+            $this->getCommand()->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');
             die;
         }
     }
