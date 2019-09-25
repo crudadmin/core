@@ -65,7 +65,8 @@ trait SupportColumn
         }
 
         //Get column response
-        $column = $columnClass->registerColumn($table, $model, $key, $updating);
+        $column = $columnClass->setCommand($this->getCommand())
+                              ->registerColumn($table, $model, $key, $updating);
 
         //If column has not been found, or we want skip column registration
         if (! $column || $column === true || $columnClass->hasColumn() == false) {
