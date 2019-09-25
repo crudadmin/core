@@ -82,7 +82,7 @@ trait FieldTypes
      */
     public function getColumnType(AdminModel $model, string $key)
     {
-        return $this->cache($model->getKey() . '.fields.type.'.$key, function() use ($model, $key) {
+        return $this->cache($model->getTable() . '.fields.type.'.$key, function() use ($model, $key) {
             $classes = [];
 
             foreach ($this->getColumnTypes() as $columnClass) {
