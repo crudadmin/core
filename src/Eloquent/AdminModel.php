@@ -2,22 +2,24 @@
 
 namespace Admin\Core\Eloquent;
 
-use Fields;
-use Schema;
 use AdminCore;
-use Carbon\Carbon;
-use Admin\Core\Helpers\File;
-use Illuminate\Database\Eloquent\Model;
+use Admin\Core\Eloquent\Concerns\BootAdminModel;
+use Admin\Core\Eloquent\Concerns\FieldProperties;
+use Admin\Core\Eloquent\Concerns\HasChildrens;
+use Admin\Core\Eloquent\Concerns\HasSettings;
+use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
 use Admin\Core\Eloquent\Concerns\Validation;
-use Admin\Core\Eloquent\Concerns\HasSettings;
-use Admin\Core\Eloquent\Concerns\HasChildrens;
-use Admin\Core\Eloquent\Concerns\FieldProperties;
-use Admin\Core\Eloquent\Concerns\RelationsBuilder;
+use Admin\Core\Helpers\File;
+use Carbon\Carbon;
+use Fields;
+use Illuminate\Database\Eloquent\Model;
+use Schema;
 
 class AdminModel extends Model
 {
-    use HasChildrens,
+    use BootAdminModel,
+        HasChildrens,
         HasSettings,
         RelationsBuilder,
         FieldProperties,
@@ -89,6 +91,13 @@ class AdminModel extends Model
     protected $fields = [];
 
     /**
+     * Admin model properties of booted model
+     *
+     * @var  array
+     */
+    static $adminBooted = [];
+
+    /**
      * Returns also unpublished rows.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -120,14 +129,19 @@ class AdminModel extends Model
     public function __construct(array $attributes = [])
     {
         if (AdminCore::isLoaded()) {
-            //Add fillable fields
-            $this->makeFillable();
+            $this->cachableFieldsProperties(function($fields){
+                //Add fillable fields
+                $this->makeFillable($fields);
 
-            //Add dates fields
-            $this->makeDateable();
 
-            //Add cast attributes
-            $this->makeCastable();
+                //Add dates fields
+                $this->makeDateable($fields);
+
+                //Add cast attributes
+                $this->makeCastable($fields);
+            });
+
+            $this->bootCachableProperties();
         }
 
         parent::__construct($attributes);
@@ -276,9 +290,9 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeFillable()
+    protected function makeFillable($fields)
     {
-        foreach ($this->getFields() as $key => $field) {
+        foreach ($fields as $key => $field) {
             //Skip column
             if (! ($column = Fields::getColumnType($this, $key)) || ! $column->hasColumn()) {
                 continue;
@@ -308,9 +322,9 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeDateable()
+    protected function makeDateable($fields)
     {
-        foreach ($this->getFields() as $key => $field) {
+        foreach ($fields as $key => $field) {
             if ($this->isFieldType($key, ['date', 'datetime']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
                 $this->dates[] = $key;
             }
@@ -325,11 +339,12 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeCastable()
+    protected function makeCastable($fields)
     {
-        foreach ($this->getFields() as $key => $field) {
+        foreach ($fields as $key => $field) {
             //Add cast attribute for fields with multiple select
-            if ((
+            if (
+                (
                      $this->isFieldType($key, ['select', 'file', 'date', 'time'])
                      && $this->hasFieldParam($key, 'multiple', true)
                  )
