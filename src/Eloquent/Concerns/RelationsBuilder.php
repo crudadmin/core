@@ -19,7 +19,7 @@ trait RelationsBuilder
      */
     protected function getAdminRelationKey(string $method)
     {
-        return '$relations.'.$this->getTable().'.'.$method.'.'.($this->exists ? $this->getKey() : 'global');
+        return $this->getTable().'.'.$method.'.'.($this->exists ? $this->getKey() : 'global');
     }
 
     /**
@@ -33,7 +33,9 @@ trait RelationsBuilder
         $loaded = parent::relationLoaded($key);
 
         if (! $loaded) {
-            $loaded = AdminCore::has($this->getAdminRelationKey($key));
+            $loaded = AdminCore::get('relations', []);
+
+            return array_key_exists($this->getAdminRelationKey($key), $loaded);
         }
 
         return $loaded;
@@ -53,7 +55,11 @@ trait RelationsBuilder
 
         $relationKey = $this->getAdminRelationKey($key);
 
-        return AdminCore::get($relationKey);
+        $cache = AdminCore::get('relations');
+
+        //If key exists in cache
+        if ( array_key_exists($relationKey, $cache) )
+            return $cache[$relationKey];
     }
 
     /**
@@ -67,7 +73,7 @@ trait RelationsBuilder
     {
         $relationKey = $this->getAdminRelationKey($relation);
 
-        AdminCore::set($relationKey, $value);
+        AdminCore::push('relations', $value, $relationKey);
 
         return parent::setRelation($relation, $value);
     }
