@@ -129,16 +129,15 @@ class AdminModel extends Model
     public function __construct(array $attributes = [])
     {
         if (AdminCore::isLoaded()) {
-            $this->cachableFieldsProperties(function($fields){
+            $this->cachableFieldsProperties(function(){
                 //Add fillable fields
-                $this->makeFillable($fields);
-
+                $this->makeFillable();
 
                 //Add dates fields
-                $this->makeDateable($fields);
+                $this->makeDateable();
 
                 //Add cast attributes
-                $this->makeCastable($fields);
+                $this->makeCastable();
             });
 
             $this->bootCachableProperties();
@@ -290,9 +289,9 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeFillable($fields)
+    protected function makeFillable()
     {
-        foreach ($fields as $key => $field) {
+        foreach ($this->getFields() as $key => $field) {
             //Skip column
             if (! ($column = Fields::getColumnType($this, $key)) || ! $column->hasColumn()) {
                 continue;
@@ -322,9 +321,9 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeDateable($fields)
+    protected function makeDateable()
     {
-        foreach ($fields as $key => $field) {
+        foreach ($this->getFields() as $key => $field) {
             if ($this->isFieldType($key, ['date', 'datetime']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
                 $this->dates[] = $key;
             }
@@ -339,9 +338,9 @@ class AdminModel extends Model
      *
      * @return void
      */
-    protected function makeCastable($fields)
+    protected function makeCastable()
     {
-        foreach ($fields as $key => $field) {
+        foreach ($this->getFields() as $key => $field) {
             //Add cast attribute for fields with multiple select
             if (
                 (

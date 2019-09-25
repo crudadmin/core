@@ -39,7 +39,7 @@ trait BootAdminModel
 
             //Boot all saved callbacks
             foreach ($this->adminCachable as $callback) {
-                $callback($this->getFields());
+                $callback();
             }
 
             //Save booted properties
