@@ -210,7 +210,7 @@ trait Validation
         if (is_array($fields)) {
             //Filtrate which fields will be validated
             foreach ($fields as $key => $field) {
-                //If is just key, then just this fields will be allowed in validation
+                //If key from model are available, then only this fields will be allowed in validation
                 if (is_numeric($key) && is_string($field) && $this->getField($field)) {
                     $only[] = $field;
                 }
@@ -225,6 +225,7 @@ trait Validation
                 }
             }
 
+            //Allow only existing fields
             if (count($only) > 0) {
                 $rules = array_intersect_key($rules, array_flip($only));
             }

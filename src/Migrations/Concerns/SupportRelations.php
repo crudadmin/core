@@ -97,7 +97,7 @@ trait SupportRelations
 
             //Define ids for existing rows
             do {
-                $requestedId = $this->ask('Which id would you like define for existing rows?');
+                $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?');
 
                 if (! is_numeric($requestedId)) {
                     continue;
