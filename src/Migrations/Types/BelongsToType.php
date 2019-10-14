@@ -58,7 +58,7 @@ class BelongsToType extends Type
         //If table has not foreign column
         if ($keyExists == 0) {
             //Checks if table has already inserted rows which won't allow insert foreign key without NULL value
-            if ($tableExists === true && $model->count() > 0 && $model->hasFieldParam($key, 'required', true)) {
+            if ($tableExists === true && $model->withoutGlobalScopes()->count() > 0 && $model->hasFieldParam($key, 'required', true)) {
                 $this->checkForReferenceTable($model, $key, $properties[0]);
             }
 
