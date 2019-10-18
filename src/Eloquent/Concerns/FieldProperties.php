@@ -5,6 +5,7 @@ namespace Admin\Core\Eloquent\Concerns;
 use Fields;
 use Localization;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Fields\Group;
 
 trait FieldProperties
 {
@@ -89,7 +90,31 @@ trait FieldProperties
      */
     public function getFieldsGroups()
     {
-        return Fields::getFieldsGroups($this);
+        $groups = Fields::getFieldsGroups($this);
+
+        return $this->recursivelyBuildAllGroups($groups ?: []);
+    }
+
+    /**
+     * Retrieve all buildedgroups
+     *
+     * @param  array  $groups
+     * @return  array
+     */
+    private function recursivelyBuildAllGroups($groups = [])
+    {
+        foreach ($groups as $key => $group) {
+            if ( !($group instanceof Group) ) {
+                continue;
+            }
+
+            $group->fields = $this->recursivelyBuildAllGroups($group->fields);
+
+            if ( method_exists($group, 'build') )
+                $groups[$key] = $group->build();
+        }
+
+        return $groups;
     }
 
     /**
