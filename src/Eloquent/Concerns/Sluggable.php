@@ -472,7 +472,7 @@ trait Sluggable
 
         $row = ($query ?: new static)->whereSlug($slug)->first($columns);
 
-        if (! $row) {
+        if (! $row || ($id && $row->getKey() !== $id)) {
             (new static)->redirectWithWrongSlug($slug, $id, $key, $row);
         }
 
