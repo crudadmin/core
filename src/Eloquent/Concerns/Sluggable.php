@@ -40,7 +40,7 @@ trait Sluggable
         $url = trim($url);
         $url = strtr($url, $rules);
         $url = mb_strtolower($url, 'utf8');
-        $url = preg_replace('/[^\-a-z0-9_.]+/', '-', $url);
+        $url = preg_replace('/[^\-a-z0-9]+/', '-', $url);
         $url = preg_replace('[^-*|-*$]', '', $url);
         $url = preg_replace('~(-+)~', '-', $url);
 
