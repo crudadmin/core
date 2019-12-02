@@ -187,7 +187,7 @@ class AdminModelCommand extends GeneratorCommand
             $lines[] = "'$key' => '$field',";
         }
 
-        return $this->fixParameterSpacing(implode("\n", $lines), '        ');
+        return $this->fixParameterSpacing(implode("\n", $lines), '            ');
     }
 
     /**
