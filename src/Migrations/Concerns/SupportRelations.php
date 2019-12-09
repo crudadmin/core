@@ -72,8 +72,10 @@ trait SupportRelations
                 continue;
             }
 
-            $this->registerAfterAllMigrations($model, function ($table) use ($foreignColumn, $parent) {
-                $table->foreign($foreignColumn)->references('id')->on($parent->getTable());
+            $this->registerAfterAllMigrations($model, function ($table) use ($model, $foreignColumn, $parent) {
+                $foreignName = $this->makeShortForeignIndex($model->getTable(), $foreignColumn, 'fkbm_');
+
+                $table->foreign($foreignColumn, $foreignName)->references('id')->on($parent->getTable());
             });
         }
     }
@@ -117,5 +119,65 @@ trait SupportRelations
             $this->getCommand()->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');
             die;
         }
+    }
+
+    /**
+     * Remove every second char from given string
+     *
+     * @param  string  $string
+     * @return string
+     */
+    private function removeEverySecondCharInMiddle($string)
+    {
+        $string = str_replace('_', '', $string);
+
+        //Split string into array
+        $allChars = str_split($string);
+
+        //Skip first and last characted in the string
+        $chars = array_slice($allChars, 1, -1);
+
+        //Remove every other characted from the middle string
+        foreach ($chars as $key => $char) {
+            if ( $key%2 == 0 ) {
+                unset($chars[$key]);
+            }
+        }
+
+        //Does not delete first and last character from the table.
+        //Everything odd characted in the middle can be removed
+        $newString = $allChars[0].implode('', $chars).$allChars[strlen($string)-1];
+
+        //Return smaller character
+        return strlen($newString) < strlen($string)
+                ? $newString
+                : $string;
+    }
+
+    /**
+     * Create foreign key index name.
+     * @param  string $table
+     * @param  string $key
+     * @return string
+     */
+    private function makeShortForeignIndex($table, $key, $prefix = 'fk_')
+    {
+        $fkStringLimit = 64;
+
+        $table = preg_replace('/_+/', '_', $table);
+
+        //If table name is too long for MySql
+        for ( $i = 0; $i < 2; $i++ )
+        {
+            $totalLength = strlen($prefix) + strlen($table) + strlen($key);
+
+            if ( strlen($table) > 10 && $totalLength > $fkStringLimit ) {
+                $table = $this->removeEverySecondCharInMiddle($table);
+            } else {
+                break;
+            }
+        }
+
+        return $prefix.$table.'_'.$key;
     }
 }

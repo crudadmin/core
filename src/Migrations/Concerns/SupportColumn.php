@@ -94,7 +94,7 @@ trait SupportColumn
      */
     private function setNullable(AdminModel $model, string $key, $column)
     {
-        if (! $model->hasFieldParam($key, ['required']) || $model->hasFieldParam($key, ['nullable'])) {
+        if (! $model->hasFieldParam($key, ['required']) ) {
             $column->nullable();
         }
     }

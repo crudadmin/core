@@ -131,7 +131,7 @@ class ColumnsTypesTest extends TestCase
         $this->assertTableExists('article_fields_relation_multiple')
              ->assertColumnExists('article_fields_relation_multiple', 'fields_relation_id')
              ->assertColumnExists('article_fields_relation_multiple', 'article_id')
-             ->assertHasForeignKey('article_fields_relation_multiple', 'fk_aefsrnme_fields_relation_id')
-             ->assertHasForeignKey('article_fields_relation_multiple', 'fk_aefsrnme_article_id');
+             ->assertHasForeignKey('article_fields_relation_multiple', 'fk_article_fields_relation_multiple_fields_relation_id')
+             ->assertHasForeignKey('article_fields_relation_multiple', 'fk_article_fields_relation_multiple_article_id');
     }
 }
