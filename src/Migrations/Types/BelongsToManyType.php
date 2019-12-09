@@ -3,10 +3,13 @@
 namespace Admin\Core\Migrations\Types;
 
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SupportRelations;
 use Illuminate\Database\Schema\Blueprint;
 
 class BelongsToManyType extends Type
 {
+    use SupportRelations;
+
     /*
      * This column type does not contain of column in database
      */
@@ -53,11 +56,11 @@ class BelongsToManyType extends Type
 
                     //Add integer reference for owner table
                     $table->integer($properties[6])->unsigned();
-                    $table->foreign($properties[6], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
+                    $table->foreign($properties[6], $this->makeShortForeignIndex($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
 
                     //Add integer reference for belongs to table
                     $table->integer($properties[7])->unsigned();
-                    $table->foreign($properties[7], $this->makeForeignIndexForBelongsToMany($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
+                    $table->foreign($properties[7], $this->makeShortForeignIndex($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
                 });
 
                 $this->getCommand()->line('<comment>Created table:</comment> '.$properties[3]);
@@ -113,25 +116,5 @@ class BelongsToManyType extends Type
         }
 
         return [];
-    }
-
-    /**
-     * Create foreign key index name.
-     * @param  string $table
-     * @param  string $key
-     * @return string
-     */
-    private function makeForeignIndexForBelongsToMany($table, $key)
-    {
-        $table_index = '';
-
-        $table = preg_replace('/_+/', '_', $table);
-
-        foreach ((array) explode('_', $table) as $t) {
-            //Get first letter and last letter from table name
-            $table_index .= $t[0].$t[strlen($t) - 1];
-        }
-
-        return 'fk_'.$table_index.'_'.$key;
     }
 }
