@@ -375,6 +375,18 @@ trait FieldProperties
     }
 
     /**
+     * alias for getSelectOption
+     *
+     * @param  string  $field
+     * @param  string|int  $value
+     * @return string
+     */
+    public function getOptionValue(string $field, $value)
+    {
+        return $this->getSelectOption($field, $value);
+    }
+
+    /**
      * Get migration column type.
      *
      * @param  string  $key
