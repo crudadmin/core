@@ -4,6 +4,7 @@ namespace Admin\Core\Eloquent;
 
 use AdminCore;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
+use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\HasSettings;
@@ -23,6 +24,7 @@ class AdminModel extends Model
         HasSettings,
         RelationsBuilder,
         FieldProperties,
+        FieldModules,
         Validation,
         Sluggable;
 
@@ -89,6 +91,13 @@ class AdminModel extends Model
      * @var  array
      */
     protected $fields = [];
+
+    /**
+     * Model modules
+     *
+     * @var  array
+     */
+    protected $modules = [];
 
     /**
      * Admin model properties of booted model

@@ -277,9 +277,17 @@ class Fields extends MigrationDefinition
     {
         $builder = new FieldsMutationBuilder;
 
+        //Mutate fields in admin model
         if (method_exists($model, 'mutateFields')) {
             $model->mutateFields($builder, $param);
         }
+
+        //Mutate fields in admin model modules
+        $model->runAdminModules(function($module) use ($builder, $param) {
+            if ( method_exists($module, 'mutateFields') ) {
+                $module->mutateFields($builder, $param);
+            }
+        });
 
         return $builder;
     }
