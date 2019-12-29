@@ -21,9 +21,16 @@ trait FieldModules
      */
     protected function getCachedAdminModuleClass($class)
     {
-        return AdminCore::cache($this->getTable().$class, function () use ($class) {
-            return new $class($this);
-        });
+        $storeKey = 'admin_modules';
+
+        $store = AdminCore::get($storeKey, []);
+
+        //If key does exists in store
+        if ( array_key_exists($class, $store) ) {
+            return $store[$class];
+        }
+
+        return AdminCore::push($storeKey, new $class(), $class);
     }
 
     /*
@@ -33,7 +40,7 @@ trait FieldModules
     {
         if ($this->modules && is_array($this->modules)) {
             foreach ($this->modules as $class) {
-                $module = $this->getCachedAdminRuleClass($class);
+                $module = $this->getCachedAdminModuleClass($class);
 
                 if ( $module->isActive($this) === true ) {
                     $callback($module);
