@@ -125,8 +125,8 @@ class AdminModel extends Model
      */
     public function scopeWithPublished($query)
     {
-        $query->where('published_at', '!=', null)
-              ->whereRAW('published_at <= NOW()');
+        $query->where($this->getTable().'.published_at', '!=', null)
+              ->whereRAW($this->getTable().'.published_at <= NOW()');
     }
 
     /**
@@ -434,5 +434,31 @@ class AdminModel extends Model
     public function getSchema()
     {
         return Schema::connection($this->getProperty('connection'));
+    }
+
+    /**
+     * Fix ambiguous column or multiple columns
+     *
+     * @param  string/array  $columns
+     * @param  string        $table
+     * @return  string/array
+     */
+    public function fixAmbiguousColumn($column, $table = null)
+    {
+        if ( ! $table ) {
+            $table = $this->getTable();
+        }
+
+        if ( is_array($column) ) {
+            return array_map(function($item) use ($table) {
+                return $this->fixAmbiguousColumn($item, $table);
+            }, $column);
+        }
+
+        if ( strpos($column, '.') === false ) {
+            return $this->getTable().'.'.$column;
+        }
+
+        return $column;
     }
 }
