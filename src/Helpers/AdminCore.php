@@ -215,7 +215,8 @@ class AdminCore
     {
         $path = trim_end($path, '/');
 
-        if (substr($path, 0, 1) != '/') {
+        //If is not app basepath
+        if (substr($path, 0, strlen(base_path())) !== base_path()) {
             $path = base_path($path);
         }
 
@@ -243,9 +244,10 @@ class AdminCore
     private function fromFilePathToNamespace($path, $basepath, $namespace)
     {
         $basepath = trim_end($basepath, '*');
+        $basepath = str_replace('/', '\\', $basepath);
 
-        $path = str_replace_first($basepath, '', $path);
         $path = str_replace('/', '\\', $path);
+        $path = str_replace_first($basepath, '', $path);
         $path = str_replace('.php', '', $path);
         $path = trim($path, '\\');
 
