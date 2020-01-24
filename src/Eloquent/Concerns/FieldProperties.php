@@ -140,9 +140,9 @@ trait FieldProperties
      */
     public function getFieldType(string $key)
     {
-        $field = $this->getField($key);
-
-        return $field['type'];
+        if ( $field = $this->getField($key) ) {
+            return $field['type'];
+        }
     }
 
     /**

@@ -106,9 +106,6 @@ class AdminCore
             $this->registerAdminModels($basepath, $namespace);
         }
 
-        //Sorting models
-        $this->sortModels();
-
         //All admin models has been properly loaded
         $this->set('booted', true);
 
@@ -144,6 +141,8 @@ class AdminCore
 
         //Set actual namespace as booted
         $this->push('booted_namespaces', $namespace);
+
+        $this->sortModels();
     }
 
     /**

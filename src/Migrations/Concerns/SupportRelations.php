@@ -95,7 +95,7 @@ trait SupportRelations
         $referenceTableIds = AdminCore::getModelByTable($referenceTable)->take(10)->select('id')->pluck('id');
 
         if (count($referenceTableIds) > 0) {
-            $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode($referenceTableIds->toArray(), ', '));
+            $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode(', ', $referenceTableIds->toArray()));
 
             //Define ids for existing rows
             do {
