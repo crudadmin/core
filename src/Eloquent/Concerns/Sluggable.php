@@ -250,16 +250,26 @@ trait Sluggable
         $slugcolumn = $this->getProperty('sluggable');
 
         //Set slug
-        if ( array_key_exists($slugcolumn, $array) && mb_strlen($array[$slugcolumn], 'UTF-8') > 0 )
+        if (array_key_exists($slugcolumn, $array))
         {
-            $slug = $this->makeSlug($array[$slugcolumn]);
-
-            //If slug has been changed, then save previous slug state
-            if ($this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug) {
-                $this->slugSnapshot();
+            //If dynamic slugs are turned off
+            if ( $this->slug_dynamic === false ) {
+                if ( $this->exists && $this->slug !== $this->getOriginal('slug') ) {
+                    $this->slugSnapshot();
+                }
             }
 
-            $this->attributes['slug'] = $slug;
+            //If is available slug column value
+            else if ( mb_strlen($array[$slugcolumn], 'UTF-8') > 0 ) {
+                $slug = $this->makeSlug($array[$slugcolumn]);
+
+                //If slug has been changed, then save previous slug state
+                if ($this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug) {
+                    $this->slugSnapshot();
+                }
+
+                $this->attributes['slug'] = $slug;
+            }
         }
     }
 
@@ -542,5 +552,15 @@ trait Sluggable
         }
 
         return $this->slug;
+    }
+
+    /**
+     * Check if given model has sluggable support
+     *
+     * @return  bool
+     */
+    public function hasSluggable()
+    {
+        return $this->sluggable ?: false;
     }
 }

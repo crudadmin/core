@@ -21,7 +21,7 @@ trait FieldModules
      */
     protected function getCachedAdminModuleClass($class)
     {
-        $storeKey = 'admin_modules';
+        $storeKey = 'admin_modules.'.$this->getTable();
 
         $store = AdminCore::get($storeKey, []);
 
@@ -30,7 +30,10 @@ trait FieldModules
             return $store[$class];
         }
 
-        return AdminCore::push($storeKey, new $class(), $class);
+        $initializedClass = new $class();
+        $initializedClass->setModel($this);
+
+        return AdminCore::push($storeKey, $initializedClass, $class);
     }
 
     /*

@@ -1,8 +1,10 @@
 <?php
 
-namespace Admin\Core\Eloquent;
+namespace Admin\Core\Eloquent\Concerns;
 
-interface AdminModelModule
+use Admin\Core\Eloquent\AdminModel;
+
+interface AdminModelModuleSupport
 {
     /**
      * Check if admin module is active
