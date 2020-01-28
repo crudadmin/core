@@ -253,9 +253,10 @@ trait Sluggable
         if (array_key_exists($slugcolumn, $array))
         {
             //If dynamic slugs are turned off
-            if ( $this->slug_dynamic === false ) {
-                if ( $this->exists && $this->slug !== $this->getOriginal('slug') ) {
-                    $this->slugSnapshot();
+            if ( $this->slug_dynamic === false && $this->slug ) {
+                //If does exists row, and if has been changed
+                if ( $this->exists && ($original = $this->getOriginal('slug')) && $this->slug !== $original ) {
+                    $this->slugSnapshot($original);
                 }
             }
 
@@ -289,9 +290,9 @@ trait Sluggable
      *
      * @return void
      */
-    public function slugSnapshot()
+    public function slugSnapshot($value = null)
     {
-        SluggableHistory::snapshot($this);
+        SluggableHistory::snapshot($this, $value);
     }
 
     /**
