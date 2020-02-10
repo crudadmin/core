@@ -90,6 +90,8 @@ class MigrationBuilder extends Command
             $this->updateTable($model);
         } else {
             $this->createTable($model);
+
+            $this->fireModelEvent($model, 'onTableCreate');
         }
 
         $this->fireModelEvent($model, 'afterMigrate');
