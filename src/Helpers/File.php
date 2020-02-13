@@ -49,7 +49,7 @@ class File
 
         $this->directory = str_replace(public_path(), '', implode('/', array_slice(explode('/', $this->path), 0, -1)));
 
-        $this->url = url(str_replace(public_path(), '', $this->path));
+        $this->url = asset(str_replace(public_path(), '', $this->path));
     }
 
     /**
@@ -152,6 +152,16 @@ class File
     }
 
     /**
+     * Returns backup images resource path
+     *
+     * @return  string
+     */
+    public function getBackupResourcePath()
+    {
+        return config('admin.backup_image', __DIR__.'/../Resources/images/thumbnail.jpg');
+    }
+
+    /**
      * Resize image.
      * @param  array   $mutators      array of muttators
      * @param  [type]  $directory     where should be image saved, directory name may be generated automatically
@@ -163,7 +173,10 @@ class File
     public function image($mutators = [], $directory = null, $force = false, $return_object = false, $webp = true)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
-        if ($this->extension == 'svg' || ! file_exists($this->path)) {
+        if (
+            ($this->extension == 'svg' || ! file_exists($this->path))
+            && config('admin.rewrite_missing_upload_images', true) !== true
+        ) {
             return $this;
         }
 
@@ -218,7 +231,7 @@ class File
         }
 
         //Set image for processing
-        $image = Image::make($this->path);
+        $image = Image::make(file_exists($this->basepath) ? $this->basepath : $this->getBackupResourcePath());
 
         /*
          * Apply mutators on image
