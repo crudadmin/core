@@ -94,7 +94,7 @@ class Sluggable extends Column
             $empty_slugs = $model->withoutGlobalScopes()->where(function ($query) use ($model) {
                 //If some of localized slug value is empty
                 if ($model->hasLocalizedSlug()) {
-                    $languages = Localization::getLanguages(true);
+                    $languages = Localization::getLanguages();
 
                     //Check all available languages slugs
                     foreach ($languages as $key => $lang) {

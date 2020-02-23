@@ -85,7 +85,7 @@ trait SupportJson
             return;
         }
 
-        $languages = Localization::getLanguages(true);
+        $languages = Localization::getLanguages();
 
         $slug = ($lang = $languages->first()) ? $lang->slug : 'en';
 

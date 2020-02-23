@@ -251,6 +251,17 @@ class AdminModel extends Model
                 return ($value = parent::__get($key)) ? Carbon::createFromFormat('H:i:s', $value) : null;
             }
 
+            else if ( in_array($field['type'], ['editor', 'longeditor']) ) {
+                $value = parent::__get($key);
+                $value = $this->returnLocaleValue($value);
+
+                if ( $value ) {
+                    return '<div data-crudadmin-editor>'.$value.'</div>';
+                }
+
+                return $value;
+            }
+
             //If field has not relationship, then return field value... This condition is here for better framework performance
             elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
                 if (array_key_exists('locale', $field) && $field['locale'] === true) {

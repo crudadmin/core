@@ -37,19 +37,24 @@ class File
      */
     public $url;
 
-    public function __construct($path)
+    /**
+     * Initialize new admin file
+     *
+     * @param  string  $basepath
+     */
+    public function __construct($basepath)
     {
-        $this->filename = basename($path);
+        $this->filename = basename($basepath);
 
         $this->extension = $this->getExtension($this->filename);
 
-        $this->path = $path;
+        $this->path = str_replace(public_path('/'), '', $basepath);
 
-        $this->basepath = public_path(str_replace(public_path(), '', $path));
+        $this->basepath = $basepath;
 
-        $this->directory = str_replace(public_path(), '', implode('/', array_slice(explode('/', $this->path), 0, -1)));
+        $this->directory = implode('/', array_slice(explode('/', $this->path), 0, -1));
 
-        $this->url = asset(str_replace(public_path(), '', $this->path));
+        $this->url = asset($this->path);
     }
 
     /**
@@ -69,7 +74,7 @@ class File
             return $this;
         }
 
-        return new static($this->directory.'/'.$key.'/'.$this->filename);
+        return new static(public_path($this->directory.'/'.$key.'/'.$this->filename));
     }
 
     /*
@@ -87,7 +92,7 @@ class File
      */
     public static function adminModelFile($model, $field, $file)
     {
-        return new static('uploads/'.$model.'/'.$field.'/'.$file);
+        return new static(public_path('uploads/'.$model.'/'.$field.'/'.$file));
     }
 
     /*
@@ -214,7 +219,7 @@ class File
         if (file_exists($filepath)) {
             $relative_filepath = self::adminModelCachePath($directory.'/'.$hash.'/'.$this->filename, false);
 
-            return new static($relative_filepath);
+            return new static(public_path($relative_filepath));
         }
 
         //If mutators file does not exists, and cannot be resized in actual request, then return path to resizing process
@@ -330,7 +335,7 @@ class File
     public function filesize($formated = false)
     {
         if ($formated === true) {
-            return $this->filesizeFormated($this->basepath);
+            return $this->filesizeFormated();
         }
 
         return filesize($this->basepath);
@@ -339,8 +344,10 @@ class File
     /*
      * Returns formated value of filesize
      */
-    public function filesizeFormated($path)
+    public function filesizeFormated()
     {
+        $path = $this->basepath;
+
         $bytes = sprintf('%u', filesize($path));
 
         return (new static($path))->formatFilesizeNumber($bytes);
