@@ -253,7 +253,10 @@ class AdminModel extends Model
 
             else if ( in_array($field['type'], ['editor', 'longeditor']) ) {
                 $value = parent::__get($key);
-                $value = $this->returnLocaleValue($value);
+
+                if ($this->hasFieldParam($key, ['locale'], true)) {
+                    $value = $this->returnLocaleValue($value);
+                }
 
                 if ( $value ) {
                     return '<div data-crudadmin-editor>'.$value.'</div>';
