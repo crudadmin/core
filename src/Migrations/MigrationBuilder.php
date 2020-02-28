@@ -67,7 +67,7 @@ class MigrationBuilder extends Command
         }
 
         if ($migrated === 0) {
-            return $this->line('<info>Noting to migrate.</info>');
+            return $this->line('<info>Nothing to migrate.</info>');
         }
 
         /*
