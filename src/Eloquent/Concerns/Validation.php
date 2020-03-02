@@ -174,11 +174,11 @@ trait Validation
      * @param  array  $fields
      * @return array
      */
-    protected function muttatorsResponse($fields)
+    protected function muttatorsResponse($fields, $rules = null)
     {
         $request = new \Admin\Requests\DataRequest(request()->all());
 
-        $request->applyMutators($this, $fields);
+        $request->applyMutators($this, $fields, $rules);
 
         $data = $request->allWithMutators()[0];
 
@@ -254,7 +254,7 @@ trait Validation
 
         //Modify request data with admin mutators
         if ($mutators == true) {
-            return $this->muttatorsResponse(count($only) > 0 ? $only : null);
+            return $this->muttatorsResponse(count($only) > 0 ? $only : null, $rules);
         }
     }
 }
