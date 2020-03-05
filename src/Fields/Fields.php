@@ -608,6 +608,7 @@ class Fields extends MigrationDefinition
         $mutation = new $namespace;
 
         if ($mutation instanceof MutationRule) {
+            $mutation->setModel($model);
             $mutation->setFields($this->fields[$model->getTable()]);
             $mutation->setField($field);
             $mutation->setKey($key);
