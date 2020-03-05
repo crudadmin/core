@@ -419,13 +419,17 @@ class AdminModel extends Model
      */
     public function getProperty(string $property, $row = null)
     {
-        //Translates
-        if (in_array($property, ['name', 'title']) && $translate = trans($this->{$property})) {
+        //Laravel for translatable properties
+        if (
+            in_array($property, ['name', 'title'])
+            && property_exists($this, $property)
+            && $translate = trans($this->{$property})
+        ) {
             return $translate;
         }
 
         //Object / Array
-        elseif (in_array($property, ['fields', 'active', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'publishable', 'deletable', 'layouts', 'belongsToModel'])) {
+        elseif (in_array($property, ['name', 'fields', 'active', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'publishable', 'deletable', 'layouts', 'belongsToModel'])) {
             if (method_exists($this, $property)) {
                 return $this->{$property}($row);
             }
