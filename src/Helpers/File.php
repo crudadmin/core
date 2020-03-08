@@ -69,11 +69,6 @@ class File
 
     public function __get($key)
     {
-        //When is file type svg, then image postprocessing subdirectories not exists
-        if ($this->extension == 'svg') {
-            return $this;
-        }
-
         return new static(public_path($this->directory.'/'.$key.'/'.$this->filename));
     }
 
@@ -278,6 +273,11 @@ class File
      */
     public function resize($width = null, $height = null, $directory = null, $force = false, $webp = true)
     {
+        //We cant resize svg files...
+        if ($this->extension == 'svg') {
+            return $this;
+        }
+
         if (is_numeric($width) && is_numeric($height)) {
             $action = 'fit';
         } else {
