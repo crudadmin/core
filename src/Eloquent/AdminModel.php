@@ -233,13 +233,13 @@ class AdminModel extends Model
 
                         foreach ($file as $value) {
                             if (is_string($value)) {
-                                $files[] = File::adminModelFile($this->getTable(), $key, $value);
+                                $files[] = File::adminModelFile($this->getTable(), $key, $value, $this->getKey());
                             }
                         }
 
                         return $files;
                     } else {
-                        return File::adminModelFile($this->getTable(), $key, $file);
+                        return File::adminModelFile($this->getTable(), $key, $file, $this->getKey());
                     }
                 }
 

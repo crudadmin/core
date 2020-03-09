@@ -37,13 +37,39 @@ class File
      */
     public $url;
 
+    /*
+     * Related admin model
+     */
+    public $tableName;
+
+    /*
+     * Related field key
+     */
+    public $fieldKey;
+
+    /*
+     * Related model id
+     */
+    public $rowId;
+
+    /*
+     * Saved resize params
+     */
+    public $resizeParams = [];
+
     /**
      * Initialize new admin file
      *
      * @param  string  $basepath
      */
-    public function __construct($basepath)
+    public function __construct($basepath, $previousObject = null)
     {
+        //If previous object does exists
+        //We want clone some data...
+        if ( $previousObject ) {
+            $this->cloneModelData($previousObject);
+        }
+
         $this->filename = basename($basepath);
 
         $this->extension = $this->getExtension($this->filename);
@@ -54,7 +80,7 @@ class File
 
         $this->directory = implode('/', array_slice(explode('/', $this->path), 0, -1));
 
-        $this->url = asset($this->path);
+        $this->url = $this->buildAssetsPath($this->path);
     }
 
     /**
@@ -69,7 +95,22 @@ class File
 
     public function __get($key)
     {
-        return new static(public_path($this->directory.'/'.$key.'/'.$this->filename));
+        $basepath = public_path($this->directory.'/'.$key.'/'.$this->filename);
+
+        return new static($basepath, $this);
+    }
+
+    private function buildAssetsPath($path)
+    {
+        $path = asset($path);
+
+        if ( class_exists(\FrontendEditor::class)
+            && $this->tableName && $this->fieldKey && $this->rowId
+        ) {
+            return \FrontendEditor::buildImageQuery($path, $this->resizeParams, $this->tableName, $this->fieldKey, $this->rowId);
+        }
+
+        return $path;
     }
 
     /*
@@ -85,9 +126,15 @@ class File
     /*
      * Build directory path for uploaded files in model
      */
-    public static function adminModelFile($model, $field, $file)
+    public static function adminModelFile($table, $field, $file, $rowId = null)
     {
-        return new static(public_path('uploads/'.$model.'/'.$field.'/'.$file));
+        $file = new static(public_path('uploads/'.$table.'/'.$field.'/'.$file));
+
+        $file->tableName = $table;
+        $file->fieldKey = $field;
+        $file->rowId = $rowId;
+
+        return $file;
     }
 
     /*
@@ -214,7 +261,7 @@ class File
         if (file_exists($filepath)) {
             $relative_filepath = self::adminModelCachePath($directory.'/'.$hash.'/'.$this->filename, false);
 
-            return new static(public_path($relative_filepath));
+            return new static(public_path($relative_filepath), $this);
         }
 
         //If mutators file does not exists, and cannot be resized in actual request, then return path to resizing process
@@ -227,7 +274,7 @@ class File
                 ]));
             }
 
-            return new static($filepath);
+            return new static($filepath, $this);
         }
 
         //Set image for processing
@@ -255,7 +302,7 @@ class File
             return $image;
         }
 
-        return new static($filepath);
+        return new static($filepath, $this);
     }
 
     /*
@@ -273,6 +320,9 @@ class File
      */
     public function resize($width = null, $height = null, $directory = null, $force = false, $webp = true)
     {
+        //Saved resize params
+        $this->resizeParams = [$width, $height];
+
         //We cant resize svg files...
         if ($this->extension == 'svg') {
             return $this;
@@ -389,6 +439,19 @@ class File
         $encoded = $image->encode('webp', 85);
 
         @file_put_contents($output_filename, $encoded);
+
+        return $this;
+    }
+
+    /*
+     * Clone required params form frontendEditor
+     */
+    public function cloneModelData($file)
+    {
+        $this->resizeParams = $file->resizeParams;
+        $this->tableName = $file->tableName;
+        $this->fieldKey = $file->fieldKey;
+        $this->rowId = $file->rowId;
 
         return $this;
     }
