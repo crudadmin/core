@@ -134,6 +134,9 @@ class File
         $file->fieldKey = $field;
         $file->rowId = $rowId;
 
+        //Rebuild url path. Because this parameter is assigned to model attributes
+        $file->url = $file->buildAssetsPath($file->path);
+
         return $file;
     }
 
