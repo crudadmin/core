@@ -2,10 +2,11 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Fields;
-use Validator;
-use Localization;
 use Admin\Exceptions\ValidationException;
+use Fields;
+use Illuminate\Validation\ValidationException as BaseValidationExpetion;
+use Localization;
+use Validator;
 
 trait Validation
 {
@@ -162,7 +163,9 @@ trait Validation
     {
         //If is ajax request
         if (request()->expectsJson()) {
-            return response()->json($validator->errors(), 422);
+            $error = BaseValidationExpetion::withMessages($validator->errors()->getMessages());
+
+            throw $error;
         }
 
         return redirect(url()->previous())->withErrors($validator)->withInput();
