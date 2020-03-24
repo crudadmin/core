@@ -87,7 +87,11 @@ class File
      */
     public static function adminModelFile($model, $field, $file)
     {
-        return new static('uploads/'.$model.'/'.$field.'/'.$file);
+        $parts = [basename($model), basename($field), basename($file)];
+        $parts = array_filter($parts);
+        $parts = implode('/', $parts);
+
+        return new static('uploads/'.$parts);
     }
 
     /*
@@ -121,10 +125,12 @@ class File
             }
         }
 
-        $path = substr($this->path, 8);
-        $action = action('\Admin\Controllers\DownloadController@signedDownload', self::getHash($path));
+        $origPath = substr($this->path, 8);
+        $path = explode('/', $origPath);
 
-        return $action.'?file='.urlencode($path);
+        $action = action( '\Admin\Controllers\DownloadController@signedDownload', self::getHash($origPath) );
+
+        return $action.'?model='.urlencode($path[0]).'&field='.urlencode($path[1]).'&file='.urlencode($path[2]);
     }
 
     /*
