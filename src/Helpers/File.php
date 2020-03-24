@@ -128,11 +128,18 @@ class File
      */
     public static function adminModelFile($table, $field, $file, $rowId = null)
     {
-        $file = new static(public_path('uploads/'.$table.'/'.$field.'/'.$file));
+        $table = basename($table);
+        $field = basename($field);
+
+        $parts = [$table, $field, basename($file)];
+        $parts = array_filter($parts);
+        $parts = implode('/', $parts);
+
+        $file = new static(public_path('uploads/'.$parts));
 
         $file->tableName = $table;
         $file->fieldKey = $field;
-        $file->rowId = $rowId;
+        $file->rowId = basename($rowId);
 
         //Rebuild url path. Because this parameter is assigned to model attributes
         $file->url = $file->buildAssetsPath($file->path);
@@ -171,10 +178,12 @@ class File
             }
         }
 
-        $path = substr($this->path, 8);
-        $action = action('\Admin\Controllers\DownloadController@signedDownload', self::getHash($path));
+        $origPath = substr($this->path, 8);
+        $path = explode('/', $origPath);
 
-        return $action.'?file='.urlencode($path);
+        $action = action( '\Admin\Controllers\DownloadController@signedDownload', self::getHash($origPath) );
+
+        return $action.'?model='.urlencode($path[0]).'&field='.urlencode($path[1]).'&file='.urlencode($path[2]);
     }
 
     /*
