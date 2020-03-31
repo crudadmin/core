@@ -28,13 +28,12 @@ trait HasIndex
      */
     protected function hasIndex(AdminModel $model, $key, $prefix = null)
     {
-        return count($model->getConnection()->select(
-            DB::raw(
-                'SHOW KEYS
-                FROM `'.$model->getTable().'`
-                WHERE Key_name=\''.$this->getIndexName($model, $key, $prefix).'\''
-            )
-        ));
+        $schema = $model->getConnection()->getDoctrineSchemaManager();
+        $indexes = $schema->listTableIndexes($model->getTable());
+
+        $searchIndex = $this->getIndexName($model, $key, $prefix);
+
+        return array_key_exists($searchIndex, $indexes);
     }
 
     /*
