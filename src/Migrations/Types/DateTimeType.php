@@ -62,7 +62,7 @@ class DateTimeType extends Type
 
         //Set default timestamp
         if (strtoupper($default) == 'CURRENT_TIMESTAMP') {
-            $column->default(DB::raw('CURRENT_TIMESTAMP'));
+            $column->useCurrent();
         }
     }
 }
