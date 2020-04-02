@@ -17,7 +17,7 @@ trait BootAdminModel
     protected $cacheProperties = ['fillable', 'dates', 'casts', 'hidden'];
 
     /**
-     * Save cachable fields properties
+     * Save cachable fields properties which will be booted on model boot state
      *
      * @param  closure  $closure
      * @return void
@@ -27,6 +27,11 @@ trait BootAdminModel
         $this->adminCachable[] = $closure;
     }
 
+    /*
+     * Boot cachable properties first time.
+     * Generate all required laravel properties as hidden, fillable, visible etc... then cache this values
+     * for given moodel, and next time when model will be initialized again, this properties will be received from cache
+     */
     public function bootCachableProperties()
     {
         $table = $this->getTable();

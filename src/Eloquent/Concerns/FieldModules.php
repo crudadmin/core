@@ -51,4 +51,16 @@ trait FieldModules
             }
         }
     }
+
+    /*
+     * On model boot, run boot method for all modules
+     */
+    public function bootAdminModules()
+    {
+        $this->runAdminModules(function($module) {
+            if ( method_exists($module, 'boot') ) {
+                $module->boot();
+            }
+        });
+    }
 }

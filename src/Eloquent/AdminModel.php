@@ -147,6 +147,9 @@ class AdminModel extends Model
 
                 //Add cast attributes
                 $this->makeCastable();
+
+                //Boot all admin eloquent modules
+                $this->bootAdminModules();
             });
 
             $this->bootCachableProperties();

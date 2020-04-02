@@ -7,6 +7,16 @@ use Admin\Core\Eloquent\AdminModel;
 class AdminModelModule
 {
     /**
+     * Boot admin module on model init state
+     *
+     * @return  void
+     */
+    // public function boot();
+    // {
+    //     //..
+    // }
+
+    /**
      * Set AdminModel
      *
      * @param  Admin\Core\Eloquent\AdminModel  $model
