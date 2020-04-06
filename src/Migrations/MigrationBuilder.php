@@ -241,8 +241,11 @@ class MigrationBuilder extends Command
                 $auto_drop = $this->option('auto-drop', false);
 
                 if ($auto_drop === true || $this->confirm('Do you want drop this column? [y|N]')) {
-                    if ($this->hasIndex($model, $column)) {
-                        $this->dropIndex($model, $column);
+                    //Drop foreign indexes for given column
+                    foreach ($this->getModelForeignKeys($model) as $item) {
+                        if ( in_array($column, $item->getColumns()) ){
+                            $table->dropForeign($item->getName());
+                        }
                     }
 
                     $table->dropColumn($column);

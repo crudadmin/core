@@ -21,6 +21,7 @@ trait HasIndex
 
     /**
      * Returns if table has index.
+     *
      * @param  AdminModel $model
      * @param  string     $key
      * @param  string     $prefix
@@ -28,13 +29,38 @@ trait HasIndex
      */
     protected function hasIndex(AdminModel $model, $key, $prefix = null)
     {
-        return count($model->getConnection()->select(
-            DB::raw(
-                'SHOW KEYS
-                FROM `'.$model->getTable().'`
-                WHERE Key_name=\''.$this->getIndexName($model, $key, $prefix).'\''
-            )
-        ));
+        $indexes = $this->getModelIndexes($model);
+
+        $searchIndex = $this->getIndexName($model, $key, $prefix);
+
+        return array_key_exists($searchIndex, $indexes);
+    }
+
+    /**
+     * Return indexes of model
+     *
+     * @param  AdminModel  $model
+     * @return  string
+     */
+    protected function getModelIndexes(AdminModel $model)
+    {
+        $schema = $model->getConnection()->getDoctrineSchemaManager();
+
+        return $schema->listTableIndexes($model->getTable());
+    }
+
+
+    /**
+     * Return indexes of model
+     *
+     * @param  AdminModel  $model
+     * @return  string
+     */
+    protected function getModelForeignKeys(AdminModel $model)
+    {
+        $schema = $model->getConnection()->getDoctrineSchemaManager();
+
+        return $schema->listTableForeignKeys($model->getTable());
     }
 
     /*
