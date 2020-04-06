@@ -73,6 +73,19 @@ class Group
     }
 
     /**
+     * Add fields into group.
+     *
+     * @param  array  $fields
+     * @return Group
+     */
+    public function pushFields(array $fields = [])
+    {
+        $this->fields = array_merge($this->fields ?: [], $fields);
+
+        return $this;
+    }
+
+    /**
      * Push fields parameters into every field in group.
      * @param string $params
      * @return Group
