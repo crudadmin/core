@@ -538,8 +538,34 @@ class Fields extends MigrationDefinition
         $table = $model->getTable();
 
         //If no field is present, if is null or empty array value
-        if ( ! $field )
+        if ( ! $field ) {
             return $this->fields[$table];
+        }
+
+        //Run all global mutations
+        $this->runGlobalMutations($field, $key, $model, $skip);
+
+        $fieldAfterGlobalMutations = $this->fields[$table][$key];
+
+        //Mutate field from mutation builder
+        $this->mutateField($fieldAfterGlobalMutations, $key, $table);
+
+        //Run all global mutations again if field has been changed after developer mutation method
+        if ( $fieldAfterGlobalMutations != $this->fields[$table][$key] ) {
+            $this->runGlobalMutations($this->fields[$table][$key], $key, $model, $skip);
+        }
+
+        //If field need to be removed
+        if (in_array($key, (array) $this->remove[$table])) {
+            unset($this->fields[$table][$key]);
+        }
+
+        return $this->fields[$table];
+    }
+
+    private function runGlobalMutations($field, string $key, AdminModel $model, $skip = [])
+    {
+        $table = $model->getTable();
 
         //Field mutations
         foreach ($this->mutations as $namespace) {
@@ -555,16 +581,6 @@ class Fields extends MigrationDefinition
             //Update and register field
             $this->fields[$table][$key] = $field;
         }
-
-        //Mutate field from mutation builder
-        $this->mutateField($field, $key, $table);
-
-        //If field need to be removed
-        if (in_array($key, (array) $this->remove[$table])) {
-            unset($this->fields[$table][$key]);
-        }
-
-        return $this->fields[$table];
     }
 
     /**
