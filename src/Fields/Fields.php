@@ -167,11 +167,14 @@ class Fields extends MigrationDefinition
         //Set rendering of fields as completed
         $this->setCompletedState($table);
 
+        //First "postupdate" on modules
+        $this->fireModulesPostUpdate($model, $table, $param);
+
         //Register base fields without options for cached operations
         $this->base_fields[$table] = $this->removeOptions($this->fields[$table]);
 
         //Fire post updated on fields as queries, loading options etc...
-        $fields = $this->firePostUpdate($model, $table);
+        $this->fireMutatorsPostUpdate($model, $table);
 
         return $this->fields[$table];
     }
@@ -237,7 +240,7 @@ class Fields extends MigrationDefinition
      * @param  string  $table
      * @return array
      */
-    private function firePostUpdate(AdminModel $model, string $table)
+    private function fireMutatorsPostUpdate(AdminModel $model, string $table)
     {
         $fields = $this->fields[$table];
 
@@ -265,6 +268,26 @@ class Fields extends MigrationDefinition
         $this->fields[$table] = $fields;
 
         return $fields;
+    }
+
+    /**
+     * Fire
+     *
+     * @param  Admin\Core\Eloquent\AdminModel  $model
+     * @param  string  $table
+     * @param  array  $fields
+     * @param  Admin\Core\Eloquent\AdminModel|null  $param
+     * @return  void
+     */
+    private function fireModulesPostUpdate($model, $table, $param = null)
+    {
+        //When all fields are already initialized,
+        //we can slightly mutate their parameters in this state.
+        $model->runAdminModules(function($module) use ($model, $param, $table) {
+            if ( method_exists($module, 'mutateBootedFields') ) {
+                $this->fields[$table] = $module->mutateBootedFields($this->fields[$table], $param, $model);
+            }
+        });
     }
 
     /**

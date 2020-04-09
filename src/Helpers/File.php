@@ -178,7 +178,7 @@ class File
             }
         }
 
-        $origPath = substr($this->path, 8);
+        $origPath = substr(trim($this->path, '/'), 8);
         $path = explode('/', $origPath);
 
         $action = action( '\Admin\Controllers\DownloadController@signedDownload', self::getHash($origPath) );

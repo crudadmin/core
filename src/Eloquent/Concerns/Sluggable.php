@@ -232,8 +232,9 @@ trait Sluggable
             return $this->hasLocalizedSlug;
         }
 
-        if ( !($slugcolumn = $this->getProperty('sluggable')))
+        if ( !($slugcolumn = $this->getProperty('sluggable'))) {
             return;
+        }
 
         return $this->hasLocalizedSlug = $this->hasFieldParam($slugcolumn, 'locale', true);
     }
@@ -255,7 +256,11 @@ trait Sluggable
             //If dynamic slugs are turned off
             if ( $this->slug_dynamic === false && $this->slug ) {
                 //If does exists row, and if has been changed
-                if ( $this->exists && ($original = $this->getOriginal('slug')) && $this->slug !== $original ) {
+                if (
+                    $this->exists
+                    && $this->isAllowedHistorySlugs()
+                    && ($original = $this->getOriginal('slug'))
+                    && $this->slug !== $original ) {
                     $this->slugSnapshot($original);
                 }
             }
@@ -265,7 +270,11 @@ trait Sluggable
                 $slug = $this->makeSlug($array[$slugcolumn]);
 
                 //If slug has been changed, then save previous slug state
-                if ($this->exists && $this->isAllowedHistorySlugs() && str_replace('": "', '":"', $this->attributes['slug']) != $slug) {
+                if (
+                    $this->exists
+                    && $this->isAllowedHistorySlugs()
+                    && str_replace('": "', '":"', $this->attributes['slug']) != $slug
+                ) {
                     $this->slugSnapshot();
                 }
 
@@ -526,7 +535,9 @@ trait Sluggable
     public function getSlug()
     {
         if ($this->hasLocalizedSlug()) {
-            $slug = (array) json_decode($this->slug);
+            //Cast model slug to propert type
+            $slug = $this->getAttribute('slug');
+            $slug = is_array($slug) ? $slug : (array) json_decode($slug);
 
             $lang = Localization::get();
 

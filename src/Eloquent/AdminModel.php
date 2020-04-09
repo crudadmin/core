@@ -270,7 +270,8 @@ class AdminModel extends Model
 
             //If field has not relationship, then return field value... This condition is here for better framework performance
             elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
-                if (array_key_exists('locale', $field) && $field['locale'] === true) {
+                //Does not allow get specific locale value from localized slug column
+                if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
                     $object = parent::__get($key);
 
                     return $this->returnLocaleValue($object);
