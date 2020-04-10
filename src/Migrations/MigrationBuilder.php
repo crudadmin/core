@@ -2,12 +2,13 @@
 
 namespace Admin\Core\Migrations;
 
-use Fields;
-use Schema;
-use Illuminate\Console\Command;
 use Admin\Core\Eloquent\AdminModel;
-use Illuminate\Filesystem\Filesystem;
+use Fields;
+use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\DB;
+use Schema;
 
 class MigrationBuilder extends Command
 {
@@ -24,6 +25,13 @@ class MigrationBuilder extends Command
      * Files
      */
     protected $files;
+
+    /*
+     * All migrated tables
+     */
+    protected $initializedTables = [
+        'migrations', 'jobs', 'failed_jobs', 'password_resets',
+    ];
 
     public function __construct()
     {
@@ -76,6 +84,19 @@ class MigrationBuilder extends Command
         foreach ($models as $model) {
             $this->fireMigrationEvents($model, 'fire_after_all');
         }
+
+        //Check unknown tables
+        if ( $this->option('unknown') == true ) {
+            $this->checkUneccesaryTables();
+        }
+    }
+
+    /*
+     * Add table into tables list
+     */
+    public function registerTable($table)
+    {
+        $this->initializedTables[] = $table;
     }
 
     /**
@@ -84,6 +105,8 @@ class MigrationBuilder extends Command
      */
     protected function generateMigration($model)
     {
+        $this->registerTable($model->getTable());
+
         $this->fireModelEvent($model, 'beforeMigrate');
 
         if ($model->getSchema()->hasTable($model->getTable())) {
@@ -294,5 +317,26 @@ class MigrationBuilder extends Command
     protected function getSchema($model)
     {
         return Schema::connection($model->getProperty('connection'));
+    }
+
+    /*
+     * Display all uneccessary tables
+     */
+    public function checkUneccesaryTables()
+    {
+        $tables = array_map(function($item){
+            return array_values((array)$item)[0];
+        }, DB::select('SHOW TABLES'));
+
+        foreach (array_diff($tables, $this->initializedTables) as $table) {
+            $this->info('Unknown table: <comment>'.$table.'</comment>');
+
+            if ( $this->confirm('Would you like to drop <comment>'.$table.'</comment> table with <comment>'.DB::table($table)->count().' rows</comment>? [y|N]') ) {
+                Schema::drop($table);
+                $this->line('<comment>+ Dropped table:</comment> '.$table);
+            } else {
+                $this->line('<info>+ Skipped table:</info> '.$table);
+            }
+        }
     }
 }
