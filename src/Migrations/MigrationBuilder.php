@@ -324,6 +324,12 @@ class MigrationBuilder extends Command
      */
     public function checkUneccesaryTables()
     {
+        //We need have turned on force flag. because we need check all tables for receiving their table names.
+        if ( $this->option('force') == false ){
+            $this->error('Check for uneccessary tables is possible only with -f/--force flag.');
+            return;
+        }
+
         $tables = array_map(function($item){
             return array_values((array)$item)[0];
         }, DB::select('SHOW TABLES'));

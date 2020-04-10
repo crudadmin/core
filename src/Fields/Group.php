@@ -98,6 +98,19 @@ class Group
     }
 
     /**
+     * Push fields into given group
+     *
+     * @param  array  $fields
+     * @return  Group
+     */
+    public function push($fields)
+    {
+        $this->fields = array_merge($this->fields, $fields);
+
+        return $this;
+    }
+
+    /**
      * Set type of group.
      * @param $type string group/tab
      * @return Group
