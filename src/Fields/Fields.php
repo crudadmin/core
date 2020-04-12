@@ -513,8 +513,22 @@ class Fields extends MigrationDefinition
             }
 
             //Create mutation on field
-            return $this->registerField($field, str_slug($key, '_'), $model);
+            return $this->registerField($field, $this->toColumnName($key), $model);
         }
+    }
+
+    public function toColumnName($origKey)
+    {
+        $key = str_slug($origKey, '_');
+
+        $prefix = '';
+
+        //str_slug trims from start _, so we need to archive it in prefix
+        if ( $origKey[0] == '_' ) {
+            $prefix .= '_';
+        }
+
+        return $prefix.$key;
     }
 
     /**

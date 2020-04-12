@@ -57,7 +57,9 @@ trait Sluggable
     private function getLocaleDifferences($slugs, $relatedSlug)
     {
         if ($this->hasLocalizedSlug()) {
-            return array_filter(array_intersect_assoc($slugs, (array) json_decode($relatedSlug)));
+            $slugData = is_array($relatedSlug) ? $relatedSlug : (array) json_decode($relatedSlug);
+
+            return array_filter(array_intersect_assoc($slugs, $slugData));
         } else {
             return array_wrap($relatedSlug);
         }
