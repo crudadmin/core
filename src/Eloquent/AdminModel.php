@@ -261,7 +261,7 @@ class AdminModel extends Model
                     $value = $this->returnLocaleValue($value);
                 }
 
-                if ( $value ) {
+                if ( $value && class_exists('Admin') && \Admin::isFrontend() ) {
                     return '<div data-crudadmin-editor>'.$value.'</div>';
                 }
 

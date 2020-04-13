@@ -508,20 +508,25 @@ class Fields extends MigrationDefinition
 
             return $group;
         } else {
+            //Add parameters into all fields in group
             if ($parentGroup && count($parentGroup->add) > 0) {
                 $field = $this->pushParams($field, $parentGroup->add);
             }
 
+            $columnPrefix = $parentGroup ? $parentGroup->prefix : null;
+
+            $columnName = $this->toColumnName($key, $columnPrefix);
+
             //Create mutation on field
-            return $this->registerField($field, $this->toColumnName($key), $model);
+            return $this->registerField($field, $columnName, $model);
         }
     }
 
-    public function toColumnName($origKey)
+    public function toColumnName($origKey, $prefix = '')
     {
-        $key = str_slug($origKey, '_');
+        $prefix = $prefix ? $prefix.'_' : '';
 
-        $prefix = '';
+        $key = str_slug($origKey, '_');
 
         //str_slug trims from start _, so we need to archive it in prefix
         if ( $origKey[0] == '_' ) {

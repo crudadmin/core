@@ -554,4 +554,17 @@ trait RelationsBuilder
 
         return $columns;
     }
+
+    /**
+     * Return rows by given model
+     *
+     * @param  Builder  $query
+     * @param  BaseModel  $row
+     * @return  [type]
+     */
+    public function scopeWhereGlobalRelation($query, BaseModel $row)
+    {
+        $query->where('_table', $row->getTable());
+        $query->where('_row_id', $row->getKey());
+    }
 }

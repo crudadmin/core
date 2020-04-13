@@ -29,6 +29,13 @@ class Group
      */
     public $type = 'default';
 
+    /**
+     * Prefix for all columns
+     *
+     * @var  string|null
+     */
+    public $prefix = null;
+
     /*
      * Boot group and add fields into class
      */
@@ -118,6 +125,19 @@ class Group
     public function type($type = 'group')
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Set prefix for all columns
+     *
+     * @param  string  $prefix
+     * @return  Group
+     */
+    public function prefix(string $prefix)
+    {
+        $this->prefix = $prefix;
 
         return $this;
     }
