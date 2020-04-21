@@ -94,7 +94,10 @@ trait SupportColumn
      */
     private function setNullable(AdminModel $model, string $key, $column)
     {
-        if (! $model->hasFieldParam($key, ['required']) ) {
+        if (
+            ! $model->hasFieldParam($key, ['required'], true)
+            || $model->hasFieldParam($key, 'null', true)
+        ) {
             $column->nullable();
         }
     }
@@ -108,7 +111,7 @@ trait SupportColumn
      */
     private function setIndex(AdminModel $model, string $key, $column)
     {
-        if (! $model->hasFieldParam($key, 'index')) {
+        if (! $model->hasFieldParam($key, 'index', true)) {
             return;
         }
 
@@ -131,7 +134,7 @@ trait SupportColumn
     private function setDefault(AdminModel $model, string $key, $column, Type $columnClass)
     {
         //If field does not have default value
-        if (! $model->hasFieldParam($key, 'default')) {
+        if (! $model->hasFieldParam($key, 'default', true)) {
             $column->default(null);
         }
 

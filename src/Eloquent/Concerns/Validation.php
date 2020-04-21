@@ -95,7 +95,7 @@ trait Validation
 
             //If is available default locale, then set default key name, if
             //language is not available, then apply for all langs...
-            if ($has_locale = $this->hasFieldParam($orig_key, 'locale')) {
+            if ($has_locale = $this->hasFieldParam($orig_key, 'locale', true)) {
                 if ($default_language) {
                     $key = $orig_key.'.'.$default_language->slug;
                 } else {
@@ -112,14 +112,14 @@ trait Validation
             }
 
             //If field is not required
-            if (! $this->hasFieldParam($orig_key, 'required')) {
+            if (! $this->hasFieldParam($orig_key, 'required', true)) {
                 $field['nullable'] = true;
             }
 
             //If is existing row is file type and required file already exists
             if ($row
                 && ! empty($row[$orig_key])
-                && $this->hasFieldParam($orig_key, 'required')
+                && $this->hasFieldParam($orig_key, 'required', true)
                 && $this->isFieldType($orig_key, 'file')
             ) {
                 $field['required'] = false;
