@@ -462,7 +462,7 @@ class File
             config('admin.image_webp', false) === false
 
             //If webp format is not allowed for this file
-            || !in_array($this->extension ?: $this->getExtension($sourcePath), $allowedExtensions)
+            || !in_array(strtolower($this->extension ?: $this->getExtension($sourcePath)), $allowedExtensions)
 
             //If source path does not exists
             || !file_exists($sourcePath)
