@@ -152,13 +152,13 @@ class File
      */
     public static function adminModelCachePath($path = null, $absolute = true)
     {
-        $cache_path = 'uploads/cache';
+        $cachePath = 'uploads/cache';
 
         if ($absolute) {
-            return public_path($cache_path.'/'.$path);
+            return public_path($cachePath.'/'.$path);
         }
 
-        return $cache_path.'/'.$path;
+        return $cachePath.'/'.$path;
     }
 
     public static function getHash($path)
@@ -220,6 +220,27 @@ class File
         return config('admin.backup_image', __DIR__.'/../Resources/images/thumbnail.jpg');
     }
 
+    private function getDirectoryHash($directory, $mutators)
+    {
+        if ($directory) {
+            $hash = str_slug($directory);
+        } elseif (count($mutators) > 1) {
+            $hash = md5($this->directory.serialize($mutators));
+        } else {
+            $firstValue = array_first($mutators);
+
+            foreach ($firstValue as $key => $mutator) {
+                if (! is_string($mutator) && ! is_numeric($mutator)) {
+                    $firstValue[$key] = 0;
+                }
+            }
+
+            $hash = key($mutators).'-'.implode('x', $firstValue);
+        }
+
+        return $hash;
+    }
+
     /**
      * Resize image.
      * @param  array   $mutators      array of muttators
@@ -234,40 +255,26 @@ class File
         //When is file type svg, then image postprocessing subdirectories not exists
         if (
             ($this->extension == 'svg' || ! file_exists($this->path))
-            && config('admin.rewrite_missing_upload_images', true) !== true
+            && config('admin.image_rewrite_missing_uploads', true) !== true
         ) {
             return $this;
         }
 
         //Hash of directory which belongs to image mutators
-        if ($directory) {
-            $hash = str_slug($directory);
-        } elseif (count($mutators) > 1) {
-            $hash = md5($this->directory.serialize($mutators));
-        } else {
-            $first_value = array_first($mutators);
-
-            foreach ($first_value as $key => $mutator) {
-                if (! is_string($mutator) && ! is_numeric($mutator)) {
-                    $first_value[$key] = 0;
-                }
-            }
-
-            $hash = key($mutators).'-'.implode('x', $first_value);
-        }
+        $hash = $this->getDirectoryHash($directory, $mutators);
 
         //Correct trim directory name
         $directory = ltrim($this->directory, '/');
         $directory = substr($directory, 0, 8) == 'uploads/' ? substr($directory, 8) : $directory;
 
         //Get directory path for file
-        $cache_path = self::adminModelCachePath($directory.'/'.$hash);
+        $cachePath = self::adminModelCachePath($directory.'/'.$hash);
 
         //Filepath
-        $filepath = $cache_path.'/'.$this->filename;
+        $filepath = $cachePath.'/'.$this->filename;
 
         //Create directory if is missing
-        static::makeDirs($cache_path);
+        static::makeDirs($cachePath);
 
         //If file exists
         if (file_exists($filepath)) {
@@ -305,8 +312,13 @@ class File
         $image->save($filepath, 85);
 
         //Create webp version of image
-        if ($webp === true && config('admin.upload_webp', false) === true) {
+        if ($webp === true && config('admin.image_webp', false) === true) {
             $this->createWebp($filepath);
+        }
+
+        //Compress image with lossless compression
+        if ( class_exists('ImageCompressor') ) {
+            \ImageCompressor::tryShellCompression($filepath);
         }
 
         //Return image object
