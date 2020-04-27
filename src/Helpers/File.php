@@ -80,7 +80,7 @@ class File
 
         $this->directory = implode('/', array_slice(explode('/', $this->path), 0, -1));
 
-        $this->url = $this->buildAssetsPath($this->path);
+        $this->url = $this->buildUrlPath($this->path);
     }
 
     /**
@@ -100,17 +100,24 @@ class File
         return new static($basepath, $this);
     }
 
-    private function buildAssetsPath($path)
+    private function buildUrlPath($path)
     {
-        $path = asset($path);
+        $isUploadsDir = substr(ltrim($path, '/'), 0, 7) == 'uploads';
+
+        $url = asset($path);
+
+        //We can generate webp image for resource that should be
+        if ( $isUploadsDir && class_exists('Admin') && \Admin::isFrontend() ){
+            $this->createWebp(public_path($path));
+        }
 
         if ( class_exists(\FrontendEditor::class)
             && $this->tableName && $this->fieldKey && $this->rowId
         ) {
-            return \FrontendEditor::buildImageQuery($path, $this->resizeParams, $this->tableName, $this->fieldKey, $this->rowId);
+            return \FrontendEditor::buildImageQuery($url, $this->resizeParams, $this->tableName, $this->fieldKey, $this->rowId);
         }
 
-        return $path;
+        return $url;
     }
 
     /*
@@ -142,7 +149,7 @@ class File
         $file->rowId = basename($rowId);
 
         //Rebuild url path. Because this parameter is assigned to model attributes
-        $file->url = $file->buildAssetsPath($file->path);
+        $file->url = $file->buildUrlPath($file->path);
 
         return $file;
     }
@@ -247,10 +254,9 @@ class File
      * @param  [type]  $directory     where should be image saved, directory name may be generated automatically
      * @param  bool $force         force render image immediately
      * @param  bool $return_object return image instance
-     * @param  bool $webp          enable/disable webp image extension
      * @return File/Image class
      */
-    public function image($mutators = [], $directory = null, $force = false, $return_object = false, $webp = true)
+    public function image($mutators = [], $directory = null, $force = false, $return_object = false)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
         if (
@@ -312,9 +318,7 @@ class File
         $image->save($filepath, 85);
 
         //Create webp version of image
-        if ($webp === true && config('admin.image_webp', false) === true) {
-            $this->createWebp($filepath);
-        }
+        $this->createWebp($filepath);
 
         //Compress image with lossless compression
         if ( class_exists('ImageCompressor') ) {
@@ -342,7 +346,7 @@ class File
     /*
      * Resize or fit image depending on dimensions
      */
-    public function resize($width = null, $height = null, $directory = null, $force = false, $webp = true)
+    public function resize($width = null, $height = null, $directory = null, $force = false)
     {
         //Saved resize params
         $this->resizeParams = [$width, $height];
@@ -360,7 +364,7 @@ class File
 
         return $this->image([
             $action => [$width, $height],
-        ], $directory, $force, false, $webp);
+        ], $directory, $force, false);
     }
 
     /*
@@ -447,22 +451,33 @@ class File
     /*
      * Create webp version of image file
      */
-    public function createWebp($source_path = null)
+    public function createWebp($sourcePath = null)
     {
-        $source_path = $source_path ?: $this->basepath;
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif'];
 
-        $output_filename = $source_path.'.webp';
+        $sourcePath = $sourcePath ?: $this->basepath;
 
-        //If webp exists already
-        if (file_exists($output_filename)) {
+        if (
+            //If webp images are not enabled
+            config('admin.image_webp', false) === false
+
+            //If webp format is not allowed for this file
+            || !in_array($this->extension ?: $this->getExtension($sourcePath), $allowedExtensions)
+
+            //If source path does not exists
+            || !file_exists($sourcePath)
+
+            //If webp exists already
+            || file_exists($outputFilepath = $sourcePath.'.webp')
+        ){
             return $this;
         }
 
-        $image = Image::make($source_path);
+        $image = Image::make($sourcePath);
 
         $encoded = $image->encode('webp', 85);
 
-        @file_put_contents($output_filename, $encoded);
+        @file_put_contents($outputFilepath, $encoded);
 
         return $this;
     }
