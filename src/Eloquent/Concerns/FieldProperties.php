@@ -142,7 +142,7 @@ trait FieldProperties
     {
         $field = $this->getField($key);
 
-        return $field['type'];
+        return @$field['type'];
     }
 
     /**
