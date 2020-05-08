@@ -4,6 +4,7 @@ namespace Admin\Core\Migrations\Types;
 
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
 class DateTimeType extends Type
 {
