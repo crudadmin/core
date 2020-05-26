@@ -74,7 +74,7 @@ class File
 
         $this->extension = $this->getExtension($this->filename);
 
-        $this->path = str_replace(public_path('/'), '', $basepath);
+        $this->path = ltrim(str_replace(public_path(), '', $basepath), '/\\');
 
         $this->basepath = $basepath;
 
@@ -102,7 +102,7 @@ class File
 
     private function buildUrlPath($path)
     {
-        $isUploadsDir = substr(ltrim($path, '/'), 0, 7) == 'uploads';
+        $isUploadsDir = substr(ltrim($path, '/\\'), 0, 7) == 'uploads';
 
         $url = asset($path);
 
@@ -185,7 +185,7 @@ class File
             }
         }
 
-        $origPath = substr(trim($this->path, '/'), 8);
+        $origPath = substr(trim($this->path, '/\\'), 8);
         $path = explode('/', $origPath);
 
         $action = action( '\Admin\Controllers\DownloadController@signedDownload', self::getHash($origPath) );
@@ -270,7 +270,7 @@ class File
         $hash = $this->getDirectoryHash($directory, $mutators);
 
         //Correct trim directory name
-        $directory = ltrim($this->directory, '/');
+        $directory = ltrim($this->directory, '/\\');
         $directory = substr($directory, 0, 8) == 'uploads/' ? substr($directory, 8) : $directory;
 
         //Get directory path for file
