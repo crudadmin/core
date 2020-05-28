@@ -214,8 +214,11 @@ class AdminCore
     {
         $path = trim_end($path, '/');
 
-        //If is not app basepath
-        if (substr($path, 0, strlen(base_path())) !== base_path()) {
+        //If is not absolute app basepath
+        if (
+            substr($path, 0, strlen(base_path())) !== base_path()
+            && file_exists(base_path(dirname($path)))
+        ) {
             $path = base_path($path);
         }
 

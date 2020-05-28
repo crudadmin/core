@@ -17,12 +17,13 @@
         "laravel/helpers": "^1.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "~5.7|~7.0",
-        "orchestra/testbench": "^3.8"
+        "phpunit/phpunit": "~5.7|~7.0|^8.0",
+        "orchestra/testbench": "^3.8|^5.0"
     },
     "autoload": {
         "psr-4": {
-            "Admin\\Core\\": "src"
+            "Admin\\Core\\": "src",
+            "Admin\\Core\\Tests\\": "tests"
         },
         "files": [
             "src/Helpers/helpers.php"
@@ -30,7 +31,6 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Admin\\Core\\Tests\\": "tests",
             "Admin\\Core\\Tests\\App\\": "tests/Stubs/app"
         }
     },
