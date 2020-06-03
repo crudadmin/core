@@ -464,14 +464,14 @@ trait RelationsBuilder
      * Returns properties of field with belongsTo or belongsToMany relationship.
      *
      * @param  string  $key
-     * @param  string  $relation
+     * @param  string  $relationType
      * @return array
      */
-    public function getRelationProperty(string $key, string $relation)
+    public function getRelationProperty(string $key, string $relationType)
     {
         $field = $this->getField($key);
 
-        $properties = explode(',', $field[$relation]);
+        $properties = explode(',', $field[$relationType]);
 
         //If is not defined references column for other table
         if (count($properties) == 1) {
@@ -482,7 +482,7 @@ trait RelationsBuilder
             $properties[] = 'id';
         }
 
-        if ($relation == 'belongsToMany') {
+        if ($relationType == 'belongsToMany') {
             //Table names in singular
             $tables = [
                 str_singular($this->getTable()),
@@ -498,6 +498,11 @@ trait RelationsBuilder
             $properties[] = $tables[1];
             $properties[] = $tables[0].'_id';
             $properties[] = $tables[1].'_id';
+
+            //If is same relationship
+            if ( $properties[6] == $properties[7] ){
+                $properties[7] = '_'.$properties[7];
+            }
         } else {
             $properties[] = str_singular($properties[0]);
             $properties[] = $key;
