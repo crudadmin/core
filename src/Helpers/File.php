@@ -57,6 +57,11 @@ class File
      */
     public $resizeParams = [];
 
+    public static function getUploadsDirectory()
+    {
+        return 'uploads';
+    }
+
     /**
      * Initialize new admin file
      *
@@ -102,7 +107,7 @@ class File
 
     private function buildUrlPath($path)
     {
-        $isUploadsDir = substr(ltrim($path, '/\\'), 0, 7) == 'uploads';
+        $isUploadsDir = substr(ltrim($path, '/\\'), 0, 7) == self::getUploadsDirectory();
 
         $url = asset($path);
 
@@ -142,7 +147,7 @@ class File
         $parts = array_filter($parts);
         $parts = implode('/', $parts);
 
-        $file = new static(public_path('uploads/'.$parts));
+        $file = new static(public_path(self::getUploadsDirectory().'/'.$parts));
 
         $file->tableName = $table;
         $file->fieldKey = $field;
@@ -157,15 +162,9 @@ class File
     /*
      * Build directory path for caching resized images model
      */
-    public static function adminModelCachePath($path = null, $absolute = true)
+    public static function adminModelCachePath($path = null)
     {
-        $cachePath = 'uploads/cache';
-
-        if ($absolute) {
-            return public_path($cachePath.'/'.$path);
-        }
-
-        return $cachePath.'/'.$path;
+        return public_path(self::getUploadsDirectory().'/cache/'.$path);
     }
 
     public static function getHash($path)
@@ -248,62 +247,107 @@ class File
         return $hash;
     }
 
-    /**
-     * Resize image.
-     * @param  array   $mutators      array of muttators
-     * @param  [type]  $directory     where should be image saved, directory name may be generated automatically
-     * @param  bool $force         force render image immediately
-     * @param  bool $return_object return image instance
-     * @return File/Image class
-     */
-    public function image($mutators = [], $directory = null, $force = false, $return_object = false)
+    public function getCacheImageDestinationPath($directory = null, $mutators = null)
     {
-        //When is file type svg, then image postprocessing subdirectories not exists
-        if (
-            ($this->extension == 'svg' || ! file_exists($this->path))
-            && config('admin.image_rewrite_missing_uploads', true) !== true
-        ) {
-            return $this;
-        }
-
         //Hash of directory which belongs to image mutators
         $hash = $this->getDirectoryHash($directory, $mutators);
 
         //Correct trim directory name
-        $directory = ltrim($this->directory, '/\\');
-        $directory = substr($directory, 0, 8) == 'uploads/' ? substr($directory, 8) : $directory;
+        $uploadDestination = ltrim($this->directory, '/\\');
+        $uploadDestination = substr($uploadDestination, 0, 8) == (self::getUploadsDirectory().'/') ? substr($uploadDestination, 8) : $uploadDestination;
 
         //Get directory path for file
-        $cachePath = self::adminModelCachePath($directory.'/'.$hash);
-
-        //Filepath
-        $filepath = $cachePath.'/'.$this->filename;
+        $path = self::adminModelCachePath($uploadDestination.'/'.$hash.'/'.$this->filename);
 
         //Create directory if is missing
-        static::makeDirs($cachePath);
+        static::makeDirs(dirname($path));
 
-        //If file exists
-        if (file_exists($filepath)) {
-            $relative_filepath = self::adminModelCachePath($directory.'/'.$hash.'/'.$this->filename, false);
+        return $path;
+    }
 
-            return new static(public_path($relative_filepath), $this);
+    public static function getTemporaryFilename($path)
+    {
+        return $path.'.temp';
+    }
+
+    public static function getBackupCacheImageName($path)
+    {
+        return $path.'.backup';
+    }
+
+    private function createTemporaryProcessFile($filepath, $mutators)
+    {
+        $tempPath = self::getTemporaryFilename($filepath);
+
+        //Save temporary file with properties for next resizing
+        if (! file_exists($tempPath)) {
+            file_put_contents($tempPath, json_encode([
+                'original_path' => $this->path,
+                'mutators' => $mutators,
+            ]));
         }
 
-        //If mutators file does not exists, and cannot be resized in actual request, then return path to resizing process
-        elseif ($force === false) {
-            //Save temporary file with properties for next resizing
-            if (! file_exists($filepath.'.temp')) {
-                file_put_contents($filepath.'.temp', json_encode([
-                    'original_path' => $this->path,
-                    'mutators' => $mutators,
-                ]));
+        return new static($filepath, $this);
+    }
+
+    /**
+     * Resize image.
+     * @param  array   $mutators      array of muttators
+     * @param  string|null  $directory     where should be image saved, directory name may be generated automatically
+     * @param  bool $force         force render image immediately
+     * @param  bool $returnImageObject return image instance
+     * @return File/Image class
+     */
+    public function image($mutators = [], $directory = null, $force = false, $returnImageObject = false)
+    {
+        //When is file type svg, then image postprocessing subdirectories not exists
+        if ( $this->extension == 'svg' && config('admin.image_rewrite_missing_uploads', true) !== true ) {
+            return $this;
+        }
+
+        //Get directory path for file
+        $destinationPath = $this->getCacheImageDestinationPath($directory, $mutators);
+
+        //If resized file exists already
+        if (file_exists($destinationPath)) {
+            $backupDestinationPath = self::getBackupCacheImageName($destinationPath);
+
+            //If original image does exists, but cache is generated for backup image sample
+            if ( file_exists($backupDestinationPath) ) {
+                @unlink($backupDestinationPath);
+                @unlink($destinationPath);
             }
 
-            return new static($filepath, $this);
+            //If image is resized normally, we can return resized object
+            else {
+                return new static($destinationPath, $this);
+            }
+        }
+
+        //If resized file does not exists yet, and cannot be processed in actual request,
+        //then return path to resizing process. Image will be resized in opening image request
+        elseif ($force === false) {
+            return $this->createTemporaryProcessFile($destinationPath, $mutators);
         }
 
         //Set image for processing
-        $image = Image::make(file_exists($this->basepath) ? $this->basepath : $this->getBackupResourcePath());
+        $image = $this->processImage($destinationPath, $mutators);
+
+        //Return image object
+        if ($returnImageObject) {
+            return $image;
+        }
+
+        return new static($destinationPath, $this);
+    }
+
+    private function processImage($destinationPath, $mutators)
+    {
+        $isBackupImage = $this->exists() === false;
+
+        $sourcePath = $isBackupImage ? $this->getBackupResourcePath() : $this->basepath;
+
+        $image = Image::make($sourcePath);
 
         /*
          * Apply mutators on image
@@ -315,22 +359,21 @@ class File
         }
 
         //Save image into cache folder
-        $image->save($filepath, 85);
+        $image->save($destinationPath, 85);
 
         //Create webp version of image
-        $this->createWebp($filepath);
+        $this->createWebp($destinationPath);
+
+        if ( $isBackupImage ) {
+            @file_put_contents(self::getBackupCacheImageName($destinationPath), '');
+        }
 
         //Compress image with lossless compression
         if ( class_exists('ImageCompressor') ) {
-            \ImageCompressor::tryShellCompression($filepath);
+            \ImageCompressor::tryShellCompression($destinationPath);
         }
 
-        //Return image object
-        if ($return_object) {
-            return $image;
-        }
-
-        return new static($filepath, $this);
+        return $image;
     }
 
     /*
