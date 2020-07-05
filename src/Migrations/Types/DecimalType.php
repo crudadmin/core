@@ -28,7 +28,9 @@ class DecimalType extends Type
      */
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
-        $column = $table->decimal($key, 8, 2);
+        $decimalLength = $model->getDecimalLength($key);
+
+        $column = $table->decimal($key, $decimalLength[0], $decimalLength[1]);
 
         //Check if is integer unsigned or not
         if ($model->hasFieldParam($key, 'min') && $model->getFieldParam($key, 'min') >= 0) {

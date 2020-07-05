@@ -440,4 +440,19 @@ trait FieldProperties
             return $fields;
         });
     }
+
+    /**
+     * Return decimal length of given field
+     *
+     * @param  string  $key
+     * @return  array
+     */
+    public function getDecimalLength($key)
+    {
+        $decimalLength = $this->getFieldParam($key, 'decimal_length') ?: '8,2';
+        $decimalLength = str_replace(':', ',', $decimalLength);
+        $decimalLength = explode(',', $decimalLength);
+
+        return $decimalLength;
+    }
 }
