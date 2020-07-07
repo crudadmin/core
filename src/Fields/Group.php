@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Fields;
 
+use BadMethodCallException;
+
 class Group
 {
     /*
@@ -35,6 +37,12 @@ class Group
      * @var  string|null
      */
     public $prefix = null;
+
+    /*
+     * Forward methods to support nonstatic/stattic...
+     * origMethodName => alias
+     */
+    protected $forwardCalls = [];
 
     /*
      * Boot group and add fields into class
@@ -118,6 +126,19 @@ class Group
     }
 
     /**
+     * Push fields into given before all fields
+     *
+     * @param  array  $fields
+     * @return  Group
+     */
+    public function pushBefore($fields)
+    {
+        $this->fields = array_merge($fields, $this->fields);
+
+        return $this;
+    }
+
+    /**
      * Set type of group.
      * @param $type string group/tab
      * @return Group
@@ -140,5 +161,40 @@ class Group
         $this->prefix = $prefix;
 
         return $this;
+    }
+
+    /**
+     * Handle dynamic method calls into the model.
+     * And forawd some methods
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters) {
+        foreach ($this->forwardCalls ?: [] as $originalName => $alias) {
+            if ( $originalName == $method ){
+                return $this->{$alias}(...$parameters);
+            }
+        }
+
+        if ( method_exists($this, $method) ) {
+            return $this->$method(...$parameters);
+        } else {
+            throw new BadMethodCallException(sprintf(
+                'Call to undefined method %s::%s()', static::class, $method
+            ));
+        }
+    }
+
+    /**
+     * Handle dynamic static method calls into the method.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public static function __callStatic($method, $parameters) {
+        return (new static)->$method(...$parameters);
     }
 }
