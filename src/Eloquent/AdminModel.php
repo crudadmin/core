@@ -262,7 +262,13 @@ class AdminModel extends Model
                 }
 
                 if ( $value && class_exists('Admin') && \Admin::isFrontend() ) {
-                    return '<div data-crudadmin-editor>'.$value.'</div>';
+                    if ( \FrontendEditor::isActive() && admin()->hasAccess($this, 'update') ) {
+                        $hash = \FrontendEditor::makeHash($this->getTable(), $key, $this->getKey());
+
+                        $attributes = 'data-model="'.$this->getTable().'" data-key="'.$key.'" data-id="'.$this->getKey().'" data-hash="'.$hash.'"';
+                    }
+
+                    return '<div data-crudadmin-editor'.(isset($attributes) ? (' '.$attributes) : '').'>'.$value.'</div>';
                 }
 
                 return $value;
