@@ -120,6 +120,8 @@ class Group
      */
     public function push($fields)
     {
+        $fields = array_wrap($fields);
+
         $this->fields = array_merge($this->fields, $fields);
 
         return $this;

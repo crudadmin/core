@@ -57,6 +57,11 @@ class File
      */
     public $resizeParams = [];
 
+    /*
+     * Previous given object
+     */
+    private $originalObject;
+
     public static function getUploadsDirectory()
     {
         return 'uploads';
@@ -530,11 +535,17 @@ class File
      */
     public function cloneModelData($file)
     {
+        $this->originalObject = $file;
         $this->resizeParams = $file->resizeParams;
         $this->tableName = $file->tableName;
         $this->fieldKey = $file->fieldKey;
         $this->rowId = $file->rowId;
 
         return $this;
+    }
+
+    public function getOriginalObject()
+    {
+        return $this->originalObject;
     }
 }

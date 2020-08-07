@@ -353,9 +353,9 @@ trait RelationsBuilder
      */
     public function getBelongsToRelation($baseName = false)
     {
-        $items = array_filter(is_array($this->belongsToModel)
-                    ? $this->belongsToModel
-                    : [$this->belongsToModel]);
+        $items = array_filter(
+            array_wrap($this->getProperty('belongsToModel'))
+        );
 
         if ($baseName !== true) {
             return $items;
@@ -430,13 +430,13 @@ trait RelationsBuilder
      */
     public function getForeignColumn($table = null)
     {
-        if ($this->belongsToModel == null) {
+        if ($this->getProperty('belongsToModel') == null) {
             return;
         }
 
         $columns = [];
 
-        foreach (array_wrap($this->belongsToModel) as $parent) {
+        foreach (array_wrap($this->getProperty('belongsToModel')) as $parent) {
             $model_table_name = Str::snake(class_basename($parent));
 
             $columns[str_plural($model_table_name)] = $model_table_name.'_id';

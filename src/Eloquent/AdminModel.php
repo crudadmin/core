@@ -339,7 +339,7 @@ class AdminModel extends Model
         }
 
         //If has relationship, then allow foreign key
-        if ($this->belongsToModel != null) {
+        if ($this->getProperty('belongsToModel') != null) {
             $this->fillable = array_merge(array_values($this->getForeignColumn()), $this->fillable);
         }
 

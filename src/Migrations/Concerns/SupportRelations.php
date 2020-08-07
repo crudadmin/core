@@ -169,7 +169,7 @@ trait SupportRelations
         //If table name is too long for MySql
         for ( $i = 0; $i < 2; $i++ )
         {
-            $totalLength = strlen($prefix) + strlen($table) + strlen($key);
+            $totalLength = strlen($prefix) + strlen($table) + 1 + strlen($key);
 
             if ( strlen($table) > 10 && $totalLength > $fkStringLimit ) {
                 $table = $this->removeEverySecondCharInMiddle($table);
