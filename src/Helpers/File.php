@@ -318,7 +318,8 @@ class File
             $backupDestinationPath = self::getBackupCacheImageName($destinationPath);
 
             //If original image does exists, but cache is generated for backup image sample
-            if ( file_exists($backupDestinationPath) ) {
+            //We need reset cachet resources
+            if ( $this->exists() && file_exists($backupDestinationPath) ) {
                 @unlink($backupDestinationPath);
                 @unlink($destinationPath);
             }
