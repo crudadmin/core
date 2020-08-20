@@ -160,7 +160,13 @@ class FieldsMutationBuilder
         //Push fields set
         else {
             foreach ($fields as $key => $field) {
-                $this->{$type}[$key] = $field;
+                //We does not want to overide existing keys
+                //so we need push items instead of inserting keys...
+                if ( is_numeric($key) ) {
+                    $this->{$type}[] = $field;
+                } else {
+                    $this->{$type}[$key] = $field;
+                }
             }
         }
 

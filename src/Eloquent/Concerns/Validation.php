@@ -2,9 +2,9 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
+use Admin\Core\Fields\FieldsValidator;
 use Admin\Exceptions\ValidationException;
 use Fields;
-use Illuminate\Validation\ValidationException as BaseValidationExpetion;
 use Localization;
 use Validator;
 
@@ -16,7 +16,7 @@ trait Validation
      * @param  array  $field
      * @return array
      */
-    protected function fieldToString(array $field)
+    public function fieldToString(array $field)
     {
         $data = [];
 
@@ -177,32 +177,14 @@ trait Validation
     }
 
     /**
-     * Returns error response after wrong validation.
-     *
-     * @param  Illuminate\Validation\Validator  $validator
-     * @return Illuminate\Http\Response
-     */
-    private function buildFailedValidationResponse($validator)
-    {
-        //If is ajax request
-        if (request()->expectsJson()) {
-            $error = BaseValidationExpetion::withMessages($validator->errors()->getMessages());
-
-            throw $error;
-        }
-
-        return redirect(url()->previous())->withErrors($validator)->withInput();
-    }
-
-    /**
      * Build request with admin mutators.
      *
      * @param  array  $fields
      * @return array
      */
-    protected function muttatorsResponse($fields, $rules = null)
+    public function muttatorsResponse($requestData, $fields, $rules = null)
     {
-        $request = new \Admin\Requests\DataRequest(request()->all());
+        $request = new \Admin\Requests\DataRequest($requestData);
 
         $request->applyMutators($this, $fields, $rules);
 
@@ -227,6 +209,9 @@ trait Validation
         }
 
         $rules = $this->getValidationRules($row);
+
+        $request = request();
+        $requestData = $request->all();
 
         $only = [];
         $replace = [];
@@ -272,15 +257,24 @@ trait Validation
             $rules = array_diff_key($rules, array_flip($except));
         }
 
-        $validator = Validator::make(request()->all(), $rules);
+        $validator = Validator::make($requestData, $rules);
 
         if ($validator->fails()) {
-            throw new ValidationException($this->buildFailedValidationResponse($validator));
+            throw new ValidationException(
+                (new FieldsValidator($this, $request))->buildFailedValidationResponse($validator)
+            );
         }
 
         //Modify request data with admin mutators
         if ($mutators == true) {
-            return $this->muttatorsResponse(count($only) > 0 ? $only : null, $rules);
+            return $this->muttatorsResponse($requestData, count($only) > 0 ? $only : null, $rules);
         }
+    }
+
+    public function scopeValidator($query, $request = null)
+    {
+        $validator = new FieldsValidator($this, request());
+
+        return $validator;
     }
 }

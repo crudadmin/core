@@ -499,7 +499,7 @@ trait Sluggable
             (new static)->redirectWithWrongSlug($slug, $id, $key, $row);
         }
 
-        return $row;
+        return $row ?: false;
     }
 
     /**

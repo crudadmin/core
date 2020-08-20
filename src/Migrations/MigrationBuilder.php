@@ -31,6 +31,7 @@ class MigrationBuilder extends Command
      */
     protected $initializedTables = [
         'migrations', 'jobs', 'failed_jobs', 'password_resets',
+        'oauth_access_tokens', 'oauth_auth_codes', 'oauth_clients', 'oauth_personal_access_clients', 'oauth_refresh_tokens'
     ];
 
     public function __construct()

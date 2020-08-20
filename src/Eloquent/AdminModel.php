@@ -158,6 +158,14 @@ class AdminModel extends Model
         parent::__construct($attributes);
     }
 
+    /*
+     * Mutate fields method for parent::mutateFields() support
+     */
+    public function mutateFields($fields)
+    {
+        //...
+    }
+
     /**
      * Returns migration date.
      *
