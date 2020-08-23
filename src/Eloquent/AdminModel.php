@@ -158,8 +158,13 @@ class AdminModel extends Model
         parent::__construct($attributes);
     }
 
-    /*
+    /**
      * Mutate fields method for parent::mutateFields() support
+     *
+     * @param  Admin\Tests\App\Models\Fields\FieldsMutator  $fields
+     * @param  AdminModel||null  $params
+     *
+     * @return void
      */
     public function mutateFields($fields)
     {
