@@ -13,7 +13,7 @@ trait HasAttributes
      */
     protected $attributes = [
          'name', 'type', 'resize', 'locale', 'default', 'unique_db', 'decimal_length',
-         'index', 'unsigned', 'null', 'imaginary', 'migrateToPivot',
+         'index', 'unsigned', 'null', 'imaginary', 'migrateToPivot', 'fulltext',
     ];
 
     /**

@@ -3,6 +3,7 @@
 namespace Admin\Core\Migrations;
 
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SupportFulltext;
 use Fields;
 use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
@@ -19,6 +20,7 @@ class MigrationBuilder extends Command
         Concerns\SupportRelations,
         Concerns\SupportColumn,
         Concerns\SupportJson,
+        Concerns\SupportFulltext,
         Concerns\HasIndex;
 
     /*
@@ -117,6 +119,8 @@ class MigrationBuilder extends Command
 
             $this->fireModelEvent($model, 'onTableCreate');
         }
+
+        $this->setTableFullText($model);
 
         $this->fireModelEvent($model, 'afterMigrate');
 

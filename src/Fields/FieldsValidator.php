@@ -80,14 +80,7 @@ class FieldsValidator
 
         //If Request has been received
         else if ( is_string($onlyFields) ) {
-            //Receive rules from given Request
-            $requestRules = (new $onlyFields)->rules();
-
-            //Allow only data from given request
-            $this->only(array_keys($requestRules));
-
-            //Push and merge given fields with admin fields
-            $this->merge($requestRules);
+            $this->use($onlyFields);
         }
 
         return $this;
@@ -118,7 +111,7 @@ class FieldsValidator
     {
         //Receive rules from given Request
         if ( is_string($newRules) ) {
-            $newRules = (new $newRules)->rules();
+            return $this->use($newRules);
         }
 
         foreach ($newRules as $key => $fieldRules) {
@@ -131,6 +124,47 @@ class FieldsValidator
         }
 
         return $rules;
+    }
+
+    /**
+     * Boot fields from request class
+     *
+     * @param  string  $classname
+     *
+     * @return  this
+     */
+    public function use(string $classname)
+    {
+        $class = new $classname;
+
+        //Check request authorization
+        if ( method_exists($class, 'authorize') && $class->authorize() !== true ){
+            abort(401);
+        }
+
+        //Use only fields
+        if ( method_exists($class, 'only') ){
+            $this->only($class->only());
+        }
+
+        //Merge additional fields
+        if ( method_exists($class, 'merge') ){
+            $this->merge($class->merge());
+        }
+
+        //Use only validation fields + merge additional
+        if ( method_exists($class, 'rules') ){
+            //Receive rules from given Request
+            $requestRules = $class->rules();
+
+            //Allow only data from given request
+            $this->only(array_keys($requestRules));
+
+            //Push and merge given fields with admin fields
+            $this->merge($requestRules);
+        }
+
+        return $this;
     }
 
     /**
