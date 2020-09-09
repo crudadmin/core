@@ -2,11 +2,12 @@
 
 namespace Admin\Core\Fields;
 
-use Admin\Core\Fields\Mutations\FieldToArray;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Fields\Mutations\FieldToArray;
+use Admin\Core\Requests\AdminModelRequest;
 use Admin\Exceptions\ValidationException;
-use Illuminate\Validation\ValidationException as BaseValidationExpetion;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException as BaseValidationExpetion;
 use Validator;
 
 class FieldsValidator
@@ -143,12 +144,12 @@ class FieldsValidator
         }
 
         //Use only fields
-        if ( method_exists($class, 'only') ){
+        if ( method_exists($class, 'only') && $class instanceof AdminModelRequest ){
             $this->only($class->only());
         }
 
         //Merge additional fields
-        if ( method_exists($class, 'merge') ){
+        if ( method_exists($class, 'merge') && $class instanceof AdminModelRequest ){
             $this->merge($class->merge());
         }
 
