@@ -452,7 +452,7 @@ class AdminModel extends Model
         }
 
         //Object / Array
-        elseif (in_array($property, ['name', 'fields', 'active', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'publishable', 'deletable', 'layouts', 'belongsToModel'])) {
+        elseif (in_array($property, ['name', 'fields', 'active', 'single', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'publishable', 'deletable', 'layouts', 'belongsToModel'])) {
             if (method_exists($this, $property)) {
                 return $this->{$property}($row);
             }

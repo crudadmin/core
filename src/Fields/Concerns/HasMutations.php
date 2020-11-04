@@ -25,7 +25,10 @@ trait HasMutations
      */
     public function getMutations()
     {
-        return $this->mutations;
+        return array_merge($this->mutations, [
+            Mutations\AddGlobalRules::class,
+            Mutations\AddAttributeRules::class,
+        ]);
     }
 
     /**

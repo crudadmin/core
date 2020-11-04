@@ -610,7 +610,7 @@ class Fields extends MigrationDefinition
         $table = $model->getTable();
 
         //Field mutations
-        foreach ($this->mutations as $namespace) {
+        foreach ($this->getMutations() as $namespace) {
             //Skip namespaces
             if (in_array($namespace, $skip)) {
                 continue;
