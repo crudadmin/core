@@ -134,7 +134,7 @@ trait SupportColumn
     private function setDefault(AdminModel $model, string $key, $column, Type $columnClass)
     {
         //If field does not have default value
-        if (! $model->hasFieldParam($key, 'default', true)) {
+        if (! $model->hasFieldParam($key, 'default')) {
             $column->default(null);
         }
 
