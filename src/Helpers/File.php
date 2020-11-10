@@ -364,8 +364,11 @@ class File
             $image = call_user_func_array([$image, $mutator], $params);
         }
 
+        $defaultQuality = 90;
+        $qualityCompression = config('admin.image_lossy_compression_quality', $defaultQuality);
+
         //Save image into cache folder
-        $image->save($destinationPath, 85);
+        $image->save($destinationPath, $qualityCompression);
 
         //Create webp version of image
         $this->createWebp($destinationPath);
