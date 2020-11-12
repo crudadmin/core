@@ -8,9 +8,21 @@ use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Types\Type;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema;
+use Admin;
 
 trait SupportColumn
 {
+    public function getTableColumn(AdminModel $model, $key)
+    {
+        $columns = Admin::cache('migrations.columns.doctrine.'.$model->getTable(), function() use ($model) {
+            return $model->getConnection()->getDoctrineSchemaManager()->listTableColumns(
+                $model->getTable()
+            );
+        });
+
+        return @$columns[$key];
+    }
+
     /**
      * Register all static columns.
      * @param  Blueprint    $table
@@ -74,7 +86,7 @@ trait SupportColumn
         }
 
         //Set nullable column
-        $this->setNullable($model, $key, $column);
+        $this->setNullable($model, $key, $column, $columnClass);
 
         //If field is index
         $this->setIndex($model, $key, $column);
@@ -86,19 +98,37 @@ trait SupportColumn
     }
 
     /**
+     * Determine if columns is nullable or not
+     *
+     * @param  AdminModel  $model
+     * @param  string  $key
+     * @return  bool
+     */
+    public function isNullable($model, $key)
+    {
+        return $model->hasFieldParam($key, ['required'], true) === false
+                || $model->hasFieldParam($key, 'null', true) === true;
+    }
+
+    /**
      * Set nullable column.
      * @param  AdminModel       $model
      * @param  string           $key
      * @param  mixed $column
+     * @param  Type $columnClass
      * @return void
      */
-    private function setNullable(AdminModel $model, string $key, $column)
+    public function setNullable(AdminModel $model, string $key, $column, Type $columnClass = null)
     {
-        if (
-            ! $model->hasFieldParam($key, ['required'], true)
-            || $model->hasFieldParam($key, 'null', true)
-        ) {
+        //If column has own set default setter
+        if ($columnClass && method_exists($columnClass, 'setNullable')) {
+            return $columnClass->setNullable($column, $model, $key, $this);
+        }
+
+        if ($this->isNullable($model, $key)) {
             $column->nullable();
+        } else {
+            $column->nullable(false);
         }
     }
 
@@ -141,7 +171,6 @@ trait SupportColumn
         //If column has own set default setter
         if (method_exists($columnClass, 'setDefault')) {
             $columnClass->setDefault($column, $model, $key);
-
             return;
         }
 

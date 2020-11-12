@@ -5,6 +5,7 @@ namespace Admin\Core\Migrations\Types;
 use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Concerns\SupportRelations;
+use Admin\Core\Migrations\MigrationBuilder;
 use Illuminate\Database\Schema\Blueprint;
 
 class BelongsToType extends Type
@@ -81,6 +82,49 @@ class BelongsToType extends Type
     public function setDefault($column, AdminModel $model, string $key)
     {
         $column->default(null);
+    }
+
+    /**
+     * Set default value.
+     * @param mixed $column
+     * @param AdminModel       $model
+     * @param string           $key
+     * @param MigrationBuilder           $builder
+     */
+    public function setNullable($column, AdminModel $model, string $key, MigrationBuilder $builder)
+    {
+        //If table does not exsits. We can define nullable as regullary
+        if ( !$model->getSchema()->hasTable($model->getTable()) ){
+            $builder->setNullable($model, $key, $column);
+        }
+
+        //We need change nullable, because is set to wrong state
+        else if ( !$builder->isNullable($model, $key) !== $builder->getTableColumn($model, $key)->getNotNull() ) {
+            $this->registerAfterMigration($model, function () use ($model, $key, $builder) {
+                //We we want set realtion to null, we need check if there exists rows with null values
+                if ( $builder->isNullable($model, $key) === false ) {
+                    $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
+
+                    if ( $nullableRows ) {
+                        $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
+                    }
+
+                    return;
+                }
+
+                $model->getSchema()->disableForeignKeyConstraints();
+
+                $model->getSchema()->table($model->getTable(), function (Blueprint $table) use ($model, $key, $builder) {
+                    $column = $this->registerColumn($table, $model, $key, true);
+
+                    $builder->setNullable($model, $key, $column);
+
+                    $column->change();
+                });
+
+                $model->getSchema()->enableForeignKeyConstraints();
+            }, false);
+        }
     }
 
     /**
