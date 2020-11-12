@@ -52,8 +52,9 @@ class DateTimeType extends Type
      * @param mixed $column
      * @param AdminModel       $model
      * @param string           $key
+     * @param bool           $updating
      */
-    public function setDefault($column, AdminModel $model, string $key)
+    public function setDefault($column, AdminModel $model, string $key, $updating)
     {
         //If default value has not been set
         if (! ($default = $model->getFieldParam($key, 'default'))) {
@@ -62,7 +63,19 @@ class DateTimeType extends Type
 
         //Set default timestamp
         if (strtoupper($default) == 'CURRENT_TIMESTAMP') {
-            $column->useCurrent();
+            //Check if column does exists
+            $columnExists = $updating === false
+                                ? false
+                                : $model->getSchema()->hasColumn($model->getTable(), $key);
+
+            if ( $columnExists ) {
+                $column->default('CURRENT_TIMESTAMP');
+            }
+
+            //For new columns we want use this method, because previous methot throws error
+            else {
+                $column->useCurrent();
+            }
         }
     }
 }

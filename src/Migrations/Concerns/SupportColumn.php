@@ -92,7 +92,7 @@ trait SupportColumn
         $this->setIndex($model, $key, $column);
 
         //Set default value of field
-        $this->setDefault($model, $key, $column, $columnClass);
+        $this->setDefault($model, $key, $column, $columnClass, $updating);
 
         return $column;
     }
@@ -159,9 +159,10 @@ trait SupportColumn
      * @param  AdminModel       $model
      * @param  string           $key
      * @param  Type             $column
+     * @param  bool             $updating
      * @return void
      */
-    private function setDefault(AdminModel $model, string $key, $column, Type $columnClass)
+    private function setDefault(AdminModel $model, string $key, $column, Type $columnClass, $updating)
     {
         //If field does not have default value
         if (! $model->hasFieldParam($key, 'default')) {
@@ -170,7 +171,7 @@ trait SupportColumn
 
         //If column has own set default setter
         if (method_exists($columnClass, 'setDefault')) {
-            $columnClass->setDefault($column, $model, $key);
+            $columnClass->setDefault($column, $model, $key, $updating);
             return;
         }
 
