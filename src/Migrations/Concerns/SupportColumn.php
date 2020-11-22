@@ -128,15 +128,18 @@ trait SupportColumn
         if ($this->isNullable($model, $key)) {
             $column->nullable();
         } else {
-            //If we want set column to null, we need check if there exists rows with null values
-            if ( $this->isNullable($model, $key) === false ) {
-                $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
+            //Check if column can be changed as nullable
+            if ( $model->getSchema()->hasTable($model->getTable()) && $tableColumn = $this->getTableColumn($model, $key) ){
+                //If we want set column to null, we need check if there exists rows with null values
+                if ( !$this->isNullable($model, $key) !== $tableColumn->getNotNull() ) {
+                    $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
 
-                if ( $nullableRows ) {
-                    $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
+                    if ( $nullableRows ) {
+                        $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
+                    }
+
+                    return;
                 }
-
-                return;
             }
 
             $column->nullable(false);
