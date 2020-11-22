@@ -94,12 +94,12 @@ class BelongsToType extends Type
     public function setNullable($column, AdminModel $model, string $key, MigrationBuilder $builder)
     {
         //If table does not exsits. We can define nullable as regullary
-        if ( !$model->getSchema()->hasTable($model->getTable()) ){
+        if ( !$model->getSchema()->hasTable($model->getTable()) || !($tableColumn = $builder->getTableColumn($model, $key)) ){
             $builder->setNullable($model, $key, $column);
         }
 
         //We need change nullable, because is set to wrong state
-        else if ( !$builder->isNullable($model, $key) !== $builder->getTableColumn($model, $key)->getNotNull() ) {
+        else if ( !$builder->isNullable($model, $key) !== $tableColumn->getNotNull() ) {
             $this->registerAfterMigration($model, function () use ($model, $key, $builder) {
                 //We we want set realtion to null, we need check if there exists rows with null values
                 if ( $builder->isNullable($model, $key) === false ) {

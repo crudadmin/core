@@ -2,10 +2,11 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Fields;
-use Localization;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Group;
+use Admin\Helpers\Localization\AdminResourcesSyncer;
+use Fields;
+use Localization;
 
 trait FieldProperties
 {
@@ -108,10 +109,12 @@ trait FieldProperties
                 continue;
             }
 
+            $group->name = AdminResourcesSyncer::translate($group->name);
             $group->fields = $this->recursivelyBuildAllGroups($group->fields);
 
-            if ( method_exists($group, 'build') )
+            if ( method_exists($group, 'build') ) {
                 $groups[$key] = $group->build();
+            }
         }
 
         return $groups;
