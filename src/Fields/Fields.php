@@ -332,7 +332,11 @@ class Fields extends MigrationDefinition
             return $group;
         }
 
-        $mutationBuilder->groups[$group->id]($group);
+        $groupsMutations = array_wrap($mutationBuilder->groups[$group->id]);
+
+        foreach ($groupsMutations as $callback) {
+            $callback($group);
+        }
 
         return $group;
     }
@@ -647,7 +651,11 @@ class Fields extends MigrationDefinition
             $field->{$k} = $value;
         }
 
-        $this->mutationBuilder[$table]->fields[$key]($field);
+        $mutateFields = array_wrap($this->mutationBuilder[$table]->fields[$key]);
+
+        foreach ($mutateFields as $callback) {
+            $callback($field);
+        }
 
         $this->fields[$table][$key] = (array) $field;
     }

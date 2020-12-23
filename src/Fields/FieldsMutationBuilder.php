@@ -186,6 +186,20 @@ class FieldsMutationBuilder
     }
 
     /**
+     * Push fields into given group
+     *
+     * @param  string  $id
+     * @param  array|Group  $fields
+     * @return  $this
+     */
+    public function pushGroup($id, $fields)
+    {
+        return $this->group($id, function($group) use ($fields) {
+            $group->push($fields);
+        });
+    }
+
+    /**
      * Add field modification callback mutator.
      *
      * @param  string|array  $key
@@ -259,16 +273,17 @@ class FieldsMutationBuilder
      */
     private function applyMultipleCallbacks(&$property, $key, $callback)
     {
-        //Remove multiple fields/groups
-        if (is_array($key)) {
-            foreach ($key as $k) {
+        $keys = array_wrap($key);
+
+        foreach ($keys as $k) {
+            if ( array_key_exists($k, $property) ) {
+                $values = array_wrap($property[$k]);
+                $values[] = $callback;
+
+                $property[$k] = $values;
+            } else {
                 $property[$k] = $callback;
             }
-        }
-
-        //Remove single item
-        else {
-            $property[$key] = $callback;
         }
 
         return $this;
