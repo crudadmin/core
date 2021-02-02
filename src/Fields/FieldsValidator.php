@@ -75,7 +75,24 @@ class FieldsValidator
     {
         //Allow only given fields from array set
         if ( is_array($onlyFields) ) {
-            $this->useOnly = array_merge($this->useOnly, $onlyFields);
+            $useOnly = [];
+            $merge = [];
+
+            foreach ($onlyFields as $key => $value) {
+                if ( is_numeric($key) ){
+                    $useOnly[] = $value;
+                } else {
+                    $useOnly[] = $key;
+
+                    $merge[$key] = $value;
+                }
+            }
+
+            $this->useOnly = array_merge($this->useOnly, $useOnly);
+
+            if ( count($merge) > 0 ) {
+                $this->merge($merge);
+            }
         }
 
 
