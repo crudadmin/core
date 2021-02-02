@@ -135,9 +135,7 @@ trait Validation
                         $lang_rules = array_unique(array_merge($data[$key], ['nullable']));
 
                         //Remove required rule for other languages
-                        $lang_rules = $this->removeRequiredProperties($lang_rules, [
-                            'required', 'required_if', 'required_unless', 'required_with', 'required_with_all', 'required_without', 'required_without_all',
-                        ]);
+                        $lang_rules = $this->removeRequiredProperties($lang_rules);
 
                         //Apply also for multiple files support
                         $field_key = $is_multiple
@@ -156,12 +154,16 @@ trait Validation
     /**
      * Remove all properties from given array
      *
-     * @param  [type]  $rules
-     * @param  [type]  $attributes
-     * @return  [type]
+     * @param  array  $rules
+     * @param  array|null  $attributes
+     * @return  array
      */
-    private function removeRequiredProperties($rules, $attributes)
+    private function removeRequiredProperties($rules, $attributes = null)
     {
+        $attributes = is_null($attributes) ? [
+            'required', 'required_if', 'required_unless', 'required_with', 'required_with_all', 'required_without', 'required_without_all',
+        ] : null;
+
         foreach ($rules as $k => $key) {
             foreach ($attributes as $attribute) {
                 $attributeLength = strlen($attribute);
