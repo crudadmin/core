@@ -4,6 +4,7 @@ namespace Admin\Core\Fields;
 
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Mutations\FieldToArray;
+use Admin\Core\Fields\Validation\FileMutator;
 use Admin\Core\Requests\AdminModelRequest;
 use Admin\Exceptions\ValidationException;
 use Illuminate\Http\Request;
@@ -39,6 +40,17 @@ class FieldsValidator
      * @var  Admin\Core\Eloquent\AdminModel
      */
     protected $model;
+
+    /**
+     * Whitelist additional fields than in existing request
+     *
+     * @var  array
+     */
+    protected $whitelistedKeys = [];
+
+    protected $mutators = [
+        FileMutator::class,
+    ];
 
     /**
      * Constructor
@@ -223,6 +235,30 @@ class FieldsValidator
         //Merge given fields into request
         $rules = $this->mergeRules($rules, $this->merge);
 
+        $rules = $this->mutateRules($rules);
+
+        return $rules;
+    }
+
+    public function mutateRules($rules, $mutators = null)
+    {
+        foreach ($mutators ?: $this->mutators as $mutator) {
+            $mutator = new $mutator(
+                $this->getModel(),
+                $this->request,
+            );
+
+            foreach ($rules as $key => $attributes) {
+                $rules[$key] = $mutator->mutateField(
+                    $key,
+                    $attributes,
+                    $key
+                );
+
+                $this->whitelistedKeys = array_merge($this->whitelistedKeys, $mutator->whitelistKeys($key) ?: []);
+            }
+        }
+
         return $rules;
     }
 
@@ -253,12 +289,15 @@ class FieldsValidator
     {
         $rules = $this->getRules();
 
-        $keys = array_keys($rules);
+        $dataKeys = array_keys($rules);
+        $requestKeys = array_unique(array_merge($dataKeys, $this->whitelistedKeys));
 
-        return $this->getModel()->muttatorsResponse(
-            $this->request->only($keys), //we need pass only allowed data set
-            $keys,
+        $response = $this->getModel()->muttatorsResponse(
+            $this->request->only($requestKeys), //we need pass only allowed data set
+            $dataKeys,
             $rules
         );
+
+        return array_intersect_key($response, array_flip($dataKeys));
     }
 }

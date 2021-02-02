@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use Admin\Core\Fields\FieldsValidator;
+use Admin\Core\Fields\Validation\FileMutator;
 use Admin\Exceptions\ValidationException;
 use Fields;
 use Localization;
@@ -160,9 +161,7 @@ trait Validation
      */
     private function removeRequiredProperties($rules, $attributes = null)
     {
-        $attributes = is_null($attributes) ? [
-            'required', 'required_if', 'required_unless', 'required_with', 'required_with_all', 'required_without', 'required_without_all',
-        ] : null;
+        $attributes = is_null($attributes) ? FileMutator::$requiredAttributes : null;
 
         foreach ($rules as $k => $key) {
             foreach ($attributes as $attribute) {
