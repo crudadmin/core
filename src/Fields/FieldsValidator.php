@@ -289,7 +289,13 @@ class FieldsValidator
     {
         $rules = $this->getRules();
 
-        $dataKeys = array_keys($rules);
+        $dataKeys = array_unique(
+            array_merge(
+                array_keys($rules),
+                $this->useOnly
+            )
+        );
+
         $requestKeys = array_unique(array_merge($dataKeys, $this->whitelistedKeys));
 
         $response = $this->getModel()->muttatorsResponse(
