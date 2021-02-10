@@ -280,16 +280,17 @@ class File
         return $path.'.backup';
     }
 
-    private function createTemporaryProcessFile($filepath, $mutators)
+    private function createTemporaryProcessFile($filepath, $mutators, $directory)
     {
         $tempPath = self::getTemporaryFilename($filepath);
 
         //Save temporary file with properties for next resizing
         if (! file_exists($tempPath)) {
-            file_put_contents($tempPath, json_encode([
+            file_put_contents($tempPath, json_encode(array_filter([
                 'original_path' => $this->path,
                 'mutators' => $mutators,
-            ]));
+                'directory' => $directory,
+            ])));
         }
 
         return new static($filepath, $this);
@@ -333,7 +334,7 @@ class File
         //If resized file does not exists yet, and cannot be processed in actual request,
         //then return path to resizing process. Image will be resized in opening image request
         elseif ($force === false) {
-            return $this->createTemporaryProcessFile($destinationPath, $mutators);
+            return $this->createTemporaryProcessFile($destinationPath, $mutators, $directory);
         }
 
         //Set image for processing
