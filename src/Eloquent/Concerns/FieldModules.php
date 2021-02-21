@@ -6,14 +6,22 @@ use AdminCore;
 
 trait FieldModules
 {
+    static $globalModules = [];
+
     public function getModules()
     {
-        return $this->modules;
+        return array_unique(array_merge($this->modules, self::$globalModules));
     }
 
     public function addModule($module)
     {
         $this->modules[] = $module;
+    }
+
+    public static function addGlobalModule($module)
+    {
+        self::$globalModules[] = $module;
+        self::$globalModules = array_unique(self::$globalModules);
     }
 
     /*
@@ -41,8 +49,8 @@ trait FieldModules
      */
     public function runAdminModules($callback)
     {
-        if ($this->modules && is_array($this->modules)) {
-            foreach ($this->modules as $class) {
+        if (($modules = $this->getModules()) && is_array($modules)) {
+            foreach ($modules as $class) {
                 $module = $this->getCachedAdminModuleClass($class);
 
                 if ( $module->isActive($this) === true ) {

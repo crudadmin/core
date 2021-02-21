@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
+use Admin\Core\Eloquent\Concerns\AdminModelFieldValue;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
@@ -287,6 +288,11 @@ class AdminModel extends Model
                 return $value;
             }
 
+            //Register custom global module mutators
+            else if ( ($value = $this->getModuleFieldValue($key, $field)) && $value && $value instanceof AdminModelFieldValue ) {
+                return $value->getValue();
+            }
+
             //If field has not relationship, then return field value... This condition is here for better framework performance
             elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
                 //Does not allow get specific locale value from localized slug column
@@ -328,6 +334,28 @@ class AdminModel extends Model
         }
 
         return parent::__get($key);
+    }
+
+    private function getModuleFieldValue($key, $field)
+    {
+        $returnResponse = null;
+
+        $value = parent::__get($key);
+
+        $this->runAdminModules(function($module) use (&$returnResponse, $key, $field, &$value) {
+            if ( method_exists($module, 'fieldValue') ) {
+                $response = $module->fieldValue($this, $key, $field, $value);
+
+                if ( $response && $response instanceof AdminModelFieldValue ){
+                    //Rewrite previous value, to support multiple responses at once
+                    $value = $response->getValue();
+
+                    $returnResponse = $response;
+                }
+            }
+        });
+
+        return $returnResponse;
     }
 
     /**

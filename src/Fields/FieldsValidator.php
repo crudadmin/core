@@ -283,9 +283,11 @@ class FieldsValidator
     /**
      * Returns request data mutated with admin mutators
      *
+     * @param  null|array  $whitelistedKeys
+     *
      * @return  array
      */
-    public function getData()
+    public function getData(array $whitelistedKeys = [])
     {
         $rules = $this->getRules();
 
@@ -304,6 +306,6 @@ class FieldsValidator
             $rules
         );
 
-        return array_intersect_key($response, array_flip($dataKeys));
+        return array_intersect_key($response, array_flip($whitelistedKeys ?: $dataKeys));
     }
 }
