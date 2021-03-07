@@ -216,6 +216,24 @@ class FieldsValidator
         return redirect(url()->previous())->withErrors($validator)->withInput();
     }
 
+    private function whitelistUseOnlyKeys($rules)
+    {
+        $useOnly = array_values($this->useOnly);
+
+        foreach ($rules as $key => $rule) {
+            $keyList = explode('.', $key);
+            $keyList = array_slice($keyList, 0, -1);
+            $keyList = implode('.', $keyList);
+
+            //Skip non allowed keys
+            if ( !(in_array($key, $useOnly) || $keyList && in_array($keyList, $useOnly)) ) {
+                unset($rules[$key]);
+            }
+        }
+
+        return $rules;
+    }
+
     /**
      * Build rules validator
      *
@@ -229,7 +247,7 @@ class FieldsValidator
 
         //Apply only given fields
         if ( count($this->useOnly) > 0 ) {
-            $rules = array_intersect_key($rules, array_flip(array_values($this->useOnly)));
+            $rules = $this->whitelistUseOnlyKeys($rules);
         }
 
         //Merge given fields into request
