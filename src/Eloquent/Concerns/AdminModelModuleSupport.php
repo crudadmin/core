@@ -19,8 +19,15 @@ interface AdminModelModuleSupport
      *
      * @param  Admin\Core\Fields\FieldsMutationBuilder $fields
      */
-    // public function mutateFields($fields)
-    // {
+    // public function mutateFields($fields) {}
 
-    // }
+    /**
+     * Mutate AdminModel properties
+     * setOptionsProperty
+     * setActiveProperty
+     * ...
+     *
+     * @param  mixed
+     */
+    // public function set{PropertyName}Property($value) {}
 }

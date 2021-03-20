@@ -8,6 +8,7 @@ use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
+use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
@@ -23,6 +24,7 @@ class AdminModel extends Model
     use BootAdminModel,
         HasChildrens,
         HasSettings,
+        HasProperties,
         RelationsBuilder,
         FieldProperties,
         FieldModules,
@@ -106,17 +108,6 @@ class AdminModel extends Model
      * @var  array
      */
     static $adminBooted = [];
-
-    /**
-     * This properties can be called also as method
-     *
-     * @var  array
-     */
-    static $callableProperties = [
-        'name', 'fields', 'active', 'inMenu', 'single', 'options',
-        'insertable', 'editable', 'publishable', 'deletable',
-        'settings', 'buttons', 'reserved', 'layouts', 'belongsToModel'
-    ];
 
     /**
      * Returns also unpublished rows.
@@ -470,40 +461,6 @@ class AdminModel extends Model
         $this->{$property} = $value;
 
         return $this;
-    }
-
-    /**
-     * Returns property.
-     *
-     * @param  string  $property
-     * @param  Admin\Core\Eloquent\AdminModel  $row
-     * @return mixed
-     */
-    public function getProperty(string $property, $row = null)
-    {
-        //Laravel for translatable properties
-        if (
-            in_array($property, ['name', 'title'])
-            && property_exists($this, $property)
-            && $translate = trans($this->{$property})
-        ) {
-            return $translate;
-        }
-
-        //Object / Array
-        elseif (in_array($property, self::$callableProperties)) {
-            if (method_exists($this, $property)) {
-                return $this->{$property}($row);
-            }
-
-            if (property_exists($this, $property)) {
-                return $this->{$property};
-            }
-        }
-
-        else if (property_exists($this, $property)) {
-            return $this->{$property};
-        }
     }
 
     /**
