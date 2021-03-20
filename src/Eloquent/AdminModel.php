@@ -108,6 +108,17 @@ class AdminModel extends Model
     static $adminBooted = [];
 
     /**
+     * This properties can be called also as method
+     *
+     * @var  array
+     */
+    static $callableProperties = [
+        'name', 'fields', 'active', 'inMenu', 'single', 'options',
+        'insertable', 'editable', 'publishable', 'deletable',
+        'settings', 'buttons', 'reserved', 'layouts', 'belongsToModel'
+    ];
+
+    /**
      * Returns also unpublished rows.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -480,7 +491,7 @@ class AdminModel extends Model
         }
 
         //Object / Array
-        elseif (in_array($property, ['name', 'fields', 'active', 'single', 'options', 'settings', 'buttons', 'reserved', 'insertable', 'editable', 'publishable', 'deletable', 'layouts', 'belongsToModel', 'inMenu'])) {
+        elseif (in_array($property, self::$callableProperties)) {
             if (method_exists($this, $property)) {
                 return $this->{$property}($row);
             }
@@ -488,11 +499,11 @@ class AdminModel extends Model
             if (property_exists($this, $property)) {
                 return $this->{$property};
             }
-
-            return;
         }
 
-        return $this->{$property};
+        else if (property_exists($this, $property)) {
+            return $this->{$property};
+        }
     }
 
     /**

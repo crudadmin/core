@@ -32,4 +32,8 @@ return [
         'datetime' => 'date_format:d.m.Y H:i|nullable',
         'time' => 'date_format:H:i|nullable',
     ],
+
+    'modules' => [
+        'App\Admin\Modules' => app_path('Admin/Modules'),
+    ],
 ];

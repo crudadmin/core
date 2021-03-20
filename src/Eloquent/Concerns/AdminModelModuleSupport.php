@@ -14,8 +14,13 @@ interface AdminModelModuleSupport
      */
     public function isActive($model);
 
-    /*
-     * Mutate admin fields
+    /**
+     * Mutate fields properties
+     *
+     * @param  Admin\Core\Fields\FieldsMutationBuilder $fields
      */
-    // public function mutateFields() { }
+    // public function mutateFields($fields)
+    // {
+
+    // }
 }
