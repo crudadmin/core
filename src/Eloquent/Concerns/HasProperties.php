@@ -49,27 +49,32 @@ trait HasProperties
             if (property_exists($this, $property)) {
                 return $this->mutateAdminModelProperty($property, $this->{$property});
             }
+
+            return $this->mutateAdminModelProperty($property, null);
         }
 
         else if (property_exists($this, $property)) {
-            return $this->mutateAdminModelProperty($property, $this->{$property});
+            return $this->{$property};
         }
-
-        return $this->mutateAdminModelProperty($property);
     }
 
     private function mutateAdminModelProperty($property, $value = null)
     {
+        $mutatorMethodName = 'set'.$property.'Property';
+
         //We need disable mutating properties inside module
         if ( $this->mutatingInMutator === true ){
             return $value;
         }
 
+        if ( method_exists($this, $mutatorMethodName) ){
+            $value = $this->{$mutatorMethodName}($value);
+        }
+
         $this->mutatingInMutator = true;
 
-        $this->runAdminModules(function($module) use (&$value, $property) {
-            $mutatorMethodName = 'set'.$property.'Property';
-
+        //Mutate property in module
+        $this->runAdminModules(function($module) use (&$value, $property, $mutatorMethodName) {
             if ( method_exists($module, $mutatorMethodName) ) {
                 $value = $module->{$mutatorMethodName}($value);
             }
