@@ -449,21 +449,6 @@ class AdminModel extends Model
     }
 
     /**
-     * Set inside property.
-     *
-     * @param  string  $property
-     * @param  mixed  $value
-     *
-     * @return $this
-     */
-    public function setProperty($property, $value)
-    {
-        $this->{$property} = $value;
-
-        return $this;
-    }
-
-    /**
      * Returns schema with correct connection.
      *
      * @return  Illuminate\Support\Facades\Schema

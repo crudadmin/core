@@ -58,6 +58,21 @@ trait HasProperties
         }
     }
 
+    /**
+     * Set inside property.
+     *
+     * @param  string  $property
+     * @param  mixed  $value
+     *
+     * @return $this
+     */
+    public function setProperty($property, $value)
+    {
+        $this->{$property} = $value;
+
+        return $this;
+    }
+
     private function mutateAdminModelProperty($property, $value = null)
     {
         $mutatorMethodName = 'set'.$property.'Property';
