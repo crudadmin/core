@@ -562,7 +562,9 @@ trait Sluggable
                 }
             }
 
-            return;
+            //If languages has been hidden, and no slug has been defined from any known language
+            //we can return any existing
+            return array_values($slug)[0] ?? null;
         }
 
         return $this->slug;
