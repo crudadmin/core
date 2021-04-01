@@ -47,6 +47,11 @@ trait Sluggable
         return $url;
     }
 
+    private function isValidSlug($slug)
+    {
+        return $slug || $slug == 0;
+    }
+
     /**
      * Return which slugs from other row has same slug values with actual editting row.
      *
@@ -135,12 +140,13 @@ trait Sluggable
     private function setEmptySlugs($text)
     {
         if ($text && $this->hasLocalizedSlug()) {
+            //TODO: this statement is weird.
             if (! $text && $text != 0) {
                 return $text;
             }
 
             $text = (array) json_decode($text);
-        } elseif ($text) {
+        } elseif ($this->isValidSlug($text)) {
             $text = array_wrap($text);
         }
 
@@ -194,7 +200,9 @@ trait Sluggable
 
         //If new slugs does not exists, then return new generated slug
         if ($row->count() == 0) {
-            return $this->castSlug(array_filter($slugs));
+            return $this->castSlug(array_filter($slugs, function($item){
+                return $this->isValidSlug($item);
+            }));
         }
 
         //Generate new unique slug with increment
