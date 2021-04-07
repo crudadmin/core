@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
+use Admin\Core\Casts\LocalizedJsonCast;
 use Admin\Core\Eloquent\Concerns\AdminModelFieldValue;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
@@ -108,6 +109,14 @@ class AdminModel extends Model
      * @var  array
      */
     static $adminBooted = [];
+
+    /**
+     * Returns localized values in ->toArray() response as array keys, or end translation values.
+     * Usefull if we throw await in all API responses other languages, and return only specific one
+     *
+     * @var  bool
+     */
+    public static $localizedResponseArray = true;
 
     /**
      * Returns also unpublished rows.
@@ -426,7 +435,7 @@ class AdminModel extends Model
                  || $this->isFieldType($key, 'json')
                  || $this->hasFieldParam($key, 'locale')
              ) {
-                $this->casts[$key] = 'json';
+                $this->addLocalizedCast($key);
             } elseif ($this->isFieldType($key, 'checkbox')) {
                 $this->casts[$key] = 'boolean';
             } elseif ($this->isFieldType($key, 'integer') || $this->hasFieldParam($key, 'belongsTo')) {
@@ -445,6 +454,29 @@ class AdminModel extends Model
             foreach ($relations as $key) {
                 $this->casts[$key] = 'integer';
             }
+        }
+
+        //Add cast into localized slug column
+        if ( $this->hasLocalizedSlug() ){
+            $this->addLocalizedCast('slug');
+        }
+    }
+
+    /**
+     * Add custom localized json cast
+     *
+     * @param  string  $key
+     */
+    private function addLocalizedCast($key)
+    {
+        //Add support for laravel 6 and lower.
+        if ( !interface_exists(\Illuminate\Contracts\Database\Eloquent\CastsAttributes::class) ) {
+            $this->casts[$key] = 'json';
+        }
+
+        //Laravel 7+
+        else {
+            $this->casts[$key] = LocalizedJsonCast::class;
         }
     }
 
