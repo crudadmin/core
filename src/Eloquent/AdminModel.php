@@ -119,6 +119,26 @@ class AdminModel extends Model
     public static $localizedResponseArray = true;
 
     /**
+     * Return localized array all the time
+     * This property exists for rewriting localizedResponseArray property
+     * but only in getValue method
+     *
+     * @var  bool
+     */
+    private $forcedLocalizedArray = false;
+
+    /**
+     * Returns if localized array is forced
+     * because in getValue methods etc, we want return correct array value
+     *
+     * @return  bool
+     */
+    public function isForcedLocalizedArray()
+    {
+        return $this->forcedLocalizedArray;
+    }
+
+    /**
      * Returns also unpublished rows.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -231,6 +251,17 @@ class AdminModel extends Model
         return $this->getValue($key, false);
     }
 
+    private function getParentValue($key)
+    {
+        $this->forcedLocalizedArray = true;
+
+        $value = parent::__get($key);
+
+        $this->forcedLocalizedArray = false;
+
+        return $value;
+    }
+
     /**
      * Returns modified called property.
      *
@@ -246,7 +277,7 @@ class AdminModel extends Model
         if (($field = $this->getField($key)) || ($field = $this->getField($key.'_id'))) {
             //Register file type response
             if ($field['type'] == 'file' && ! $this->hasGetMutator($key)) {
-                if ($file = parent::__get($key)) {
+                if ($file = $this->getParentValue($key)) {
                     //If is multilanguage file/s
                     if ($this->hasFieldParam($key, ['locale'], true)) {
                         $file = $this->returnLocaleValue($file);
@@ -276,11 +307,11 @@ class AdminModel extends Model
 
             //Casts time value, because laravel does not casts time
             elseif ($field['type'] == 'time') {
-                return ($value = parent::__get($key)) ? Carbon::createFromFormat('H:i:s', $value) : null;
+                return ($value = $this->getParentValue($key)) ? Carbon::createFromFormat('H:i:s', $value) : null;
             }
 
             else if ( in_array($field['type'], ['editor', 'longeditor']) ) {
-                $value = parent::__get($key);
+                $value = $this->getParentValue($key);
 
                 if ($this->hasFieldParam($key, ['locale'], true)) {
                     $value = $this->returnLocaleValue($value);
@@ -308,12 +339,12 @@ class AdminModel extends Model
             elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
                 //Does not allow get specific locale value from localized slug column
                 if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
-                    $object = parent::__get($key);
+                    $object = $this->getParentValue($key);
 
                     return $this->returnLocaleValue($object);
                 }
 
-                return parent::__get($key);
+                return $this->getParentValue($key);
             } else {
                 $forceCheckRelation = true;
             }
@@ -322,7 +353,7 @@ class AdminModel extends Model
         // Register this offen called properties for better performance
         elseif (in_array($key, ['id', 'slug', 'created_at', 'published_at', 'deleted_at', 'pivot'])) {
             if ($key != 'slug' || $this->sluggable == true && $key == 'slug') {
-                return parent::__get($key);
+                return $this->getParentValue($key);
             }
         }
 
@@ -344,14 +375,14 @@ class AdminModel extends Model
             }
         }
 
-        return parent::__get($key);
+        return $this->getParentValue($key);
     }
 
     private function getModuleFieldValue($key, $field)
     {
         $returnResponse = null;
 
-        $value = parent::__get($key);
+        $value = $this->getParentValue($key);
 
         $this->runAdminModules(function($module) use (&$returnResponse, $key, $field, &$value) {
             if ( method_exists($module, 'fieldValue') ) {
