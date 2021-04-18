@@ -346,7 +346,7 @@ trait FieldProperties
 
         //Return first available translated value in admin
         foreach ($object as $value) {
-            if (! empty($value) || $value === 0) {
+            if (!is_null($value)) {
                 return $value;
             }
         }

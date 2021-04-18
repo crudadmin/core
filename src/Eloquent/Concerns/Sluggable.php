@@ -96,7 +96,7 @@ trait Sluggable
             if ($this->exists) {
                 $query->where($this->getKeyName(), '!=', $this->getKey());
             }
-        })->whereRaw($column.' = ?', $slugs[$key])->count() > 0);
+        })->whereRaw($column.' = ?', $slugs[$key])->withoutGlobalScopes()->count() > 0);
     }
 
     /**
@@ -159,7 +159,7 @@ trait Sluggable
      * @param  string $text
      * @return string
      */
-    private function makeSlug($text)
+    public function makeSlug($text)
     {
         $slugs = [];
 
@@ -171,14 +171,9 @@ trait Sluggable
         }
 
         //Checks if some of localized slugs in database exists in other rows
-        $row = $this->where(function ($query) use ($slugs) {
-            //If is simple string slug
-            if (! $this->hasLocalizedSlug()) {
-                $query->where('slug', $slugs[0]);
-            }
-
+        $row = $this->getConnection()->table($this->getTable())->where(function ($query) use ($slugs) {
             //Multilanguages slug
-            else {
+            if ($this->hasLocalizedSlug()) {
                 $i = 0;
                 foreach ($slugs as $key => $value) {
                     if (! $value) {
@@ -188,8 +183,14 @@ trait Sluggable
                     $query->{ $i == 0 ? 'whereRaw' : 'orWhereRaw' }('JSON_EXTRACT(slug, "$.'.$key.'") = ?', $value);
                     $i++;
                 }
+
             }
-        })->withTrashed()->limit(1);
+
+            //If is simple string slug
+            else {
+                $query->where('slug', $slugs[0]);
+            }
+        })->limit(1);
 
         //If models exists, then skip slug owner
         if ($this->exists) {
