@@ -463,10 +463,14 @@ class AdminModel extends Model
                      $this->isFieldType($key, ['select', 'file', 'date', 'time'])
                      && $this->hasFieldParam($key, 'multiple', true)
                  )
+                 || ($hasLocale = $this->hasFieldParam($key, 'locale'))
                  || $this->isFieldType($key, 'json')
-                 || $this->hasFieldParam($key, 'locale')
              ) {
-                $this->addLocalizedCast($key);
+                if ( $hasLocale == true ) {
+                    $this->addLocalizedCast($key);
+                } else {
+                    $this->casts[$key] = 'json';
+                }
             } elseif ($this->isFieldType($key, 'checkbox')) {
                 $this->casts[$key] = 'boolean';
             } elseif ($this->isFieldType($key, 'integer') || $this->hasFieldParam($key, 'belongsTo')) {
