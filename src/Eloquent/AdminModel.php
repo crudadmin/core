@@ -463,10 +463,10 @@ class AdminModel extends Model
                      $this->isFieldType($key, ['select', 'file', 'date', 'time'])
                      && $this->hasFieldParam($key, 'multiple', true)
                  )
-                 || ($hasLocale = $this->hasFieldParam($key, 'locale'))
-                 || $this->isFieldType($key, 'json')
+                 || $this->hasFieldParam($key, 'locale')
+                 || ($this->isFieldType($key, 'json'))
              ) {
-                if ( $hasLocale == true ) {
+                if ( $this->hasFieldParam($key, 'locale') ) {
                     $this->addLocalizedCast($key);
                 } else {
                     $this->casts[$key] = 'json';
