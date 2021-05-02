@@ -76,6 +76,16 @@ class FieldsValidator
     }
 
     /**
+     * Returns Request
+     *
+     * @return  Illuminate\Http\Request
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
      * Validate only given fields
      * ->only(['firstname', 'lastname', 'password'])
      * ->only(MyRequest::class)
