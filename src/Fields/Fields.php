@@ -87,6 +87,18 @@ class Fields extends MigrationDefinition
     }
 
     /**
+     * Get model cache key
+     *
+     * @param  Model  $model
+     *
+     * @return  class
+     */
+    protected function getModelKey($model)
+    {
+        return get_class($model);
+    }
+
+    /**
      * Checks if key of field is key for group fields.
      *
      * @param  string|array|Admin\Core\Fields\Group  $field
@@ -132,25 +144,25 @@ class Fields extends MigrationDefinition
     public function getFields($model, $param = null, $force = true)
     {
         //Get model table name
-        $table = $model->getTable();
+        $modelKey = $this->getModelKey($model);
 
         //Return fields from cache
         if (
-            array_key_exists($table, $this->base_fields)
-            && $this->isCompletedState($table)
+            array_key_exists($modelKey, $this->base_fields)
+            && $this->isCompletedState($modelKey)
             && $force === false
         ) {
-            return $this->base_fields[$table];
+            return $this->base_fields[$modelKey];
         }
 
-        $this->setUncompletedState($table);
+        $this->setUncompletedState($modelKey);
 
         //Resets buffer
-        $this->fields[$table] = [];
-        $this->groups[$table] = [];
-        $this->remove[$table] = [];
-        $this->post_update[$table] = [];
-        $this->mutationBuilder[$table] = null;
+        $this->fields[$modelKey] = [];
+        $this->groups[$modelKey] = [];
+        $this->remove[$modelKey] = [];
+        $this->post_update[$modelKey] = [];
+        $this->mutationBuilder[$modelKey] = null;
 
         //Fields from model
         $fields = $model->getProperty('fields', $param);
@@ -159,24 +171,24 @@ class Fields extends MigrationDefinition
         $fields = is_array($fields) ? new Group($fields) : $fields;
 
         //Get actual model mutation
-        $this->mutationBuilder[$table] = $this->addFieldsMutationIntoModel($model, $param);
+        $this->mutationBuilder[$modelKey] = $this->addFieldsMutationIntoModel($model, $param);
 
         //Register fields from groups
         $this->manageGroupFields($model, 0, $fields, null);
 
         //Set rendering of fields as completed
-        $this->setCompletedState($table);
+        $this->setCompletedState($modelKey);
 
         //First "postupdate" on modules
-        $this->fireModulesPostUpdate($model, $table, $param);
+        $this->fireModulesPostUpdate($model, $modelKey, $param);
 
         //Register base fields without options for cached operations
-        $this->base_fields[$table] = $this->removeOptions($this->fields[$table]);
+        $this->base_fields[$modelKey] = $this->removeOptions($this->fields[$modelKey]);
 
         //Fire post updated on fields as queries, loading options etc...
-        $this->fireMutatorsPostUpdate($model, $table);
+        $this->fireMutatorsPostUpdate($model, $modelKey);
 
-        return $this->fields[$table];
+        return $this->fields[$modelKey];
     }
 
     /**
@@ -199,54 +211,54 @@ class Fields extends MigrationDefinition
     /**
      * Set completed status of loaded fields.
      *
-     * @param  string  $table
+     * @param  string  $modelKey
      * @return void
      */
-    private function setCompletedState(string $table)
+    private function setCompletedState(string $modelKey)
     {
-        if (! in_array($table, $this->loaded_fields)) {
-            $this->loaded_fields[] = $table;
+        if (! in_array($modelKey, $this->loaded_fields)) {
+            $this->loaded_fields[] = $modelKey;
         }
     }
 
     /**
      * Set uncompleted sate of loaded fields.
      *
-     * @param  string  $table
+     * @param  string  $modelKey
      * @return void
      */
-    private function setUncompletedState(string $table)
+    private function setUncompletedState(string $modelKey)
     {
-        if (in_array($table, $this->loaded_fields)) {
-            unset($this->loaded_fields[array_search($table, $this->loaded_fields)]);
+        if (in_array($modelKey, $this->loaded_fields)) {
+            unset($this->loaded_fields[array_search($modelKey, $this->loaded_fields)]);
         }
     }
 
     /**
      * Return if is completed state of rendering admin model fields.
      *
-     * @param  string  $table
+     * @param  string  $modelKey
      * @return bool
      */
-    private function isCompletedState(string $table)
+    private function isCompletedState(string $modelKey)
     {
-        return in_array($table, $this->loaded_fields);
+        return in_array($modelKey, $this->loaded_fields);
     }
 
     /**
      * Fire post update events for additional mutations of relationships, options, etc...
      *
      * @param  Admin\Core\Eloquent\AdminModel  $model
-     * @param  string  $table
+     * @param  string  $modelKey
      * @return array
      */
-    private function fireMutatorsPostUpdate(AdminModel $model, string $table)
+    private function fireMutatorsPostUpdate(AdminModel $model, string $modelKey)
     {
-        $fields = $this->fields[$table];
+        $fields = $this->fields[$modelKey];
 
         if (
-            ! isset($this->post_update[$table])
-            || count($updates = $this->post_update[$table]) == 0
+            ! isset($this->post_update[$modelKey])
+            || count($updates = $this->post_update[$modelKey]) == 0
         ) {
             return $fields;
         }
@@ -265,7 +277,7 @@ class Fields extends MigrationDefinition
         }
 
         //Overide fields back to previous state before post update
-        $this->fields[$table] = $fields;
+        $this->fields[$modelKey] = $fields;
 
         return $fields;
     }
@@ -274,18 +286,18 @@ class Fields extends MigrationDefinition
      * Fire
      *
      * @param  Admin\Core\Eloquent\AdminModel  $model
-     * @param  string  $table
+     * @param  string  $modelKey
      * @param  array  $fields
      * @param  Admin\Core\Eloquent\AdminModel|null  $param
      * @return  void
      */
-    private function fireModulesPostUpdate($model, $table, $param = null)
+    private function fireModulesPostUpdate($model, $modelKey, $param = null)
     {
         //When all fields are already initialized,
         //we can slightly mutate their parameters in this state.
-        $model->runAdminModules(function($module) use ($model, $param, $table) {
+        $model->runAdminModules(function($module) use ($model, $param, $modelKey) {
             if ( method_exists($module, 'mutateBootedFields') ) {
-                $this->fields[$table] = $module->mutateBootedFields($this->fields[$table], $param, $model);
+                $this->fields[$modelKey] = $module->mutateBootedFields($this->fields[$modelKey], $param, $model);
             }
         });
     }
@@ -406,7 +418,7 @@ class Fields extends MigrationDefinition
     {
         $fields = [];
 
-        $mutationBuilder = $this->mutationBuilder[$model->getTable()];
+        $mutationBuilder = $this->mutationBuilder[$this->getModelKey($model)];
 
         //Push new fields, groups... or replace existing fields. Into first level of fields
         if (! $parentGroup) {
@@ -482,7 +494,7 @@ class Fields extends MigrationDefinition
 
             //Register sub groups or sub fields
             foreach ($mutated_groups as $field_key => $field_from_group) {
-                $mutation_previous = isset($mutation_previous) ? $mutation_previous : $this->fields[$model->getTable()];
+                $mutation_previous = isset($mutation_previous) ? $mutation_previous : $this->fields[$this->getModelKey($model)];
 
                 $mutation = $this->manageGroupFields($model, $field_key, $field_from_group, $group);
 
@@ -490,7 +502,7 @@ class Fields extends MigrationDefinition
                 if ($mutation instanceof Group) {
                     $fields[] = $mutation;
 
-                    $mutation_previous = $this->fields[$model->getTable()];
+                    $mutation_previous = $this->fields[$this->getModelKey($model)];
                 }
 
                 //Add new fields into group from fields mutations
@@ -548,13 +560,13 @@ class Fields extends MigrationDefinition
      */
     public function getFieldsGroups(AdminModel $model)
     {
-        $table = $model->getTable();
+        $modelKey = $this->getModelKey($model);
 
-        if (! array_key_exists($table, $this->groups)) {
+        if (! array_key_exists($modelKey, $this->groups)) {
             return false;
         }
 
-        return $this->groups[$table];
+        return $this->groups[$modelKey];
     }
 
     /**
@@ -567,7 +579,7 @@ class Fields extends MigrationDefinition
     protected function registerGroup(Group $group, AdminModel $model)
     {
         //Update and register field
-        $this->groups[$model->getTable()][] = $group;
+        $this->groups[$this->getModelKey($model)][] = $group;
     }
 
     /**
@@ -581,37 +593,37 @@ class Fields extends MigrationDefinition
      */
     protected function registerField($field, string $key, AdminModel $model, $skip = [])
     {
-        $table = $model->getTable();
+        $modelKey = $this->getModelKey($model);
 
         //If no field is present, if is null or empty array value
         if ( ! $field ) {
-            return $this->fields[$table];
+            return $this->fields[$modelKey];
         }
 
         //Run all global mutations
         $this->runGlobalMutations($field, $key, $model, $skip);
 
-        $fieldAfterGlobalMutations = $this->fields[$table][$key];
+        $fieldAfterGlobalMutations = $this->fields[$modelKey][$key];
 
         //Mutate field from mutation builder
-        $this->mutateField($fieldAfterGlobalMutations, $key, $table);
+        $this->mutateField($fieldAfterGlobalMutations, $key, $modelKey);
 
         //Run all global mutations again if field has been changed after developer mutation method
-        if ( $fieldAfterGlobalMutations != $this->fields[$table][$key] ) {
-            $this->runGlobalMutations($this->fields[$table][$key], $key, $model, $skip);
+        if ( $fieldAfterGlobalMutations != $this->fields[$modelKey][$key] ) {
+            $this->runGlobalMutations($this->fields[$modelKey][$key], $key, $model, $skip);
         }
 
         //If field need to be removed
-        if (in_array($key, (array) $this->remove[$table])) {
-            unset($this->fields[$table][$key]);
+        if (in_array($key, (array) $this->remove[$modelKey])) {
+            unset($this->fields[$modelKey][$key]);
         }
 
-        return $this->fields[$table];
+        return $this->fields[$modelKey];
     }
 
     private function runGlobalMutations($field, string $key, AdminModel $model, $skip = [])
     {
-        $table = $model->getTable();
+        $modelKey = $this->getModelKey($model);
 
         //Field mutations
         foreach ($this->getMutations() as $namespace) {
@@ -625,7 +637,7 @@ class Fields extends MigrationDefinition
             }
 
             //Update and register field
-            $this->fields[$table][$key] = $field;
+            $this->fields[$modelKey][$key] = $field;
         }
     }
 
@@ -634,30 +646,30 @@ class Fields extends MigrationDefinition
      *
      * @param  array  $field
      * @param  string  $key
-     * @param  string  $table
+     * @param  string  $modelKey
      * @return void
      */
-    private function mutateField($field, string $key, string $table)
+    private function mutateField($field, string $key, string $modelKey)
     {
         //Mutate field by mutation builder
-        if (! array_key_exists($key, $this->mutationBuilder[$table]->fields)) {
+        if (! array_key_exists($key, $this->mutationBuilder[$modelKey]->fields)) {
             return;
         }
 
         $field = new \StdClass();
 
         //Clone field into stdt array
-        foreach ($this->fields[$table][$key] as $k => $value) {
+        foreach ($this->fields[$modelKey][$key] as $k => $value) {
             $field->{$k} = $value;
         }
 
-        $mutateFields = array_wrap($this->mutationBuilder[$table]->fields[$key]);
+        $mutateFields = array_wrap($this->mutationBuilder[$modelKey]->fields[$key]);
 
         foreach ($mutateFields as $callback) {
             $callback($field);
         }
 
-        $this->fields[$table][$key] = (array) $field;
+        $this->fields[$modelKey][$key] = (array) $field;
     }
 
     /**
@@ -675,7 +687,7 @@ class Fields extends MigrationDefinition
 
         if ($mutation instanceof MutationRule) {
             $mutation->setModel($model);
-            $mutation->setFields($this->fields[$model->getTable()]);
+            $mutation->setFields($this->fields[$this->getModelKey($model)]);
             $mutation->setField($field);
             $mutation->setKey($key);
         }
@@ -714,7 +726,7 @@ class Fields extends MigrationDefinition
             return;
         }
 
-        $this->post_update[$model->getTable()][] = $mutation;
+        $this->post_update[$this->getModelKey($model)][] = $mutation;
     }
 
     /**
@@ -792,16 +804,16 @@ class Fields extends MigrationDefinition
             $response = $mutation->remove($field, $key, $model);
 
             //Get model table name
-            $table = $model->getTable();
+            $modelKey = $this->getModelKey($model);
 
             //Remove acutal key
             if ($response === true) {
-                $this->remove[$table][] = $key;
+                $this->remove[$modelKey][] = $key;
             } elseif (is_string($response)) {
-                $this->remove[$table][] = $response;
+                $this->remove[$modelKey][] = $response;
             } elseif (is_array($response)) {
                 foreach ($response as $key) {
-                    $this->remove[$table][] = $key;
+                    $this->remove[$modelKey][] = $key;
                 }
             }
         }

@@ -58,7 +58,7 @@ trait StaticFields
      */
     public function getEnabledStaticFields(AdminModel $model)
     {
-        return Fields::cache('models.'.$model->getTable().'.static_columns.', function () use ($model) {
+        return $this->cache('models.'.$this->modelKey($model).'.static_columns.', function () use ($model) {
             $classes = [];
 
             foreach ($this->getStaticColumns() as $columnClass) {

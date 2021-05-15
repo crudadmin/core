@@ -34,12 +34,12 @@ trait BootAdminModel
      */
     public function bootCachableProperties()
     {
-        $table = $this->getTable();
+        $cacheKey = get_class($this);
 
         $cachedModels = AdminCore::get('booted_models', []);
 
         //Check if model has been cached into admin cache
-        if ( !array_key_exists($table, $cachedModels) ) {
+        if ( !array_key_exists($cacheKey, $cachedModels) ) {
             $cachedProperties = [];
 
             //Boot all saved callbacks
@@ -52,9 +52,9 @@ trait BootAdminModel
                 $cachedProperties[$key] = $this->{$key};
             }
 
-            AdminCore::push('booted_models', $cachedProperties, $this->getTable());
+            AdminCore::push('booted_models', $cachedProperties, $cacheKey);
         } else {
-            $cachedProperties = AdminCore::get('booted_models', [])[$table];
+            $cachedProperties = AdminCore::get('booted_models', [])[$cacheKey];
         }
 
         //Set all admin model properties from cache
