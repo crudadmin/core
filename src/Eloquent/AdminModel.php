@@ -307,7 +307,21 @@ class AdminModel extends Model
 
             //Casts time value, because laravel does not casts time
             elseif ($field['type'] == 'time') {
-                return ($value = $this->getParentValue($key)) ? Carbon::createFromFormat('H:i:s', $value) : null;
+                if ( ($value = $this->getParentValue($key)) ) {
+                    if ( isset($field['multiple']) ) {
+                        $dates = [];
+
+                        foreach ($value as $time) {
+                            $dates[] = Carbon::createFromFormat('H:i', $time);
+                        }
+
+                        return $dates;
+                    }
+
+                    return Carbon::createFromFormat('H:i:s', $value);
+                }
+
+                return;
             }
 
             else if ( in_array($field['type'], ['editor', 'longeditor']) ) {
