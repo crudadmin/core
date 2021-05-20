@@ -9,6 +9,7 @@ use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
+use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
@@ -30,7 +31,8 @@ class AdminModel extends Model
         FieldProperties,
         FieldModules,
         Validation,
-        Sluggable;
+        Sluggable,
+        HasLocalizedValues;
 
     /**
      * Model Parent
@@ -109,34 +111,6 @@ class AdminModel extends Model
      * @var  array
      */
     static $adminBooted = [];
-
-    /**
-     * Returns localized values in ->toArray() response as array keys, or end translation values.
-     * Usefull if we throw await in all API responses other languages, and return only specific one
-     *
-     * @var  bool
-     */
-    public static $localizedResponseArray = true;
-
-    /**
-     * Return localized array all the time
-     * This property exists for rewriting localizedResponseArray property
-     * but only in getValue method
-     *
-     * @var  bool
-     */
-    private $forcedLocalizedArray = false;
-
-    /**
-     * Returns if localized array is forced
-     * because in getValue methods etc, we want return correct array value
-     *
-     * @return  bool
-     */
-    public function isForcedLocalizedArray()
-    {
-        return $this->forcedLocalizedArray;
-    }
 
     /**
      * Returns also unpublished rows.
