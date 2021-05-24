@@ -252,11 +252,6 @@ class AdminModel extends Model
             //Register file type response
             if ($field['type'] == 'file' && ! $this->hasGetMutator($key)) {
                 if ($file = $this->getParentValue($key)) {
-                    //If is multilanguage file/s
-                    if ($this->hasFieldParam($key, ['locale'], true)) {
-                        $file = $this->returnLocaleValue($file);
-                    }
-
                     if (is_array($file) || $this->hasFieldParam($key, ['multiple'], true)) {
                         $files = [];
 
