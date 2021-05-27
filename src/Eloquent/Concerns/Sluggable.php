@@ -324,7 +324,7 @@ trait Sluggable
      * @param  string  $key
      * @return Illuminate\Http\Response
      */
-    protected static function buildFailedSlugResponse($slug, $wrong, $id, $key)
+    protected static function buildFailedSlugResponse($slug, $wrong, $id, $key, $status = 301)
     {
         $route = Route::current();
 
@@ -348,8 +348,12 @@ trait Sluggable
             }
         }
 
+        $query = request()->all();
+
+        $url = action('\\'.$current_controller, $binding).'?'.http_build_query($query);
+
         //Returns redirect
-        return redirect(action('\\'.$current_controller, $binding), 301);
+        return redirect($url, $status);
     }
 
     /**
@@ -452,6 +456,13 @@ trait Sluggable
                       ->whereRaw('JSON_EXTRACT('.$column.', "$.'.$default->slug.'") = ?', $slugValue);
             });
         }
+
+        if ( $previousLocale = $this->getValidPreiousLocale() ) {
+            //Then search also values in default language
+            $scope->orWhere(function ($query) use ($column, $previousLocale, $slugValue) {
+                $query->whereRaw('JSON_EXTRACT('.$column.', "$.'.$previousLocale.'") = ?', $slugValue);
+            });
+        }
     }
 
     /**
@@ -496,16 +507,22 @@ trait Sluggable
      */
     public static function findBySlug($slug, $id = null, $key = null, array $columns = ['*'], $query = null)
     {
+        $static = (new static);
+
         if (is_array($id)) {
             $columns = $id;
         } elseif (! is_string($id)) {
             $id = null;
         }
 
-        $row = ($query ?: new static)->whereSlug($slug)->first($columns);
+        $row = ($query ?: $static)->whereSlug($slug)->first($columns);
 
         if (! $row || ($id && $row->getKey() !== $id)) {
-            (new static)->redirectWithWrongSlug($slug, $id, $key, $row);
+            $static->redirectWithWrongSlug($slug, $id, $key, $row);
+        }
+
+        if ( $static->getValidPreiousLocale() ) {
+            $static->redirectToCorrectLocale($slug, $id, $key, $row);
         }
 
         return $row ?: false;
@@ -587,5 +604,31 @@ trait Sluggable
     public function hasSluggable()
     {
         return $this->sluggable ?: false;
+    }
+
+    private function getValidPreiousLocale()
+    {
+        if ( !$previousLocale = request('_previous_locale') ){
+            return;
+        }
+
+        if ( preg_match("/^[a-z]+$/", $previousLocale) == false ){
+            return;
+        }
+
+        if ( mb_strlen($previousLocale) != 2 ) {
+            return;
+        }
+
+        return $previousLocale;
+    }
+
+    public function redirectToCorrectLocale($slug, $id, $key, $row)
+    {
+        if ($row && $row->getSlug() != $slug) {
+            throw new SluggableException(
+                $this->buildFailedSlugResponse($row->getSlug(), $slug, $id, $key, 302)
+            );
+        }
     }
 }
