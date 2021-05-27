@@ -336,7 +336,7 @@ trait FieldProperties
         $slug = $lang ?: Localization::get()->slug;
 
         if (! $object || ! is_array($object)) {
-            return;
+            return $object;
         }
 
         //If row has saved actual value
