@@ -335,7 +335,11 @@ trait FieldProperties
     {
         $slug = $lang ?: Localization::get()->slug;
 
-        if (! $object || ! is_array($object)) {
+        if ( ! $object ) {
+            return;
+        }
+
+        else if (! is_array($object)) {
             return $object;
         }
 
