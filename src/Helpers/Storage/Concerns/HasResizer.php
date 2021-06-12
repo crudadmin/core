@@ -60,25 +60,20 @@ trait HasResizer
         //Get directory path for file
         $cachedPath = $this->getCachePath($cachePrefix, $mutators);
 
-        //If resized file exists already
-        if ( $this->getStorage()->exists($cachedPath) ) {
-            if ( $image = $this->onExistingImage($cachedPath) ) {
+        //If previously resized image has been resized from sample image, when source is missing...
+        $this->checkInactiveSampleImage($cachedPath);
+
+        //If image processign is ask to be completed in actual request
+        if ($force === true) {
+            //Set image for processing
+            $image = $this->processImageMutators($cachedPath, $mutators);
+
+            //Return image object
+            if ($returnImageObject) {
                 return $image;
             }
-        }
-
-        //If resized file does not exists yet, and cannot be processed in actual request,
-        //then return path to resizing process. Image will be resized in next image request load
-        elseif ($force === false) {
-            return $this->prepareResizeOnNextRequest($cachedPath, $cachePrefix, $mutators);
-        }
-
-        //Set image for processing
-        $image = $this->processImageMutators($cachedPath, $mutators);
-
-        //Return image object
-        if ($returnImageObject) {
-            return $image;
+        } else {
+            $this->setCachedResizeData($cachePrefix, $mutators);
         }
 
         return (new static($this->getModel(), $this->fieldKey, $cachedPath))->cloneModelData($this);
@@ -88,27 +83,25 @@ trait HasResizer
      * Return existing image class or delete existing sample file
      *
      * @param  string  $cachedPath
-     *
-     * @return  AdminFile|null
      */
-    private function onExistingImage($cachedPath)
+    private function checkInactiveSampleImage($cachedPath)
     {
-        $samplePath = $this->getBackupCacheImageName($cachedPath);
-
-        //If original image does exists, but cache is generated for backup image sample
-        //We need reset cachet resources
-        if ( $this->exists() && $this->getStorage()->exists($samplePath) ) {
-            $this->getStorage()->delete([
-                $samplePath, $cachedPath
-            ]);
-
+        //If is not local storage, we cannot allow checking of sample images
+        if ( $this->getAdminStorage() != $this->getStorage() ) {
             return;
         }
 
-        //If image is resized normally, we can return resized object
-        $cachedFile = (new static($this->getModel(), $this->fieldKey, $cachedPath));
+        $samplePath = $this->getBackupCacheImageName($cachedPath);
 
-        return $cachedFile->cloneModelData($this);
+        //If original/source image does exists and sample file is generated
+        //In this case we need reset all resized cache, which has been resized from sample image.
+        if ( !($this->exists() && $this->getStorage()->exists($samplePath)) ){
+            return;
+        }
+
+        $this->getStorage()->delete([
+            $samplePath, $cachedPath
+        ]);
     }
 
     /**
@@ -337,45 +330,30 @@ trait HasResizer
      */
     public function getCacheKey($cachePrefix)
     {
-        return 'resize.'.md5($this->path).'.'.$cachePrefix;
-    }
-
-    /**
-     * Cache information that image should be resized on next request
-     *
-     * @param  string  $filepath
-     * @param  string  $cachePrefix
-     * @param  string  $mutators
-     *
-     * @return  AdminFile
-     */
-    private function prepareResizeOnNextRequest($cachePath, $cachePrefix, $mutators)
-    {
-        $this->setCachedResizeData($cachePrefix, $cachePath, $mutators);
-
-        $adminFile = new static($this->getModel(), $this->fieldKey, $cachePath);
-
-        return $adminFile->cloneModelData($this);
+        return 'resize.'.$this->table.'.'.$this->fieldKey.'.'.$cachePrefix;
     }
 
     /**
      * Returns cached resize information
      *
      * @param  string  $cachePrefix
+     * @param  array  $mutators
      *
      * @return  array|null
      */
-    public function setCachedResizeData($cachePrefix, $cachePath, $mutators)
+    public function setCachedResizeData($cachePrefix, $mutators)
     {
-        $minutes = 60 * 24;
+        $cacheKey = $this->getCacheKey($cachePrefix);
 
-        //Put into cache for x minutes.
-        //If request wont'be hit in x minutes, cache can disappear.
-        Cache::put($this->getCacheKey($cachePrefix), [
-            'path' => $this->path,
-            'resized_path' => $cachePath,
+        //Does not add into cache if exists already
+        if ( Cache::has($cacheKey) ) {
+            return;
+        }
+
+        //Put directory resize settings
+        Cache::forever($cacheKey, [
             'mutators' => $mutators,
-        ], $minutes * 60);
+        ]);
     }
 
     /**
@@ -391,17 +369,4 @@ trait HasResizer
             $this->getCacheKey($cachePrefix)
         );
     }
-
-    /**
-     * Remove resize information
-     *
-     * @param  string  $cachePrefix
-     */
-   public function removeCachedResizeData($cachePrefix)
-    {
-        Cache::forget(
-            $this->getCacheKey($cachePrefix)
-        );
-    }
-
 }
