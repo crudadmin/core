@@ -51,11 +51,6 @@ class AdminFile
     public $path;
 
     /*
-     * Saved resize params
-     */
-    public $resizeParams = [];
-
-    /*
      * Previous given object
      */
     private $originalObject;
@@ -136,7 +131,23 @@ class AdminFile
      */
     public function url()
     {
-        $url = $this->getStorage()->url($this->path);
+        if ( count($this->resizeParams) > 0 ) {
+            //If is internal storage, we can use storage url, because
+            //if image is missing, laravel endpoint is waiting
+            if ( $this->getStorage() == $this->getAdminStorage() ) {
+                $url = $this->getStorage()->url($this->path);
+            }
+
+            //Use resizer endpoint with asset route for CDN support
+            else {
+                $url = asset(route('crudadminResizer', [$this->table, $this->fieldKey, $this->cachePrefix, $this->filename], false));
+            }
+        }
+
+        //Source image
+        else {
+            $url = $this->getStorage()->url($this->path);
+        }
 
         //TODO: REFACTOR
         //We can generate webp image for resource that should be
@@ -328,6 +339,7 @@ class AdminFile
     {
         $this->originalObject = $file;
         $this->resizeParams = $file->resizeParams;
+        $this->cachePrefix = $file->cachePrefix;
         $this->table = $file->table;
         $this->fieldKey = $file->fieldKey;
         $this->rowId = $file->rowId;

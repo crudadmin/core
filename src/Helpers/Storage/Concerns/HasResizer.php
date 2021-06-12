@@ -9,6 +9,44 @@ use ImageCompressor;
 
 trait HasResizer
 {
+    /*
+     * Saved resize params
+     */
+    private $resizeParams = [];
+
+    /*
+     * Cache prefix directory
+     */
+    private $cachePrefix;
+
+    /*
+     * Get resized parameters
+     */
+    public function getResizeParams()
+    {
+        return $this->resizeParams;
+    }
+
+    /*
+     * Get cache prefix
+     */
+    public function getCachePrefix()
+    {
+        return $this->cachePrefix;
+    }
+
+    /**
+     * Set cache prefix
+     *
+     * @param  string  $cachePrefix
+     */
+    public function setCachePrefix($cachePrefix)
+    {
+        $this->cachePrefix = $cachePrefix;
+
+        return $this;
+    }
+
     /**
      * Returns backup images resource path
      *
@@ -43,11 +81,10 @@ trait HasResizer
      *
      * @param  array   $mutators
      * @param  bool $force
-     * @param  bool $returnImageObject
      *
      * @return File/Image class
      */
-    public function image($mutators = [], $force = false, $returnImageObject = false)
+    public function image($mutators = [], $force = false)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
         if ( $this->canBeImageResized() === false ) {
@@ -65,18 +102,17 @@ trait HasResizer
 
         //If image processign is ask to be completed in actual request
         if ($force === true) {
-            //Set image for processing
-            $image = $this->processImageMutators($cachedPath, $mutators);
-
-            //Return image object
-            if ($returnImageObject) {
-                return $image;
+            //Set image for processing if does not exists yet
+            if ( $this->getStorage()->exists($cachedPath) == false ) {
+                $this->processImageMutators($cachedPath, $mutators);
             }
         } else {
             $this->setCachedResizeData($cachePrefix, $mutators);
         }
 
-        return (new static($this->getModel(), $this->fieldKey, $cachedPath))->cloneModelData($this);
+        return (new static($this->getModel(), $this->fieldKey, $cachedPath))
+                ->cloneModelData($this)
+                ->setCachePrefix($cachePrefix);
     }
 
     /**
