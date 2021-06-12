@@ -14,6 +14,7 @@ use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
+use Admin\Core\Eloquent\Concerns\Uploadable;
 use Admin\Core\Eloquent\Concerns\Validation;
 use Admin\Core\Helpers\File;
 use Carbon\Carbon;
@@ -32,6 +33,7 @@ class AdminModel extends Model
         FieldModules,
         Validation,
         Sluggable,
+        Uploadable,
         HasLocalizedValues;
 
     /**
