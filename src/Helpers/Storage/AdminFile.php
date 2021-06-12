@@ -7,9 +7,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Helpers\Storage\Concerns\FileHelper;
 use Admin\Core\Helpers\Storage\Concerns\HasDownloads;
 use Admin\Core\Helpers\Storage\Concerns\HasResizer;
-use File as BaseFile;
-use Image;
-use ImageCompressor;
+use File;
 use Storage;
 
 class AdminFile
@@ -247,7 +245,7 @@ class AdminFile
     public static function makeDirs($path)
     {
         if (! file_exists($path)) {
-            BaseFile::makeDirectory($path, 0775, true);
+            File::makeDirectory($path, 0775, true);
         }
     }
 
