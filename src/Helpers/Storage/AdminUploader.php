@@ -91,7 +91,7 @@ class AdminUploader
 
         $this->mutateUploadedFile($fileStoragePath, $filename, $extension);
 
-        $this->moveToFinalStorage($fileStoragePath);
+        $this->model->moveToFinalStorage($this->fieldKey, $fileStoragePath);
 
         $this->filename = $filename;
 
@@ -184,30 +184,6 @@ class AdminUploader
         }
 
         return false;
-    }
-
-    /**
-     * If file should be sent into other storage, we will sent in there and remove temporary file for process/mutations purposes
-     *
-     * @param  string  $fileStoragePath
-     */
-    private function moveToFinalStorage($fileStoragePath)
-    {
-        $fieldStorage = $this->getFieldStorage();
-        $adminStorage = $this->getAdminStorage();
-
-        //If file should be sent into other storage than temporary crudadmin storage
-        if ( $fieldStorage === $adminStorage ) {
-            return;
-        }
-
-        $fieldStorage->writeStream(
-            $fileStoragePath,
-            $adminStorage->readStream($fileStoragePath)
-        );
-
-        //After file process we can delete file from temporary crudadmin location
-        $adminStorage->delete($fileStoragePath);
     }
 
     /**

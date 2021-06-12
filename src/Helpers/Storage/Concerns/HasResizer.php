@@ -161,6 +161,8 @@ trait HasResizer
             $this->getStorage()->put($this->getBackupCacheImageName($destinationPath), '');
         }
 
+        $model->moveToFinalStorage($this->fieldKey, $destinationPath);
+
         return $image;
     }
 
@@ -205,7 +207,7 @@ trait HasResizer
 
 
     /**
-     * Create webp version of image file
+     * Create webp version of image file into final storage destination
      *
      * @param  string  $sourcePath
      * @param  Image  $image

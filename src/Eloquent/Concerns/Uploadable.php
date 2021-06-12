@@ -126,9 +126,7 @@ trait Uploadable
 
                 if ( $needDelete ) {
                     //Remove dynamicaly cached thumbnails
-                    if ($storage->exists($cachePath) ) {
-                        $this->removeCachedImages($storage, $adminFile, $cachePath);
-                    }
+                    $this->removeCachedImages($storage, $adminFile, $cachePath);
 
                     //Removing original files
                     if ($isAllowedDeleting) {

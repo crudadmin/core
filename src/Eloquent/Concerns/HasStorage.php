@@ -63,4 +63,32 @@ trait HasStorage
         return $file;
     }
 
+    /**
+     * If file has been saved in crudadmin storage for postprocess operations,
+     * but we use other storage for given field. We need send final file into this final storage destination.
+     *
+     * We will sent in there and remove temporary file for process/mutations purposes
+     *
+     * @param  string  $fieldKey
+     * @param  string  $fileStoragePath
+     */
+    public function moveToFinalStorage(string $fieldKey, $fileStoragePath)
+    {
+        $fieldStorage = $this->getFieldStorage($fieldKey);
+
+        $localStorage = Storage::disk('crudadmin');
+
+        //If file should be sent into other storage than temporary crudadmin storage
+        if ( $fieldStorage === $localStorage ) {
+            return;
+        }
+
+        $fieldStorage->writeStream(
+            $fileStoragePath,
+            $localStorage->readStream($fileStoragePath)
+        );
+
+        //After file process we can delete file from temporary crudadmin location
+        $localStorage->delete($fileStoragePath);
+    }
 }
