@@ -12,6 +12,7 @@ use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasSettings;
+use Admin\Core\Eloquent\Concerns\HasStorage;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
 use Admin\Core\Eloquent\Concerns\Uploadable;
@@ -33,6 +34,7 @@ class AdminModel extends Model
         FieldModules,
         Validation,
         Sluggable,
+        HasStorage,
         Uploadable,
         HasLocalizedValues;
 
@@ -268,13 +270,13 @@ class AdminModel extends Model
 
                         foreach ($file as $value) {
                             if (is_string($value)) {
-                                $files[] = File::adminModelFile($this->getTable(), $key, $value, $this->getKey());
+                                $files[] = $this->getAdminFile($key, $value);
                             }
                         }
 
                         return $files;
                     } else {
-                        return File::adminModelFile($this->getTable(), $key, $file, $this->getKey());
+                        return $this->getAdminFile($key, $file);
                     }
                 }
 

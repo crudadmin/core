@@ -5,6 +5,7 @@ namespace Admin\Core\Providers;
 use Admin\Core\Facades;
 use Admin\Core\Fields;
 use Admin\Core\Helpers;
+use Admin\Core\Helpers\Storage\AdminFile;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -66,6 +67,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerFacades();
 
         $this->registerProviders();
+
+        $this->addCrudadminStorage();
     }
 
     /*
@@ -98,5 +101,22 @@ class AppServiceProvider extends ServiceProvider
         foreach ($providers ?: $this->providers as $provider) {
             app()->register($provider);
         }
+    }
+
+    /*
+     * Register crudadmin storage
+     */
+    private function addCrudadminStorage()
+    {
+        $uploadsDirectory = storage_path('app/crudadmin');
+
+        $this->app['config']->set('filesystems.disks.crudadmin', [
+            'driver' => 'local',
+            'root' => $uploadsDirectory,
+            'url' => env('APP_URL').'/'.AdminFile::UPLOADS_DIRECTORY,
+            'visibility' => 'public',
+        ]);
+
+        $this->app['config']->set('filesystems.links.'.public_path(AdminFile::UPLOADS_DIRECTORY), $uploadsDirectory);
     }
 }

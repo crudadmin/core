@@ -2,45 +2,31 @@
 
 namespace Admin\Core\Helpers\Storage;
 
-use Image;
+use AdminCore;
+use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Helpers\Storage\Concerns\FileHelper;
+use Admin\Core\Helpers\Storage\Concerns\HasDownloads;
+use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use File as BaseFile;
+use Image;
+use ImageCompressor;
+use Storage;
 
 class AdminFile
 {
-    /*
-     * Filename
-     */
-    public $filename;
+    use FileHelper,
+        HasDownloads,
+        HasResizer;
 
-    /*
-     * File extension type
+    /**
+     * This directory will be visible for file downloads
      */
-    public $extension;
-
-    /*
-     * relative path to file
-     */
-    public $directory;
-
-    /*
-     * relative path to file
-     */
-    public $path;
-
-    /*
-     * full basepath
-     */
-    public $basepath;
-
-    /*
-     * Absolute path to file
-     */
-    public $url;
+    const UPLOADS_DIRECTORY = 'uploads';
 
     /*
      * Related admin model
      */
-    public $tableName;
+    public $table;
 
     /*
      * Related field key
@@ -52,6 +38,18 @@ class AdminFile
      */
     public $rowId;
 
+    /**
+     * File Disk
+     *
+     * @var  string
+     */
+    public $disk;
+
+    /*
+     * Relative path to file in disk storage
+     */
+    public $path;
+
     /*
      * Saved resize params
      */
@@ -62,35 +60,24 @@ class AdminFile
      */
     private $originalObject;
 
-    public static function getUploadsDirectory()
-    {
-        return 'uploads';
-    }
-
     /**
-     * Initialize new admin file
+     * Create new admin file
      *
-     * @param  string  $basepath
+     * @param  string  $path
+     * @param  string|null  $fieldKey
+     * @param  string|null  $path
      */
-    public function __construct($basepath, $previousObject = null)
+    public function __construct(AdminModel $model, string $fieldKey, string $path)
     {
-        //If previous object does exists
-        //We want clone some data...
-        if ( $previousObject ) {
-            $this->cloneModelData($previousObject);
-        }
+        $this->table = $model->getTable();
 
-        $this->filename = basename($basepath);
+        $this->fieldKey = $fieldKey;
 
-        $this->extension = $this->getExtension($this->filename);
+        $this->rowId = $model->getKey();
 
-        $this->path = ltrim(str_replace(public_path(), '', $basepath), '/\\');
+        $this->disk = $model->getFieldDiskName($fieldKey);
 
-        $this->basepath = $basepath;
-
-        $this->directory = implode('/', array_slice(explode('/', $this->path), 0, -1));
-
-        $this->url = $this->buildUrlPath($this->path);
+        $this->path = $path;
     }
 
     /**
@@ -100,101 +87,147 @@ class AdminFile
      */
     public function __toString()
     {
-        return $this->url;
+        return $this->url();
     }
 
+    /**
+     * Forward property calls
+     *
+     * @param  string  $key
+     *
+     * @return  mixed
+     */
     public function __get($key)
     {
-        $basepath = public_path($this->directory.'/'.$key.'/'.$this->filename);
-
-        return new static($basepath, $this);
-    }
-
-    private function buildUrlPath($path)
-    {
-        $isUploadsDir = substr(ltrim($path, '/\\'), 0, 7) == self::getUploadsDirectory();
-
-        $url = asset($path);
-
-        //We can generate webp image for resource that should be
-        if ( $isUploadsDir && class_exists('Admin') && \Admin::isFrontend() ){
-            $this->createWebp(public_path($path));
+        //Forward calls into methods
+        if ( in_array($key, ['url', 'filename', 'filesize', 'basepath', 'extension', 'hash', 'exists', 'download']) ) {
+            return $this->{$key}();
         }
 
+        return $this->{$key};
+    }
+
+    /**
+     * Returns file storage
+     *
+     * @return  Illuminate\Filesystem\FilesystemAdapter
+     */
+    public function getStorage()
+    {
+        return Storage::disk($this->disk);
+    }
+
+    /**
+     * Returns admin storage. For cache or rendering purposes...
+     *
+     * @return  Illuminate\Filesystem\FilesystemAdapter
+     */
+    public function getAdminStorage()
+    {
+        return Storage::disk('crudadmin');
+    }
+
+    /**
+     * Build file url path
+     *
+     * @param  string  $path
+     *
+     * @return  string
+     */
+    public function url()
+    {
+        $url = $this->getStorage()->url($this->path);
+
+        //TODO: REFACTOR
+        //We can generate webp image for resource that should be
+        // $isUploadsDir = substr(ltrim($path, '/\\'), 0, 7) == self::UPLOADS_DIRECTORY;
+        // if ( $isUploadsDir && class_exists('Admin') && \Admin::isFrontend() ){
+        //     $this->createWebp(public_path($path));
+        // }
+
         if ( class_exists(\FrontendEditor::class)
-            && $this->tableName && $this->fieldKey && $this->rowId
+            && $this->table && $this->fieldKey && $this->rowId
         ) {
-            return \FrontendEditor::buildImageQuery($url, $this->resizeParams, $this->tableName, $this->fieldKey, $this->rowId);
+            return \FrontendEditor::buildImageQuery($url, $this->resizeParams, $this->table, $this->fieldKey, $this->rowId);
         }
 
         return $url;
     }
 
+    /**
+     * Returns filename
+     *
+     * @return  string|null
+     */
+    public function filename()
+    {
+        return basename($this->path);
+    }
+
+    /**
+     * Returns file basepath
+     *
+     * @return  string|null
+     */
+    public function basepath()
+    {
+        return $this->getStorage()->path($this->path);
+    }
+
     /*
      * Returns extension name of file
      */
-    protected function getExtension($filename)
+    public function extension($filename = null)
     {
-        $extension = explode('.', $filename);
+        $extension = explode('.', $filename ?: $this->filename);
 
         return last($extension);
     }
 
-    /*
-     * Build directory path for uploaded files in model
+    /**
+     * Set model table
+     *
+     * @param  string  $table
      */
-    public static function adminModelFile($table, $field, $file, $rowId = null)
+    public function setTable(string $table)
     {
-        $table = basename($table);
-        $field = basename($field);
+        $this->table = $table;
 
-        $parts = [$table, $field, basename($file)];
-        $parts = array_filter($parts);
-        $parts = implode('/', $parts);
-
-        $file = new static(public_path(self::getUploadsDirectory().'/'.$parts));
-
-        $file->tableName = $table;
-        $file->fieldKey = $field;
-        $file->rowId = basename($rowId);
-
-        //Rebuild url path. Because this parameter is assigned to model attributes
-        $file->url = $file->buildUrlPath($file->path);
-
-        return $file;
+        return $this;
     }
 
     /*
-     * Build directory path for caching resized images model
+     * Set field key
+     *
+     * @param  string  $fieldKey
      */
-    public static function adminModelCachePath($path = null)
+    public function setFieldKey(string $fieldKey)
     {
-        return public_path(self::getUploadsDirectory().'/cache/'.$path);
+        $this->fieldKey = $fieldKey;
+
+        return $this;
     }
 
-    public static function getHash($path)
+    /**
+     * Set row id
+     *
+     * @param  int  $rowId
+     */
+    public function setRowId($rowId)
     {
-        return sha1(md5('!$%'.sha1(env('APP_KEY')).$path));
+        $this->rowId = $rowId;
+
+        return $this;
     }
 
-    /*
-     * Returns absolute signed path for downloading file
+    /**
+     * Returns file model
+     *
+     * @return  AdminModel
      */
-    public function download($displayableInBrowser = false)
+    public function getModel()
     {
-        //If is possible open file in browser, then return right path of file and not downloading path
-        if ($displayableInBrowser) {
-            if (in_array($this->extension, (array) $displayableInBrowser)) {
-                return $this->url;
-            }
-        }
-
-        $origPath = substr(trim($this->path, '/\\'), 8);
-        $path = explode('/', $origPath);
-
-        $action = action( '\Admin\Controllers\DownloadController@signedDownload', self::getHash($origPath) );
-
-        return $action.'?model='.urlencode($path[0]).'&field='.urlencode($path[1]).'&file='.urlencode($path[2]);
+        return AdminCore::getModelByTable($this->table);
     }
 
     /*
@@ -221,171 +254,6 @@ class AdminFile
         return $params;
     }
 
-    /**
-     * Returns backup images resource path
-     *
-     * @return  string
-     */
-    public function getBackupResourcePath()
-    {
-        return config('admin.backup_image', __DIR__.'/../Resources/images/thumbnail.jpg');
-    }
-
-    private function getDirectoryHash($directory, $mutators)
-    {
-        if ($directory) {
-            $hash = str_slug($directory);
-        } elseif (count($mutators) > 1) {
-            $hash = md5($this->directory.serialize($mutators));
-        } else {
-            $firstValue = array_first($mutators);
-
-            foreach ($firstValue as $key => $mutator) {
-                if (! is_string($mutator) && ! is_numeric($mutator)) {
-                    $firstValue[$key] = 0;
-                }
-            }
-
-            $hash = key($mutators).'-'.implode('x', $firstValue);
-        }
-
-        return $hash;
-    }
-
-    public function getCacheImageDestinationPath($directory = null, $mutators = null)
-    {
-        //Hash of directory which belongs to image mutators
-        $hash = $this->getDirectoryHash($directory, $mutators);
-
-        //Correct trim directory name
-        $uploadDestination = ltrim($this->directory, '/\\');
-        $uploadDestination = substr($uploadDestination, 0, 8) == (self::getUploadsDirectory().'/') ? substr($uploadDestination, 8) : $uploadDestination;
-
-        //Get directory path for file
-        $path = self::adminModelCachePath($uploadDestination.'/'.$hash.'/'.$this->filename);
-
-        //Create directory if is missing
-        static::makeDirs(dirname($path));
-
-        return $path;
-    }
-
-    public static function getTemporaryFilename($path)
-    {
-        return $path.'.temp';
-    }
-
-    public static function getBackupCacheImageName($path)
-    {
-        return $path.'.backup';
-    }
-
-    private function createTemporaryProcessFile($filepath, $mutators, $directory)
-    {
-        $tempPath = self::getTemporaryFilename($filepath);
-
-        //Save temporary file with properties for next resizing
-        if (! file_exists($tempPath)) {
-            file_put_contents($tempPath, json_encode(array_filter([
-                'original_path' => $this->path,
-                'mutators' => $mutators,
-                'directory' => $directory,
-            ])));
-        }
-
-        return new static($filepath, $this);
-    }
-
-    /**
-     * Resize image.
-     * @param  array   $mutators      array of muttators
-     * @param  string|null  $directory     where should be image saved, directory name may be generated automatically
-     * @param  bool $force         force render image immediately
-     * @param  bool $returnImageObject return image instance
-     * @return File/Image class
-     */
-    public function image($mutators = [], $directory = null, $force = false, $returnImageObject = false)
-    {
-        //When is file type svg, then image postprocessing subdirectories not exists
-        if ( $this->extension == 'svg' && config('admin.image_rewrite_missing_uploads', true) !== true ) {
-            return $this;
-        }
-
-        //Get directory path for file
-        $destinationPath = $this->getCacheImageDestinationPath($directory, $mutators);
-
-        //If resized file exists already
-        if (file_exists($destinationPath)) {
-            $backupDestinationPath = self::getBackupCacheImageName($destinationPath);
-
-            //If original image does exists, but cache is generated for backup image sample
-            //We need reset cachet resources
-            if ( $this->exists() && file_exists($backupDestinationPath) ) {
-                @unlink($backupDestinationPath);
-                @unlink($destinationPath);
-            }
-
-            //If image is resized normally, we can return resized object
-            else {
-                return new static($destinationPath, $this);
-            }
-        }
-
-        //If resized file does not exists yet, and cannot be processed in actual request,
-        //then return path to resizing process. Image will be resized in opening image request
-        elseif ($force === false) {
-            return $this->createTemporaryProcessFile($destinationPath, $mutators, $directory);
-        }
-
-        //Set image for processing
-        $image = $this->processImage($destinationPath, $mutators);
-
-        //Return image object
-        if ($returnImageObject) {
-            return $image;
-        }
-
-        return new static($destinationPath, $this);
-    }
-
-    private function processImage($destinationPath, $mutators)
-    {
-        $isBackupImage = $this->exists() === false;
-
-        $sourcePath = $isBackupImage ? $this->getBackupResourcePath() : $this->basepath;
-
-        $image = Image::make($sourcePath);
-
-        /*
-         * Apply mutators on image
-         */
-        foreach ($mutators as $mutator => $params) {
-            $params = static::paramsMutator($mutator, $params);
-
-            $image = call_user_func_array([$image, $mutator], $params);
-        }
-
-        $defaultQuality = 90;
-        $qualityCompression = config('admin.image_lossy_compression_quality', $defaultQuality);
-
-        //Save image into cache folder
-        $image->save($destinationPath, $qualityCompression);
-
-        //Create webp version of image
-        $this->createWebp($destinationPath);
-
-        if ( $isBackupImage ) {
-            @file_put_contents(self::getBackupCacheImageName($destinationPath), '');
-        }
-
-        //Compress image with lossless compression
-        if ( class_exists('ImageCompressor') ) {
-            \ImageCompressor::tryShellCompression($destinationPath);
-        }
-
-        return $image;
-    }
-
     /*
      * If directories for postprocessed images dones not exists
      */
@@ -397,37 +265,15 @@ class AdminFile
     }
 
     /*
-     * Resize or fit image depending on dimensions
-     */
-    public function resize($width = null, $height = null, $directory = null, $force = false)
-    {
-        //Saved resize params
-        $this->resizeParams = [$width, $height];
-
-        //We cant resize svg files...
-        if ($this->extension == 'svg') {
-            return $this;
-        }
-
-        if (is_numeric($width) && is_numeric($height)) {
-            $action = 'fit';
-        } else {
-            $action = 'resize';
-        }
-
-        return $this->image([
-            $action => [$width, $height],
-        ], $directory, $force, false);
-    }
-
-    /*
      * Remove file
      */
     public function delete()
     {
-        if (file_exists($this->basepath)) {
-            unlink($this->basepath);
+        if ($this->exists()) {
+            return $this->getStorage()->delete($this->path);
         }
+
+        return false;
     }
 
     /*
@@ -443,7 +289,7 @@ class AdminFile
      */
     public function exists()
     {
-        return file_exists($this->basepath);
+        return $this->getStorage()->exists($this->path);
     }
 
     /*
@@ -451,8 +297,8 @@ class AdminFile
      */
     public function copy($destination)
     {
-        if (file_exists($this->basepath)) {
-            return copy($this->basepath, $destination);
+        if ($this->exists) {
+            return $this->getStorage()->copy($this->path, $destination);
         }
 
         return false;
@@ -469,7 +315,7 @@ class AdminFile
             return $this->filesizeFormated();
         }
 
-        return filesize($this->basepath);
+        return $this->getStorage()->size($this->path);
     }
 
     /*
@@ -477,11 +323,9 @@ class AdminFile
      */
     public function filesizeFormated()
     {
-        $path = $this->basepath;
+        $bytes = sprintf('%u', $this->filesize);
 
-        $bytes = sprintf('%u', filesize($path));
-
-        return (new static($path))->formatFilesizeNumber($bytes);
+        return static::formatFilesizeNumber($bytes);
     }
 
     /*
@@ -502,47 +346,13 @@ class AdminFile
     }
 
     /*
-     * Create webp version of image file
-     */
-    public function createWebp($sourcePath = null)
-    {
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif'];
-
-        $sourcePath = $sourcePath ?: $this->basepath;
-
-        if (
-            //If webp images are not enabled
-            config('admin.image_webp', false) === false
-
-            //If webp format is not allowed for this file
-            || !in_array(strtolower($this->extension ?: $this->getExtension($sourcePath)), $allowedExtensions)
-
-            //If source path does not exists
-            || !file_exists($sourcePath)
-
-            //If webp exists already
-            || file_exists($outputFilepath = $sourcePath.'.webp')
-        ){
-            return $this;
-        }
-
-        $image = Image::make($sourcePath);
-
-        $encoded = $image->encode('webp', 85);
-
-        @file_put_contents($outputFilepath, $encoded);
-
-        return $this;
-    }
-
-    /*
      * Clone required params form frontendEditor
      */
     public function cloneModelData($file)
     {
         $this->originalObject = $file;
         $this->resizeParams = $file->resizeParams;
-        $this->tableName = $file->tableName;
+        $this->table = $file->table;
         $this->fieldKey = $file->fieldKey;
         $this->rowId = $file->rowId;
 

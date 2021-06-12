@@ -1,0 +1,368 @@
+<?php
+
+namespace Admin\Core\Helpers\Storage\Concerns;
+
+use AdminCore;
+use Cache;
+use File;
+use Image;
+use ImageCompressor;
+
+trait HasResizer
+{
+    /**
+     * Returns backup images resource path
+     *
+     * @return  string
+     */
+    protected function getBackupResourcePath()
+    {
+        return config('admin.backup_image', __DIR__.'/../../../Resources/images/thumbnail.jpg');
+    }
+
+    /*
+     * Resize or fit image depending on dimensions
+     */
+    public function resize($width = null, $height = null, $force = false)
+    {
+        //Saved resize params
+        $this->resizeParams = [$width, $height];
+
+        if (is_numeric($width) && is_numeric($height)) {
+            $action = 'fit';
+        } else {
+            $action = 'resize';
+        }
+
+        return $this->image([
+            $action => [$width, $height],
+        ], $force, false);
+    }
+
+    /**
+     * Resize image.
+     *
+     * @param  array   $mutators
+     * @param  bool $force
+     * @param  bool $returnImageObject
+     *
+     * @return File/Image class
+     */
+    public function image($mutators = [], $force = false, $returnImageObject = false)
+    {
+        //When is file type svg, then image postprocessing subdirectories not exists
+        if ( $this->canBeImageResized() === false ) {
+            return $this;
+        }
+
+        //Prefix of directory for given resize parameters configuration
+        $cachePrefix = $this->getCacheMutatorsDirectory($mutators);
+
+        //Get directory path for file
+        $cacheDestinationPath = $this->getCachePath($cachePrefix, $mutators);
+
+        //If resized file exists already
+        if ( $this->getStorage()->exists($cacheDestinationPath) ) {
+            $backupDestinationPath = $this->getBackupCacheImageName($cacheDestinationPath);
+
+            //If original image does exists, but cache is generated for backup image sample
+            //We need reset cachet resources
+            if ( $this->exists() && $this->getStorage()->exists($backupDestinationPath) ) {
+                $this->getStorage()->delete([
+                    $backupDestinationPath,
+                    $cacheDestinationPath
+                ]);
+            }
+
+            //If image is resized normally, we can return resized object
+            else {
+                return (new static($this->getModel(), $this->fieldKey, $cacheDestinationPath))->cloneModelData($this);
+            }
+        }
+
+        //If resized file does not exists yet, and cannot be processed in actual request,
+        //then return path to resizing process. Image will be resized in next image request load
+        elseif ($force === false) {
+            return $this->prepareResizeOnNextRequest($cacheDestinationPath, $cachePrefix, $mutators);
+        }
+
+        //Set image for processing
+        $image = $this->processImageMutators($cacheDestinationPath, $mutators);
+
+        //Return image object
+        if ($returnImageObject) {
+            return $image;
+        }
+
+        return (new static($this->getModel(), $this->fieldKey, $cacheDestinationPath))->cloneModelData($this);
+    }
+
+    /**
+     * Process given mutators/resizes
+     *
+     * @param  string  $destinationPath
+     * @param  array  $mutators
+     *
+     * @return  Image
+     */
+    private function processImageMutators($destinationPath, $mutators)
+    {
+        $model = AdminCore::getModelByTable($this->table);
+
+        $backupImageIfSourceMissing = $this->exists() === false;
+
+        $adminStorage = $this->getAdminStorage();
+
+        //Load example image if source is missing
+        if ( $backupImageIfSourceMissing ) {
+            $imageData = $this->getBackupResourcePath();
+        }
+
+        //Load source from storage
+        else {
+            $imageData = $this->getStorage()->get($this->path);
+        }
+
+        $image = Image::make($imageData);
+
+        /*
+         * Apply mutators on image
+         */
+        foreach ($mutators as $mutator => $params) {
+            $params = static::paramsMutator($mutator, $params);
+
+            $image = call_user_func_array([$image, $mutator], $params);
+        }
+
+        //Save image with compression
+        ImageCompressor::saveImageWithCompression(
+            $adminStorage,
+            $model,
+            $image,
+            $destinationPath,
+            $this->extension
+        );
+
+        //Compress image with lossless compression
+        ImageCompressor::tryShellCompression($adminStorage->path($destinationPath));
+
+        //Create webp version of image
+        $this->createWebp($destinationPath, $image);
+
+        //Label that this rendered image has been switched for default/backup image.
+        //If image will appear, we will delete this sample file.
+        if ( $backupImageIfSourceMissing ) {
+            $this->getStorage()->put(
+                $this->getBackupCacheImageName($destinationPath),
+                ''
+            );
+        }
+
+        return $image;
+    }
+
+    private function getBackupCacheImageName($path)
+    {
+        return $path.'.backup';
+    }
+
+
+    /**
+     * Create webp version of image file
+     *
+     * @param  string  $sourcePath
+     * @param  Image  $image
+     *
+     */
+    public function createWebp(string $sourcePath, $image = null)
+    {
+        $sourcePath = $sourcePath ?: $this->basepath;
+
+        $outputFilepath = $sourcePath.'.webp';
+
+        if ( $this->canCreateWebpFormat($sourcePath, $outputFilepath) == false ){
+            return $this;
+        }
+
+        //Get compressed saved image from local crudadmin storage path
+        $image = $image ?: Image::make(
+            $this->getAdminStorage()->get($sourcePath)
+        );
+
+        $encoded = $image->encode('webp', 85);
+
+        $this->getStorage()->put($outputFilepath, $encoded);
+
+        return $this;
+    }
+
+    /**
+     * Check if webp format can be created
+     *
+     * @param $sourcePath
+     * @param $outputFilepath
+     *
+     * @return  bool
+     */
+    private function canCreateWebpFormat($sourcePath, $outputFilepath)
+    {
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'gif'];
+
+        //If webp images are not enabled
+        if ( config('admin.image_webp', false) === false ){
+            return false;
+        }
+
+        //If webp format is not allowed for this file
+        if ( !in_array(strtolower($this->extension ?: $this->extension($sourcePath)), $allowedExtensions) ) {
+            return false;
+        }
+
+        //If webp exists already
+        if ( $this->getStorage()->exists($outputFilepath) == true ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Build cache path
+     *
+     * @param  string  $cachePrefix
+     * @param  string  $mutators
+     *
+     * @return  string
+     */
+    private function getCachePath($cachePrefix, $mutators = null)
+    {
+        //Get directory path for file
+        $path = dirname($this->path).'/'.$cachePrefix.'/'.$this->filename;
+
+        return self::getCacheDirectory($path);
+    }
+
+    /**
+     * Returns cache directory postfix
+     *
+     * @param  string  $path
+     *
+     * @return  string
+     */
+    public static function getCacheDirectory($path)
+    {
+        return 'cache/'.$path;
+    }
+
+    private function canBeImageResized()
+    {
+        if ( config('admin.image_rewrite_missing_uploads', true) === false ) {
+            return false;
+        }
+
+        if ( $this->extension == 'svg' ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Build directory name according to given mutators
+     *
+     * @param  string  $mutators
+     *
+     * @return  string
+     */
+    private function getCacheMutatorsDirectory($mutators)
+    {
+        $firstValue = array_first($mutators);
+
+        foreach ($firstValue as $key => $mutator) {
+            if (! is_string($mutator) && ! is_numeric($mutator)) {
+                $firstValue[$key] = 0;
+            }
+        }
+
+        $hash = key($mutators).'-'.implode('x', $firstValue);
+
+        return $hash;
+    }
+
+    /**
+     * Cache key for preparing resize in next request
+     *
+     * @params $cachePrefix
+     *
+     * @return  string
+     */
+    public function getCacheKey($cachePrefix)
+    {
+        return 'resize.'.md5($this->path).'.'.$cachePrefix;
+    }
+
+    /**
+     * Cache information that image should be resized on next request
+     *
+     * @param  string  $filepath
+     * @param  string  $cachePrefix
+     * @param  string  $mutators
+     *
+     * @return  AdminFile
+     */
+    private function prepareResizeOnNextRequest($cachePath, $cachePrefix, $mutators)
+    {
+        $this->setCachedResizeData($cachePrefix, $cachePath, $mutators);
+
+        $adminFile = new static($this->getModel(), $this->fieldKey, $cachePath);
+
+        return $adminFile->cloneModelData($this);
+    }
+
+    /**
+     * Returns cached resize information
+     *
+     * @param  string  $cachePrefix
+     *
+     * @return  array|null
+     */
+    public function setCachedResizeData($cachePrefix, $cachePath, $mutators)
+    {
+        $minutes = 60 * 24;
+
+        //Put into cache for x minutes.
+        //If request wont'be hit in x minutes, cache can disappear.
+        Cache::put($this->getCacheKey($cachePrefix), [
+            'path' => $this->path,
+            'resized_path' => $cachePath,
+            'mutators' => $mutators,
+        ], $minutes * 60);
+    }
+
+    /**
+     * Returns cached resize information
+     *
+     * @param  string  $cachePrefix
+     *
+     * @return  array|null
+     */
+    public function getCachedResizeData($cachePrefix)
+    {
+        return Cache::get(
+            $this->getCacheKey($cachePrefix)
+        );
+    }
+
+    /**
+     * Remove resize information
+     *
+     * @param  string  $cachePrefix
+     */
+   public function removeCachedResizeData($cachePrefix)
+    {
+        Cache::forget(
+            $this->getCacheKey($cachePrefix)
+        );
+    }
+
+}
