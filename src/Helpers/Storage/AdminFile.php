@@ -231,30 +231,6 @@ class AdminFile
     }
 
     /*
-     * Update postprocess params
-     */
-    public static function paramsMutator($name, $params)
-    {
-        if (! is_array($params)) {
-            $params = [$params];
-        }
-
-        //Automatic aspect ratio in resizing image with one parameter
-        if ($name == 'resize' && count($params) <= 2) {
-            //Add auto ratio
-            if (count($params) == 1) {
-                $params[] = null;
-            }
-
-            $params[] = function ($constraint) {
-                $constraint->aspectRatio();
-            };
-        }
-
-        return $params;
-    }
-
-    /*
      * If directories for postprocessed images dones not exists
      */
     public static function makeDirs($path)

@@ -4,6 +4,7 @@ namespace Admin\Core\Eloquent\Concerns;
 
 use Admin\Core\Helpers\Storage\AdminFile;
 use Admin\Core\Helpers\Storage\AdminUploader;
+use Illuminate\Filesystem\FilesystemAdapter;
 use File;
 use Image;
 use ImageCompressor;
@@ -106,11 +107,11 @@ trait Uploadable
 
         //Remove fixed thumbnails
         if (($adminFile = $this->getValue($key)) && ! $this->hasFieldParam($key, 'multiple', true)) {
-            $files = is_array($adminFile) ? $adminFile : [$adminFile];
+            $files = array_wrap($adminFile);
 
             $isAllowedDeleting = $this->canPermanentlyDeleteFiles();
 
-            //Remove also multiple uploded files
+            //Remove also multiple uploaded files
             foreach ($files as $adminFile) {
                 $field = $this->getField($key);
 
@@ -123,35 +124,51 @@ trait Uploadable
                                || is_string($newFiles) && $adminFile->filename != $newFiles;
 
 
-                //Remove dynamicaly cached thumbnails
-                if ($needDelete && $storage->exists($cachePath) ) {
-                    $resizedImages = $storage->allFiles($cachePath);
-
-                    foreach ($resizedImages as $pathToCheck) {
-                        $cachedFilename = basename($pathToCheck);
-
-                        //If filename is same
-                        if ( $cachedFilename != $adminFile->filename ) {
-                            continue;
-                        }
-
-                        //Delete filename
-                        $adminFile->getStorage()->delete($pathToCheck);
-
-                        //Remove also webp version of image
-                        if ( $adminFile->getStorage()->exists( $webpPath = $pathToCheck.'.webp' ) ) {
-                            $adminFile->getStorage()->delete($webpPath);
-                        }
+                if ( $needDelete ) {
+                    //Remove dynamicaly cached thumbnails
+                    if ($storage->exists($cachePath) ) {
+                        $this->removeCachedImages($storage, $adminFile, $cachePath);
                     }
-                }
 
-                //Removing original files
-                if ($needDelete && $isAllowedDeleting) {
-                    $adminFile->delete();
+                    //Removing original files
+                    if ($isAllowedDeleting) {
+                        $adminFile->delete();
+                    }
                 }
             }
         }
 
         return $this;
+    }
+
+    /**
+     * When file has been deleted, we need remove files from cache directories
+     *
+     * @param  FilesystemAdapter  $storage
+     * @param  AdminFile  $adminFile
+     * @param  string  $cachePath
+     */
+    private function removeCachedImages(FilesystemAdapter $storage, AdminFile $adminFile, $cachePath)
+    {
+        $resizedImages = $storage->allFiles($cachePath);
+
+        foreach ($resizedImages as $pathToCheck) {
+            $cachedFilename = basename($pathToCheck);
+
+            //If filename is same
+            if ( $cachedFilename != $adminFile->filename ) {
+                continue;
+            }
+
+            //Delete filename
+            $storage->delete($pathToCheck);
+
+            $webpPath = $pathToCheck.'.webp';
+
+            //Remove also webp version of image
+            if ( $storage->exists($webpPath) ) {
+                $storage->delete($webpPath);
+            }
+        }
     }
 }

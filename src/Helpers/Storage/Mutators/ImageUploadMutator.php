@@ -32,17 +32,6 @@ class ImageUploadMutator extends UploadMutator
             $this->getPath(),
             $this->getExtension()
         );
-
-        //Process lossless compression if is available
-        //on local crudadmin storage.
-        if (
-            $this->model->getProperty('imageLosslessCompression') === true
-            && config('admin.image_lossless_compression', true) === true
-        ) {
-            ImageCompressor::tryShellCompression(
-                $this->getStorage()->path($this->getPath())
-            );
-        }
     }
 
     /**

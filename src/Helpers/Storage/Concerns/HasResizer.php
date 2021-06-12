@@ -2,7 +2,6 @@
 
 namespace Admin\Core\Helpers\Storage\Concerns;
 
-use AdminCore;
 use Cache;
 use File;
 use Image;
@@ -59,42 +58,57 @@ trait HasResizer
         $cachePrefix = $this->getCacheMutatorsDirectory($mutators);
 
         //Get directory path for file
-        $cacheDestinationPath = $this->getCachePath($cachePrefix, $mutators);
+        $cachedPath = $this->getCachePath($cachePrefix, $mutators);
 
         //If resized file exists already
-        if ( $this->getStorage()->exists($cacheDestinationPath) ) {
-            $backupDestinationPath = $this->getBackupCacheImageName($cacheDestinationPath);
-
-            //If original image does exists, but cache is generated for backup image sample
-            //We need reset cachet resources
-            if ( $this->exists() && $this->getStorage()->exists($backupDestinationPath) ) {
-                $this->getStorage()->delete([
-                    $backupDestinationPath,
-                    $cacheDestinationPath
-                ]);
-            }
-
-            //If image is resized normally, we can return resized object
-            else {
-                return (new static($this->getModel(), $this->fieldKey, $cacheDestinationPath))->cloneModelData($this);
+        if ( $this->getStorage()->exists($cachedPath) ) {
+            if ( $image = $this->onExistingImage($cachedPath) ) {
+                return $image;
             }
         }
 
         //If resized file does not exists yet, and cannot be processed in actual request,
         //then return path to resizing process. Image will be resized in next image request load
         elseif ($force === false) {
-            return $this->prepareResizeOnNextRequest($cacheDestinationPath, $cachePrefix, $mutators);
+            return $this->prepareResizeOnNextRequest($cachedPath, $cachePrefix, $mutators);
         }
 
         //Set image for processing
-        $image = $this->processImageMutators($cacheDestinationPath, $mutators);
+        $image = $this->processImageMutators($cachedPath, $mutators);
 
         //Return image object
         if ($returnImageObject) {
             return $image;
         }
 
-        return (new static($this->getModel(), $this->fieldKey, $cacheDestinationPath))->cloneModelData($this);
+        return (new static($this->getModel(), $this->fieldKey, $cachedPath))->cloneModelData($this);
+    }
+
+    /**
+     * Return existing image class or delete existing sample file
+     *
+     * @param  string  $cachedPath
+     *
+     * @return  AdminFile|null
+     */
+    private function onExistingImage($cachedPath)
+    {
+        $samplePath = $this->getBackupCacheImageName($cachedPath);
+
+        //If original image does exists, but cache is generated for backup image sample
+        //We need reset cachet resources
+        if ( $this->exists() && $this->getStorage()->exists($samplePath) ) {
+            $this->getStorage()->delete([
+                $samplePath, $cachedPath
+            ]);
+
+            return;
+        }
+
+        //If image is resized normally, we can return resized object
+        $cachedFile = (new static($this->getModel(), $this->fieldKey, $cachedPath));
+
+        return $cachedFile->cloneModelData($this);
     }
 
     /**
@@ -107,21 +121,16 @@ trait HasResizer
      */
     private function processImageMutators($destinationPath, $mutators)
     {
-        $model = AdminCore::getModelByTable($this->table);
+        $model = $this->getModel();
 
         $backupImageIfSourceMissing = $this->exists() === false;
 
         $adminStorage = $this->getAdminStorage();
 
-        //Load example image if source is missing
-        if ( $backupImageIfSourceMissing ) {
-            $imageData = $this->getBackupResourcePath();
-        }
-
-        //Load source from storage
-        else {
-            $imageData = $this->getStorage()->get($this->path);
-        }
+        //Load example image if source is missing. Or load from storage.
+        $imageData = $backupImageIfSourceMissing
+                        ? $this->getBackupResourcePath()
+                        : $this->getStorage()->get($this->path);
 
         $image = Image::make($imageData);
 
@@ -129,7 +138,7 @@ trait HasResizer
          * Apply mutators on image
          */
         foreach ($mutators as $mutator => $params) {
-            $params = static::paramsMutator($mutator, $params);
+            $params = $this->paramsMutator($mutator, $params);
 
             $image = call_user_func_array([$image, $mutator], $params);
         }
@@ -143,24 +152,52 @@ trait HasResizer
             $this->extension
         );
 
-        //Compress image with lossless compression
-        ImageCompressor::tryShellCompression($adminStorage->path($destinationPath));
-
         //Create webp version of image
         $this->createWebp($destinationPath, $image);
 
         //Label that this rendered image has been switched for default/backup image.
         //If image will appear, we will delete this sample file.
         if ( $backupImageIfSourceMissing ) {
-            $this->getStorage()->put(
-                $this->getBackupCacheImageName($destinationPath),
-                ''
-            );
+            $this->getStorage()->put($this->getBackupCacheImageName($destinationPath), '');
         }
 
         return $image;
     }
 
+    /**
+     * Update postprocess params
+     *
+     * @param  string  $name
+     * @param  mixed  $params
+     *
+     * @return  array
+     */
+    public function paramsMutator($name, $params)
+    {
+        $params = array_wrap($params);
+
+        //Automatic aspect ratio in resizing image with one parameter
+        if ($name == 'resize' && count($params) <= 2) {
+            //Add auto ratio
+            if (count($params) == 1) {
+                $params[] = null;
+            }
+
+            $params[] = function ($constraint) {
+                $constraint->aspectRatio();
+            };
+        }
+
+        return $params;
+    }
+
+    /**
+     * Returns sample image postfix extension
+     *
+     * @param  string  $path
+     *
+     * @return  string
+     */
     private function getBackupCacheImageName($path)
     {
         return $path.'.backup';

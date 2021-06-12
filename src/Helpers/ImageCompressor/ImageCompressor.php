@@ -63,7 +63,7 @@ class ImageCompressor
      *
      * @return  void
      */
-    public function saveImageWithCompression(FilesystemAdapter $storage, AdminModel $model, \Intervention\Image\Image $image, $path, $extension)
+    public function saveImageWithCompression(FilesystemAdapter $storage, AdminModel $model, $image, $path, $extension)
     {
         //Default compression quality
         $qualityPercentage = $this->getQualityPercentage($model);
@@ -83,6 +83,15 @@ class ImageCompressor
         }
 
         $storage->put($path, $encodedImage);
+
+        //Process lossless compression if is available
+        //on local crudadmin storage.
+        if (
+            $model->getProperty('imageLosslessCompression') === true
+            && config('admin.image_lossless_compression', true) === true
+        ) {
+            $this->tryShellCompression($storage->path($path));
+        }
     }
 
     /**
