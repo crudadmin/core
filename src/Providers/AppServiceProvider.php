@@ -108,13 +108,26 @@ class AppServiceProvider extends ServiceProvider
      */
     private function addCrudadminStorage()
     {
-        $uploadsDirectory = storage_path('app/crudadmin');
+        $crudAdminStoragePath = storage_path('crudadmin');
 
         $this->app['config']->set('filesystems.disks.crudadmin', [
             'driver' => 'local',
-            'root' => $uploadsDirectory,
-            'url' => env('APP_URL').'/'.AdminFile::UPLOADS_DIRECTORY,
+            'root' => $crudAdminStoragePath,
+            'url' => env('APP_URL'),
             'visibility' => 'public',
+        ]);
+
+        $this->app['config']->set('filesystems.disks.crudadmin.uploads', [
+            'driver' => 'local',
+            'root' => $uploadsDirectory = $crudAdminStoragePath.'/'.AdminFile::UPLOADS_DIRECTORY,
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+        ]);
+
+        $this->app['config']->set('filesystems.disks.crudadmin.lang', [
+            'driver' => 'local',
+            'root' => $crudAdminStoragePath.'/lang',
+            'visibility' => 'private',
         ]);
 
         $this->app['config']->set('filesystems.links.'.public_path(AdminFile::UPLOADS_DIRECTORY), $uploadsDirectory);

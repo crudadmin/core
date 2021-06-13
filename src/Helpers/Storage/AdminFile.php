@@ -111,16 +111,6 @@ class AdminFile
     }
 
     /**
-     * Returns admin storage. For cache or rendering purposes...
-     *
-     * @return  Illuminate\Filesystem\FilesystemAdapter
-     */
-    public function getAdminStorage()
-    {
-        return Storage::disk('crudadmin');
-    }
-
-    /**
      * Build file url path
      *
      * @param  string  $path
@@ -132,7 +122,7 @@ class AdminFile
         if ( count($this->resizeParams) > 0 ) {
             //If is internal storage, we can use storage url, because
             //if image is missing, laravel endpoint is waiting
-            if ( $this->getStorage() == $this->getAdminStorage() ) {
+            if ( $this->getStorage() == AdminCore::getUploadsStorage() ) {
                 $url = $this->getStorage()->url($this->path);
             }
 
@@ -161,6 +151,16 @@ class AdminFile
         }
 
         return $url;
+    }
+
+    /**
+     * Returns content of file
+     *
+     * @return  mixed
+     */
+    public function get()
+    {
+        return $this->getStorage()->get($this->path);
     }
 
     /**
@@ -225,6 +225,18 @@ class AdminFile
     public function setRowId($rowId)
     {
         $this->rowId = $rowId;
+
+        return $this;
+    }
+
+    /**
+     * Set disk of file
+     *
+     * @param  string  $disk
+     */
+    public function setDisk($disk)
+    {
+        $this->disk = $disk;
 
         return $this;
     }

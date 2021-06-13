@@ -7,6 +7,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Support\Facades\Log;
 use Admin\Core\Contracts\AdminEvents;
 use Illuminate\Filesystem\Filesystem;
+use Storage;
 
 class AdminCore
 {
@@ -21,6 +22,16 @@ class AdminCore
     public function __construct()
     {
         $this->files = new Filesystem;
+    }
+
+    public function getStorage()
+    {
+        return Storage::disk('crudadmin');
+    }
+
+    public function getUploadsStorage()
+    {
+        return Storage::disk('crudadmin.uploads');
     }
 
     /*

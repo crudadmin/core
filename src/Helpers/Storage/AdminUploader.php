@@ -7,6 +7,7 @@ use Admin\Core\Helpers\Storage\Mutators\ImageUploadMutator;
 use File;
 use Illuminate\Http\UploadedFile;
 use Storage;
+use AdminCore;
 
 class AdminUploader
 {
@@ -39,9 +40,9 @@ class AdminUploader
         $this->compression = $compression;
     }
 
-    public function getAdminStorage()
+    public function getUploadsStorage()
     {
-        return Storage::disk('crudadmin');
+        return AdminCore::getUploadsStorage();
     }
 
     public function getFieldStorage()
@@ -128,7 +129,7 @@ class AdminUploader
         $destinationPath = $uploadPath.'/'.$filename;
 
         //Copy file from server, or directory into uploads for field
-        $this->getAdminStorage()->put(
+        $this->getUploadsStorage()->put(
             $destinationPath,
             file_get_contents($file)
         );
@@ -148,7 +149,7 @@ class AdminUploader
 
                 $newDestinationPath = $uploadPath.'/'.$newFilename;
 
-                $this->getAdminStorage()->move($destinationPath, $newDestinationPath);
+                $this->getUploadsStorage()->move($destinationPath, $newDestinationPath);
 
                 $filename = $newFilename;
             }
@@ -165,7 +166,7 @@ class AdminUploader
      */
     private function guessExtensionFromRemoteFile($path, $filename)
     {
-        $mimeType = $this->getAdminStorage()->mimeType($path);
+        $mimeType = $this->getUploadsStorage()->mimeType($path);
 
         $replace = [
             'image/jpeg' => 'jpg',
@@ -195,7 +196,7 @@ class AdminUploader
      */
     private function mutateUploadedFile($storagePath, $filename, $extension)
     {
-        $localStorage = $this->getAdminStorage();
+        $localStorage = $this->getUploadsStorage();
 
         foreach (self::$uploadMutators as $classname) {
             $mutator = new $classname(
@@ -280,7 +281,7 @@ class AdminUploader
         $uploadedFile = $uploadedFile->storeAs(
             $this->model->getStorageFilePath($fieldKey),
             $filename,
-            [ 'disk' => 'crudadmin' ]
+            [ 'disk' => 'crudadmin.uploads' ]
         );
 
         return true;
@@ -347,7 +348,7 @@ class AdminUploader
     {
         //If field destination is crudadmin storage, we can check file existance iterate through existing files
         //with increment assignemt at the end of file
-        if ( $this->getFieldStorage() === $this->getAdminStorage() ) {
+        if ( $this->getFieldStorage() === $this->getUploadsStorage() ) {
             return $this->createFilenameIncrement($path, $filenameWithoutExtension, $extension);
         }
 

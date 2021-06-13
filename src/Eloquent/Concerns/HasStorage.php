@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use Admin\Core\Helpers\Storage\AdminFile;
+use AdminCore;
 use Storage;
 
 trait HasStorage
@@ -35,11 +36,13 @@ trait HasStorage
      * Returns file location for given field
      *
      * @param  string  $fieldKey
+     * @param  string  $filename
+     *
      * @return  string
      */
-    public function getStorageFilePath(string $fieldKey)
+    public function getStorageFilePath(string $fieldKey, $filename = null)
     {
-        return $this->getTable().'/'.$fieldKey;
+        return $this->getTable().'/'.$fieldKey.($filename ? '/'.$filename : '');
     }
 
     /**
@@ -76,7 +79,7 @@ trait HasStorage
     {
         $fieldStorage = $this->getFieldStorage($fieldKey);
 
-        $localStorage = Storage::disk('crudadmin');
+        $localStorage = AdminCore::getUploadsStorage();
 
         //If file should be sent into other storage than temporary crudadmin storage
         if ( $fieldStorage === $localStorage ) {

@@ -6,6 +6,7 @@ use Cache;
 use File;
 use Image;
 use ImageCompressor;
+use AdminCore;
 
 trait HasResizer
 {
@@ -123,7 +124,7 @@ trait HasResizer
     private function checkInactiveSampleImage($cachedPath)
     {
         //If is not local storage, we cannot allow checking of sample images
-        if ( $this->getAdminStorage() != $this->getStorage() ) {
+        if ( AdminCore::getUploadsStorage() != $this->getStorage() ) {
             return;
         }
 
@@ -154,7 +155,7 @@ trait HasResizer
 
         $backupImageIfSourceMissing = $this->exists() === false;
 
-        $adminStorage = $this->getAdminStorage();
+        $adminStorage = AdminCore::getUploadsStorage();
 
         //Load example image if source is missing. Or load from storage.
         $imageData = $backupImageIfSourceMissing
@@ -254,7 +255,7 @@ trait HasResizer
 
         //Get compressed saved image from local crudadmin storage path
         $image = $image ?: Image::make(
-            $this->getAdminStorage()->get($sourcePath)
+            AdminCore::getUploadsStorage()->get($sourcePath)
         );
 
         $encoded = $image->encode('webp', 85);
