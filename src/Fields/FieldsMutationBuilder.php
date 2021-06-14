@@ -146,12 +146,20 @@ class FieldsMutationBuilder
     /**
      * Add fields into end of model.
      *
-     * @param  array  $fields
+     * @param  array|Group  $fields
+     * @param  array|string|null  $field
      * @param  string  $type
      * @return $this
      */
-    public function push($fields, $type = 'push')
+    public function push($fields, $field = null, $type = 'push')
     {
+        //Push single line key with field data
+        if ( !is_null($field) && is_string($fields) ) {
+            $fields = [
+                $fields => $field,
+            ];
+        }
+
         //Push group or fields
         if ($fields instanceof Group) {
             $this->{$type}[] = $fields;
@@ -221,7 +229,7 @@ class FieldsMutationBuilder
     public function pushBefore($selectorKey, $fields = null)
     {
         if (is_null($fields) && (is_array($selectorKey) || is_object($selectorKey))) {
-            return $this->push($selectorKey, 'push_before');
+            return $this->push($selectorKey, null, 'push_before');
         }
 
         return $this->before($selectorKey, $fields);

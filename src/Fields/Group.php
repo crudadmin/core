@@ -38,6 +38,14 @@ class Group
      */
     public $prefix = null;
 
+    /**
+     * State if registred group should be injected into fields or not.
+     * Good for package modulation
+     *
+     * @var  bool
+     */
+    public $enabled = true;
+
     /*
      * Forward methods to support nonstatic/stattic...
      * origMethodName => alias
@@ -161,6 +169,20 @@ class Group
     public function prefix(string $prefix)
     {
         $this->prefix = $prefix;
+
+        return $this;
+    }
+
+    /**
+     * Set if group should be registred into fields
+     *
+     * @param  bool  $state
+     *
+     * @return  Group
+     */
+    public function if(bool $state)
+    {
+        $this->enabled = $state;
 
         return $this;
     }

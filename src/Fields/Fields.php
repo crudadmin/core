@@ -477,6 +477,11 @@ class Fields extends MigrationDefinition
     {
         //If is group
         if ($group = $this->isFieldGroup($field)) {
+            //Does not register this group set
+            if ( $group->enabled === false ) {
+                return;
+            }
+
             //If group name is not set
             if (! $group->name && ! is_numeric($key)) {
                 $group->name = $key;
@@ -496,7 +501,10 @@ class Fields extends MigrationDefinition
             foreach ($mutated_groups as $field_key => $field_from_group) {
                 $mutation_previous = isset($mutation_previous) ? $mutation_previous : $this->fields[$this->getModelKey($model)];
 
-                $mutation = $this->manageGroupFields($model, $field_key, $field_from_group, $group);
+                //If no mutation has been returned, we want skip this field group.
+                if ( !($mutation = $this->manageGroupFields($model, $field_key, $field_from_group, $group)) ){
+                    continue;
+                }
 
                 //If is group in fields list
                 if ($mutation instanceof Group) {
