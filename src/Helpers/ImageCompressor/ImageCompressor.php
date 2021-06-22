@@ -90,7 +90,9 @@ class ImageCompressor
             $model->getProperty('imageLosslessCompression') === true
             && config('admin.image_lossless_compression', true) === true
         ) {
-            $this->tryShellCompression($storage->path($path));
+            $this->tryShellCompression(
+                $storage->path($path)
+            );
         }
     }
 
