@@ -21,6 +21,10 @@ class AdminUploader
 
     protected $uploadErrors = [];
 
+    protected $disk;
+
+    protected $options;
+
     public $filename;
 
     public $extension;
@@ -29,7 +33,7 @@ class AdminUploader
         ImageUploadMutator::class,
     ];
 
-    public function __construct(AdminModel $model, $fieldKey, $fileOrPathToUpload, $compression = true)
+    public function __construct(AdminModel $model, $fieldKey, $fileOrPathToUpload, $options = [])
     {
         $this->model = $model;
 
@@ -37,7 +41,11 @@ class AdminUploader
 
         $this->fileOrPathToUpload = $fileOrPathToUpload;
 
-        $this->compression = $compression;
+        $this->options = $options;
+
+        $this->disk = $options['disk'] ?? null;
+
+        $this->compression = $options['compression'] ?? true;
     }
 
     public function getUploadsStorage()
@@ -47,6 +55,10 @@ class AdminUploader
 
     public function getFieldStorage()
     {
+        if ( $this->disk ) {
+            return Storage::disk($this->disk);
+        }
+
         return $this->model->getFieldStorage($this->fieldKey);
     }
 
@@ -92,7 +104,7 @@ class AdminUploader
 
         $this->mutateUploadedFile($fileStoragePath, $filename, $extension);
 
-        $this->model->moveToFinalStorage($this->fieldKey, $fileStoragePath);
+        $this->model->moveToFinalStorage($this->fieldKey, $fileStoragePath, $this->getFieldStorage());
 
         $this->filename = $filename;
 
@@ -346,14 +358,28 @@ class AdminUploader
      */
     private function createUniqueFilename($path, $filenameWithoutExtension, $extension)
     {
-        //If field destination is crudadmin storage, we can check file existance iterate through existing files
-        //with increment assignemt at the end of file
-        if ( $this->getFieldStorage() === $this->getUploadsStorage() ) {
-            return $this->createFilenameIncrement($path, $filenameWithoutExtension, $extension);
+        $postfix = ($this->options['postfix'] ?? false) === true;
+
+        //If is cloud storage or other storage solution
+        if ( $this->getFieldStorage() !== $this->getUploadsStorage() || $postfix === true ) {
+            return $this->generateFilenamePostfix($filenameWithoutExtension);
         }
 
-        $randomKeyLength = 20;
+        //If field destination is crudadmin storage, we can check file existance iterate through existing files
+        //with increment assignemt at the end of file
+        return $this->createFilenameIncrement($path, $filenameWithoutExtension, $extension);
+    }
 
+    /**
+     * Create filename postfix
+     *
+     * @param  string  $filenameWithoutExtension
+     * @param  number  $randomKeyLength
+     *
+     * @return  string
+     */
+    private function generateFilenamePostfix($filenameWithoutExtension, $randomKeyLength = 20)
+    {
         //If file already has generated key, we can let it be and may not generate new one..
         if ( preg_match("/_[a-z|A-Z|0-9]{".$randomKeyLength."}$/", $filenameWithoutExtension) ) {
             return $filenameWithoutExtension;

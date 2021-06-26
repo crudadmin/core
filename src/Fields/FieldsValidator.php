@@ -326,7 +326,9 @@ class FieldsValidator
             )
         );
 
-        $requestKeys = array_unique(array_merge($dataKeys, $this->whitelistedKeys));
+        $requestKeys = $this->onlyFirstLevelKeys(
+            array_unique(array_merge($dataKeys, $this->whitelistedKeys))
+        );
 
         $response = $this->getModel()->muttatorsResponse(
             $this->request->only($requestKeys), //we need pass only allowed data set
@@ -334,6 +336,39 @@ class FieldsValidator
             $rules
         );
 
-        return array_intersect_key($response, array_flip($whitelistedKeys ?: $dataKeys));
+        return array_intersect_key(
+            $response,
+            $this->onlyFirstLevelKeys(array_flip($whitelistedKeys ?: $dataKeys))
+        );
+    }
+
+    /**
+     * Returns request value
+     *
+     * @param  string  $key
+     * @param  mixed  $default
+     *
+     * @return  mixed
+     */
+    public function get($key, $default = null)
+    {
+        $value = ($this->getData([$key])[$key] ?? null);
+
+        return is_null($value) ? $default : $value;
+    }
+
+    /**
+     * Returns first level query parameters keys
+     * from variant.xy.tralalla makes variant
+     *
+     * @param  array  $keys
+     *
+     * @return  array
+     */
+    private function onlyFirstLevelKeys($keys)
+    {
+        return array_map(function($key){
+            return array_slice(explode('.', $key), 0, 1)[0];
+        }, $keys);
     }
 }

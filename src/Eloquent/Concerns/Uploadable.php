@@ -69,14 +69,14 @@ trait Uploadable
     /**
      * Automaticaly check, upload, and make resizing and other function on file object.
      *
-     * @param  string     $fieldKey         field key
-     * @param  string\UploadedFile     $file          file to upload/download from server
-     * @param  bool     $compression
+     * @param  string                   $fieldKey
+     * @param  string|UploadedFile      $file
+     * @param  array                    $options
      * @return object
      */
-    public function upload(string $fieldKey, $fileOrPathToUpload, $compression = true)
+    public function upload(string $fieldKey, $fileOrPathToUpload, $options = [])
     {
-        $uploader = new AdminUploader($this, $fieldKey, $fileOrPathToUpload, $compression);
+        $uploader = new AdminUploader($this, $fieldKey, $fileOrPathToUpload, $options);
 
         if ( !($path = $uploader->upload()) ) {
             return;
@@ -84,7 +84,25 @@ trait Uploadable
 
         $filename = basename($path);
 
-        return $this->getAdminFile($fieldKey, $filename);
+        return $this->getAdminFile($fieldKey, $filename, $options['disk'] ?? null);
+    }
+
+    /**
+     * Upload file locally
+     *
+     * @param  string                   $fieldKey
+     * @param  string|UploadedFile      $file
+     * @param  array                    $options
+     *
+     * @return object
+     */
+    public function uploadLocaly(string $fieldKey, $fileOrPathToUpload, $options = [])
+    {
+        $options = $options + [
+            'disk' => 'crudadmin.uploads'
+        ];
+
+        return $this->upload($fieldKey, $fileOrPathToUpload, $options);
     }
 
     /*

@@ -59,8 +59,9 @@ class AdminFile
      * @param  string  $path
      * @param  string|null  $fieldKey
      * @param  string|null  $path
+     * @param  string|null  $disk
      */
-    public function __construct(AdminModel $model, string $fieldKey, string $path)
+    public function __construct(AdminModel $model, string $fieldKey, string $path, $disk = null)
     {
         $this->table = $model->getTable();
 
@@ -68,7 +69,7 @@ class AdminFile
 
         $this->rowId = $model->getKey();
 
-        $this->disk = $model->getFieldDiskName($fieldKey);
+        $this->disk = $disk ?: $model->getFieldDiskName($fieldKey);
 
         $this->path = $path;
     }

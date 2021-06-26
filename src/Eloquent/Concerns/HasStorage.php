@@ -2,8 +2,9 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Admin\Core\Helpers\Storage\AdminFile;
 use AdminCore;
+use Admin\Core\Helpers\Storage\AdminFile;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Storage;
 
 trait HasStorage
@@ -50,18 +51,21 @@ trait HasStorage
      *
      * @param  string  $fieldKey
      * @param  string  $filename
+     * @param  string  $disk
      *
      * @return  AdminFile
      */
-    public function getAdminFile(string $fieldKey, $filename = null)
+    public function getAdminFile(string $fieldKey, $filename = null, $disk = null)
     {
+        $filename = basename($filename);
+
         if ( ! $filename ){
             return;
         }
 
         $path = $this->getStorageFilePath($fieldKey).'/'.$filename;
 
-        $file = new AdminFile($this, $fieldKey, $path);
+        $file = new AdminFile($this, $fieldKey, $path, $disk);
 
         return $file;
     }
@@ -74,10 +78,11 @@ trait HasStorage
      *
      * @param  string  $fieldKey
      * @param  string  $fileStoragePath
+     * @param  string  $fieldStorage
      */
-    public function moveToFinalStorage(string $fieldKey, $fileStoragePath)
+    public function moveToFinalStorage(string $fieldKey, $fileStoragePath, FilesystemAdapter $fieldStorage = null)
     {
-        $fieldStorage = $this->getFieldStorage($fieldKey);
+        $fieldStorage = $fieldStorage ?: $this->getFieldStorage($fieldKey);
 
         $localStorage = AdminCore::getUploadsStorage();
 
