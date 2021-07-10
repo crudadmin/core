@@ -94,7 +94,7 @@ trait Sluggable
             $i++;
         } while ($this->where(function ($query) {
             if ($this->exists) {
-                $query->where($this->getKeyName(), '!=', $this->getKey());
+                $query->where($this->getTable().'.'.$this->getKeyName(), '!=', $this->getKey());
             }
         })->whereRaw($column.' = ?', $slugs[$key])->withoutGlobalScopes()->count() > 0);
     }
@@ -438,7 +438,7 @@ trait Sluggable
         }
 
         if (! $this->hasLocalizedSlug()) {
-            return $scope->where($column, $slugValue);
+            return $scope->where($this->getTable().'.'.$column, $slugValue);
         }
 
         $lang = Localization::get();

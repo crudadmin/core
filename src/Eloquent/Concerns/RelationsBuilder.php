@@ -11,6 +11,11 @@ trait RelationsBuilder
 {
     private $saveCollection = null;
 
+    private function getOriginalTableName()
+    {
+        return Str::snake(Str::pluralStudly(class_basename($this)));
+    }
+
     /**
      * Returns admin relation key.
      *
@@ -485,7 +490,9 @@ trait RelationsBuilder
         if ($relationType == 'belongsToMany') {
             //Table names in singular
             $tables = [
-                str_singular($this->getTable()),
+                //We need use original table name, because laravel may change table name with alias for example like
+                //"products as laravel_alias_0"... so table relation wont be correct in this case
+                str_singular($this->getOriginalTableName()),
                 str_singular($properties[0]),
             ];
 
