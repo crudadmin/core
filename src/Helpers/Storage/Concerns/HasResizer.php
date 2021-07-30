@@ -63,6 +63,11 @@ trait HasResizer
      */
     public function resize($width = null, $height = null, $force = false)
     {
+        //When is file type svg, then image postprocessing subdirectories not exists
+        if ( $this->canBeImageResized() === false ) {
+            return $this;
+        }
+
         //Saved resize params
         $this->resizeParams = [$width, $height];
 
