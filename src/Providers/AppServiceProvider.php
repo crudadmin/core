@@ -120,7 +120,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app['config']->set('filesystems.disks.crudadmin.uploads', [
             'driver' => 'local',
             'root' => $uploadsDirectory = $crudAdminStoragePath.'/'.AdminFile::UPLOADS_DIRECTORY,
-            'url' => env('APP_URL'),
+            'url' => (env('ASSET_URL') ?: env('APP_URL')).'/'.AdminFile::UPLOADS_DIRECTORY,
             'visibility' => 'public',
         ]);
 

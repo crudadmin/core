@@ -123,13 +123,21 @@ class AdminFile
         if ( count($this->resizeParams) > 0 ) {
             //If is internal storage, we can use storage url, because
             //if image is missing, laravel endpoint is waiting
-            if ( $this->getStorage() == AdminCore::getUploadsStorage() ) {
+            if ( $this->isLocalStorage() ) {
                 $url = $this->getStorage()->url($this->path);
             }
 
             //Use resizer endpoint with asset route for CDN support
             else {
-                $url = asset(route('crudadminResizer', [$this->table, $this->fieldKey, $this->cachePrefix, $this->filename], false));
+                //We can return resized storage path image
+                if ( $this->existsCached() ) {
+                    $url = $this->getStorage()->url($this->path);
+                }
+
+                //We need resize image in crudadmin request
+                else {
+                    $url = asset(route('crudadminResizer', [$this->table, $this->fieldKey, $this->cachePrefix, $this->filename], false));
+                }
             }
         }
 
@@ -279,7 +287,11 @@ class AdminFile
      */
     public function remove()
     {
-        return $this->delete();
+        $delete = $this->delete();
+
+        $this->flushExistanceFromCache();
+
+        return $delete;
     }
 
     /*

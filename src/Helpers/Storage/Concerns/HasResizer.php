@@ -109,7 +109,7 @@ trait HasResizer
         //If image processign is ask to be completed in actual request
         if ($force === true) {
             //Set image for processing if does not exists yet
-            if ( $this->getStorage()->exists($cachedPath) == false ) {
+            if ( $this->existsCached($cachedPath) == false ) {
                 $this->processImageMutators($cachedPath, $mutators);
             }
         } else {
@@ -129,7 +129,7 @@ trait HasResizer
     private function checkInactiveSampleImage($cachedPath)
     {
         //If is not local storage, we cannot allow checking of sample images
-        if ( AdminCore::getUploadsStorage() != $this->getStorage() ) {
+        if ( $this->isLocalStorage() === false ) {
             return;
         }
 
@@ -197,6 +197,8 @@ trait HasResizer
         }
 
         $model->moveToFinalStorage($this->fieldKey, $destinationPath);
+
+        $this->setCachedFileExistance($destinationPath, true);
 
         return $image;
     }
