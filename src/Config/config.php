@@ -40,5 +40,6 @@ return [
     'file' => [
         'exists_cache_days' => 31,
         'exists_cache' => false,
+        'redirect_after_resize' => true,
     ],
 ];
