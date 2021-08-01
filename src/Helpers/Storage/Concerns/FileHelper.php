@@ -35,7 +35,7 @@ trait FileHelper
     {
         $path = $path ?: $this->path;
 
-        if ( $this->isLocalStorage() || $force === true ) {
+        if ( config('admin.file.exists_cache') == false || $this->isLocalStorage() || $force === true ) {
             return $this->getStorage()->exists($path);
         }
 
@@ -49,7 +49,7 @@ trait FileHelper
 
     public function flushExistanceFromCache()
     {
-        if ( $this->isLocalStorage() == false ){
+        if ( config('admin.file.exists_cache') == true && $this->isLocalStorage() == false ){
             Cache::forget($this->getFilepathExistanceCacheKey($this->path));
         }
 
@@ -58,7 +58,7 @@ trait FileHelper
 
     public function setCachedFileExistance($path, bool $state)
     {
-        if ( $this->isLocalStorage() === false ) {
+        if ( config('admin.file.exists_cache') == true && $this->isLocalStorage() === false ) {
             $key = $this->getFilepathExistanceCacheKey($path);
             $period = $this->getExistanceCachePeriod();
 
@@ -70,7 +70,7 @@ trait FileHelper
 
     private function getExistanceCachePeriod()
     {
-        $cacheDays = config('admin.storage_exists_cache', 31);
+        $cacheDays = config('admin.file.exists_cache_days', 31);
 
         return 60 * 60 * 24 * $cacheDays;
     }

@@ -36,4 +36,9 @@ return [
     'modules' => [
         'App\Admin\Modules' => app_path('Admin/Modules'),
     ],
+
+    'file' => [
+        'exists_cache_days' => 31,
+        'exists_cache' => false,
+    ],
 ];
