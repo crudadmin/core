@@ -14,11 +14,9 @@ class ImageUploadMutator extends UploadMutator
             return true;
         }
 
-        $filedata = $this->getStorage()->get(
-            $this->getPath()
-        );
+        $localStorage = $this->getStorage();
 
-        $image = Image::make($filedata);
+        $image = Image::make($localStorage->path($this->getPath()));
 
         $image = $this->rotateImage($image);
 
@@ -26,7 +24,7 @@ class ImageUploadMutator extends UploadMutator
 
         //Save image with compression
         ImageCompressor::saveImageWithCompression(
-            $this->getStorage(),
+            $localStorage,
             $this->model,
             $image,
             $this->getPath(),

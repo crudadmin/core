@@ -330,6 +330,7 @@ class FieldsValidator
             array_unique(array_merge($dataKeys, $this->whitelistedKeys))
         );
 
+        //TODO: this will upload multiple files times if ->get('xy') is used more than once
         $response = $this->getModel()->muttatorsResponse(
             $this->request->only($requestKeys), //we need pass only allowed data set
             $dataKeys,
