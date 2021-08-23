@@ -71,6 +71,13 @@ class AdminModel extends Model
     protected $publishable = true;
 
     /**
+     * Enable enhanced publishable features
+     *
+     * @var  bool
+     */
+    protected $publishableState = false;
+
+    /**
      * Enable sorting rows.
      *
      * @var  bool
@@ -131,8 +138,15 @@ class AdminModel extends Model
      */
     public function scopeWithPublished($query)
     {
-        $query->where($this->getTable().'.published_at', '!=', null)
-              ->whereRAW($this->getTable().'.published_at <= NOW()');
+        $query->where(function($query){
+            $query->where($this->getTable().'.published_at', '!=', null)
+                  ->whereRAW($this->getTable().'.published_at <= NOW()');
+
+            if ( $this->publishableState == true && admin() ) {
+                $query->orWhereNotNull('published_state->av');
+            }
+        });
+
     }
 
     /**
@@ -482,6 +496,11 @@ class AdminModel extends Model
         //Add cast into localized slug column
         if ( $this->hasLocalizedSlug() ){
             $this->addLocalizedCast('slug');
+        }
+
+        //Publishable state
+        if ($this->publishableState == true){
+            $this->casts['published_state'] = 'json';
         }
     }
 
