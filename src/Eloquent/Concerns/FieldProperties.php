@@ -333,7 +333,7 @@ trait FieldProperties
      */
     public function returnLocaleValue($object, $lang = null)
     {
-        $slug = $lang ?: Localization::get()->slug;
+        $slug = $lang ?: (Localization::get()->slug ?? null);
 
         if ( ! $object ) {
             return;

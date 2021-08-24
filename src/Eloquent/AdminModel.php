@@ -11,6 +11,7 @@ use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
+use Admin\Core\Eloquent\Concerns\HasPublishable;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
@@ -32,7 +33,8 @@ class AdminModel extends Model
         FieldModules,
         Validation,
         Sluggable,
-        HasLocalizedValues;
+        HasLocalizedValues,
+        HasPublishable;
 
     /**
      * Model Parent
@@ -118,36 +120,6 @@ class AdminModel extends Model
      * @var  array
      */
     static $adminBooted = [];
-
-    /**
-     * Returns also unpublished rows.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return void
-     */
-    public function scopeWithUnpublished($query)
-    {
-        $query->withoutGlobalScope('publishable');
-    }
-
-    /**
-     * Returns only published rows.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return void
-     */
-    public function scopeWithPublished($query)
-    {
-        $query->where(function($query){
-            $query->where($this->getTable().'.published_at', '!=', null)
-                  ->whereRAW($this->getTable().'.published_at <= NOW()');
-
-            if ( $this->publishableState == true && admin() ) {
-                $query->orWhereNotNull('published_state->av');
-            }
-        });
-
-    }
 
     /**
      * Create a new Admin Eloquent instance.
