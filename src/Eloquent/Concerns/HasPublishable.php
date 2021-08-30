@@ -54,7 +54,7 @@ trait HasPublishable
             return true;
         }
 
-        return self::$withTemporaryPublished == true;
+        return self::$withTemporaryPublished === true || self::$withTemporaryPublished === $this->getTable();
     }
 
     public function isAdminPublished()
