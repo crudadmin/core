@@ -469,10 +469,6 @@ class AdminModel extends Model
                 $this->casts[$key] = 'integer';
             } elseif ($this->isFieldType($key, 'decimal')) {
                 $this->casts[$key] = 'float';
-            } elseif ($this->isFieldType($key, ['date'])) {
-                $this->casts[$key] = 'date';
-            } elseif ($this->isFieldType($key, ['datetime'])) {
-                $this->casts[$key] = 'datetime';
             }
         }
 
