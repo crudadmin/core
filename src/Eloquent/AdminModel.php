@@ -432,7 +432,7 @@ class AdminModel extends Model
     protected function makeDateable()
     {
         foreach ($this->getFields() as $key => $field) {
-            if ($this->isFieldType($key, ['date', 'datetime']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
+            if ($this->isFieldType($key, ['date', 'datetime', 'time']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
                 $this->dates[] = $key;
             }
         }

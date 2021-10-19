@@ -28,9 +28,9 @@ return [
         'decimal' => 'numeric',
         'file' => 'max:10240|file|nullable',
         'checkbox' => 'boolean',
-        'date' => 'date_format:d.m.Y|nullable',
-        'datetime' => 'date_format:d.m.Y H:i|nullable',
-        'time' => 'date_format:H:i|nullable',
+        'date' => 'date_format_multiple:d.m.Y,Y-m-d,Y-m-d\TH:i:s.u\Z|nullable',
+        'datetime' => 'date_format_multiple:d.m.Y H:i,Y-m-d H:i,Y-m-d H:i:s,Y-m-d\TH:i:s.u\Z|nullable',
+        'time' => 'date_format_multiple:H:i|nullable',
     ],
 
     'modules' => [
