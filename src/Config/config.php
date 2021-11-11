@@ -30,7 +30,7 @@ return [
         'checkbox' => 'boolean',
         'date' => 'date_format_multiple:d.m.Y,Y-m-d,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP|nullable',
         'datetime' => 'date_format_multiple:d.m.Y H:i,Y-m-d H:i,Y-m-d H:i:s,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP|nullable',
-        'time' => 'date_format_multiple:H:i|nullable',
+        'time' => 'date_format_multiple:H:i,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vP,Y-m-d\TH:i:s.v\Z|nullable',
     ],
 
     'modules' => [
