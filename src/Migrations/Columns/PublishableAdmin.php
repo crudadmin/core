@@ -2,13 +2,16 @@
 
 namespace Admin\Core\Migrations\Columns;
 
-use Illuminate\Support\Facades\DB;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SupportJson;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
-class Publishable extends Column
+class PublishableAdmin extends Column
 {
-    public $column = 'published_at';
+    use SupportJson;
+
+    public $column = 'published_state';
 
     /**
      * Check if can apply given column.
@@ -17,7 +20,7 @@ class Publishable extends Column
      */
     public function isEnabled(AdminModel $model)
     {
-        return $model->getProperty('publishable');
+        return $model->getProperty('publishableState');
     }
 
     /**
@@ -29,19 +32,11 @@ class Publishable extends Column
      */
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
-        $indexName = $this->getIndexName($model, $this->column, 'index');
-
         //Add Sluggable column support
         if ($columnExists) {
-            //We need check index also on existing columns. Because crudadmin < 3.3 does not use index
-            //what is huge performance issue
-            if ( $this->hasIndex($model, $this->column, 'index') == false ) {
-                $this->addIndex($model, $this->column, 'index');
-            }
-
             return;
         }
 
-        return $table->timestamp($this->column)->nullable()->index($indexName)->default(DB::raw('CURRENT_TIMESTAMP'));
+        return $this->setJsonColumn($table, $this->column, $model, $update);
     }
 }

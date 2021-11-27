@@ -188,6 +188,7 @@ trait HasResizer
         );
 
         //Create webp version of image
+        //We want create webP image before ImageCompressor runs, because otherwise PNG image may be bigger size
         $this->createWebp($destinationPath, $image);
 
         //Label that this rendered image has been switched for default/backup image.

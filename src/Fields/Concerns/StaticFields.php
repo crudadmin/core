@@ -16,6 +16,7 @@ trait StaticFields
     public $staticColumns = [
         Columns\Sluggable::class,
         Columns\Publishable::class,
+        Columns\PublishableAdmin::class,
         Columns\CreatedAt::class,
         Columns\UpdatedAt::class,
         Columns\DeletedAt::class,
