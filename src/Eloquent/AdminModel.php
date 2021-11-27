@@ -37,6 +37,7 @@ class AdminModel extends Model
         Sluggable,
         HasStorage,
         Uploadable,
+        HasLocalizedValues,
         HasPublishable;
 
     /**
