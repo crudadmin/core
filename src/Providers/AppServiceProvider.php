@@ -130,6 +130,13 @@ class AppServiceProvider extends ServiceProvider
             'visibility' => 'private',
         ]);
 
-        $this->app['config']->set('filesystems.links.'.public_path(AdminFile::UPLOADS_DIRECTORY), $uploadsDirectory);
+        $this->app['config']->set(
+            'filesystems.links',
+            array_merge(
+                $this->app['config']->get('filesystems.links'), [
+                    public_path(AdminFile::UPLOADS_DIRECTORY) => $uploadsDirectory
+                ]
+            )
+        );
     }
 }
