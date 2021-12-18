@@ -207,8 +207,12 @@ trait RelationsBuilder
 
             //If needed method is matched with end of parent model from belongsToModel relation
             if (last(explode('_', snake_case($basename))) == $method) {
-                return $this->relationResponse($method, 'belongsTo', $namespace, $get, [
-                    4 => $this->getForeignColumn((new $namespace)->getTable()),
+                //We want retrieve not class from package, but local class. This class may differ
+                //then classname in package's belongsToModel property
+                $replacedModel = AdminCore::getModel($basename);
+
+                return $this->relationResponse($method, 'belongsTo', get_class($replacedModel), $get, [
+                    4 => $this->getForeignColumn($replacedModel->getTable()),
                 ]);
             }
         }
