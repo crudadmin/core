@@ -372,8 +372,8 @@ trait FieldProperties
         }
 
         if (
-            ! array_key_exists($field, $options)
-            || ! array_key_exists($value, $options[$field])
+            ! array_key_exists($field, (array)$options)
+            || ! array_key_exists($value, (array)$options[$field])
         ) {
             return;
         }
