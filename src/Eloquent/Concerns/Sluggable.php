@@ -397,7 +397,7 @@ trait Sluggable
 
         $history_row = $history_model
                         ->where('table', $this->getTable())
-                        ->whereSlug($slug, $history_model->getTable().'.'.$history_model->getSlugColumnName($this))
+                        ->whereSlug($slug, $history_model->getSlugColumnName($this))
                         ->whereExists(function ($query) use ($history_model) {
                             $query->select(['id'])
                                   ->from($this->getTable())
