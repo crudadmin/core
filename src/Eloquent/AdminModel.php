@@ -282,7 +282,11 @@ class AdminModel extends Model
                         return $dates;
                     }
 
-                    return Carbon::createFromFormat('H:i:s', $value);
+                    if ( $value instanceof Carbon ){
+                        return $value;
+                    } else {
+                        return Carbon::createFromFormat('H:i:s', $value);
+                    }
                 }
 
                 return;
