@@ -87,7 +87,11 @@ trait Validation
 
         $data = [];
 
-        $default_language = Localization::getDefaultLanguage();
+        if ( method_exists($this, 'getDefaultLanguage') ) {
+            $defaultLanguage = $this->getDefaultLanguage() ?: Localization::getDefaultLanguage();
+        } else {
+            $defaultLanguage = Localization::getDefaultLanguage();
+        }
 
         foreach ($fields as $key => $field) {
             $orig_key = $key;
@@ -97,8 +101,8 @@ trait Validation
             //If is available default locale, then set default key name, if
             //language is not available, then apply for all langs...
             if ($has_locale = $this->hasFieldParam($orig_key, 'locale', true)) {
-                if ($default_language) {
-                    $key = $orig_key.'.'.$default_language->slug;
+                if ($defaultLanguage) {
+                    $key = $orig_key.'.'.$defaultLanguage->slug;
                 } else {
                     $key = $orig_key.'.*';
                 }
@@ -132,7 +136,7 @@ trait Validation
             //If field has locales, then clone rules for specific locale
             if ($has_locale) {
                 foreach (Localization::getLanguages() as $lang) {
-                    if ($lang->getKey() != $default_language->getKey()) {
+                    if ($lang->getKey() != $defaultLanguage->getKey()) {
                         $lang_rules = array_unique(array_merge($data[$key], ['nullable']));
 
                         //Remove required rule for other languages
