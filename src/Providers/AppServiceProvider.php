@@ -133,7 +133,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app['config']->set(
             'filesystems.links',
             array_merge(
-                $this->app['config']->get('filesystems.links'), [
+                $this->app['config']->get('filesystems.links', []), [
                     public_path(AdminFile::UPLOADS_DIRECTORY) => $uploadsDirectory
                 ]
             )
