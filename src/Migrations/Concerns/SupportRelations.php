@@ -4,6 +4,7 @@ namespace Admin\Core\Migrations\Concerns;
 
 use AdminCore;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 trait SupportRelations
 {
@@ -91,29 +92,40 @@ trait SupportRelations
     {
         $this->getCommand()->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table.</comment>');
         $this->getCommand()->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
-
-        $referenceTableIds = AdminCore::getModelByTable($referenceTable)->take(10)->select('id')->pluck('id');
+        $referenceModel = AdminCore::getModelByTable($referenceTable);
+        $referenceTableIds = $referenceModel->take(10)->select('id')->pluck('id');
+        $relationRequiredEvent = 'onRequired'.Str::studly($key).'Relation';
+        $requestedId = false;
 
         if (count($referenceTableIds) > 0) {
-            $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode(', ', $referenceTableIds->toArray()));
-
             //Define ids for existing rows
-            do {
-                $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?');
+            if ( method_exists($model, $relationRequiredEvent) === false ) {
+                $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode(', ', $referenceTableIds->toArray()));
 
-                if (! is_numeric($requestedId)) {
-                    continue;
-                }
+                do {
+                    $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?');
 
-                if (AdminCore::getModelByTable($referenceTable)->where('id', $requestedId)->count() == 0) {
-                    $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
-                    $requestedId = false;
-                }
-            } while (! is_numeric($requestedId));
+                    if (! is_numeric($requestedId)) {
+                        continue;
+                    }
+
+                    if ($referenceModel->where('id', $requestedId)->count() == 0) {
+                        $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
+                        $requestedId = false;
+                    }
+                } while (! is_numeric($requestedId));
+            } else {
+                $this->getCommand()->line('<comment>+ Column required fill initialized for '.$key.' table:</comment> ');
+            }
 
             //Register event after this migration will be done
-            $this->registerAfterMigration($model, function () use ($model, $key, $requestedId) {
-                DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
+            $this->registerAfterMigration($model, function () use ($model, $key, $requestedId, $relationRequiredEvent) {
+                //Custom update event
+                if ( method_exists($model, $relationRequiredEvent) ) {
+                    $this->fireModelEvent($model, $relationRequiredEvent);
+                } else {
+                    DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
+                }
             });
         } else {
             $this->getCommand()->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');
