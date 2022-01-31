@@ -7,6 +7,7 @@ use Admin\Core\Fields\Group;
 use Admin\Helpers\Localization\AdminResourcesSyncer;
 use Fields;
 use Localization;
+use AdminCore;
 
 trait FieldProperties
 {
@@ -333,8 +334,6 @@ trait FieldProperties
      */
     public function returnLocaleValue($object, $lang = null)
     {
-        $slug = $lang ?: (Localization::get()->slug ?? null);
-
         if ( ! $object ) {
             return;
         }
@@ -344,8 +343,10 @@ trait FieldProperties
         }
 
         //If row has saved actual value
-        if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
-            return $object[$slug];
+        foreach ($this->getLanguageSlugsByPriority($lang) as $slug) {
+            if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
+                return $object[$slug];
+            }
         }
 
         //Return first available translated value in admin
@@ -354,6 +355,24 @@ trait FieldProperties
                 return $value;
             }
         }
+    }
+
+    /**
+     * Returns selected language slug, or default to try
+     *
+     * @param  string  $lang
+     *
+     * @return  array
+     */
+    private function getLanguageSlugsByPriority($lang)
+    {
+        return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
+            $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
+
+            $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];
+
+            return $slugs;
+        });
     }
 
     /**
