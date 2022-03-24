@@ -89,9 +89,10 @@ class Sluggable extends Column
     protected function updateSlugs(AdminModel $model)
     {
         $this->registerAfterMigration($model, function () use ($model) {
-
             //Get empty slugs
-            $empty_slugs = $model->withoutGlobalScopes()->where(function ($query) use ($model) {
+            $empty_slugs = $model->withoutGlobalScopes()->when($model->hasSoftDeletes(), function($query){
+                $query->withoutTrashed();
+            })->where(function ($query) use ($model) {
                 //If some of localized slug value is empty
                 if ($model->hasLocalizedSlug()) {
                     $languages = Localization::getLanguages();
