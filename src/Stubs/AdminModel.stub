@@ -12,7 +12,7 @@ class DummyClass extends AdminModel
     protected $migration_date = 'CREATED_DATETIME';
 DummyParameters
     /*
-     * Automatic form and database generator by fields list
+     * Automatic form and database generator by fields list (prettier-ignore)
      * :name - field name
      * :type - field type (string/text/editor/select/integer/decimal/file/password/date/datetime/time/checkbox/radio)
      * ... other validation methods from laravel
