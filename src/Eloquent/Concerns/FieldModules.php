@@ -60,7 +60,10 @@ trait FieldModules
 
         //If key does exists in store
         if ( array_key_exists($class, $store) ) {
-            return $store[$class];
+            $module = $store[$class];
+            $module->setModel($this);
+
+            return $module;
         }
 
         $initializedClass = new $class();
