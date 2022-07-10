@@ -23,6 +23,7 @@ trait FieldTypes
         Types\IntegerType::class,
         Types\DecimalType::class,
         Types\DateTimeType::class,
+        Types\TimestampType::class,
         Types\BooleanType::class,
     ];
 
