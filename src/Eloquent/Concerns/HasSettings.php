@@ -38,11 +38,9 @@ trait HasSettings
     /**
      * Returns model settings in array.
      *
-     * @param  string  $separator
-     * @param  array  &$arr
      * @return array
      */
-    public function getModelSettings($separator = '.', &$arr = [])
+    public function getModelSettings()
     {
         $settings = (array) $this->getProperty('settings');
 
