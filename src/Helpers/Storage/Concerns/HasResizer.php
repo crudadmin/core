@@ -204,7 +204,7 @@ trait HasResizer
         //Label that this rendered image has been switched for default/backup image.
         //If image will appear, we will delete this sample file.
         if ( $backupImageIfSourceMissing ) {
-            $this->getStorage()->put($this->getBackupCacheImageName($destinationPath), '');
+            $this->getCacheStorage()->put($this->getBackupCacheImageName($destinationPath), '');
         }
 
         //If storage cache is turned on. We will send resized cache images to the storage
