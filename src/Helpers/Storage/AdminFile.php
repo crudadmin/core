@@ -112,6 +112,20 @@ class AdminFile
     }
 
     /**
+     * Returns cache storage
+     *
+     * @return  Illuminate\Filesystem\FilesystemAdapter
+     */
+    public function getCacheStorage()
+    {
+        if ( $this->externalStorageResizer() ) {
+            return $this->getStorage();
+        }
+
+        return AdminCore::getUploadsStorage();
+    }
+
+    /**
      * Build file url path
      *
      * @param  string  $path
@@ -120,18 +134,18 @@ class AdminFile
      */
     public function url()
     {
-        if ( count($this->resizeParams) > 0 ) {
+        if ( $this->isResized() ) {
             if (
                 //If is internal storage, we can use storage url, because
-                //if image is missing, laravel endpoint is waiting
+                //if image is missing, laravel endpoint is waiting and will process image
                 $this->isLocalStorage()
 
                 //We can return resized storage path image url.
                 //This is usefull when we does not have CDN available. Then we can cache internaly
                 //if resized image is available, and redirect directly to the storage url
-                || (config('admin.file.exists_cache', false) && $this->existsCached())
+                || ($this->hasStorageExistanceCache() && $this->existsCached())
             ) {
-                $url = $this->getStorage()->url($this->path);
+                $url = $this->getCacheStorage()->url($this->path);
             }
 
             //Use resizer endpoint with asset route for CDN support

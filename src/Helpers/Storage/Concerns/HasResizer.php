@@ -28,6 +28,11 @@ trait HasResizer
         return $this->resizeParams;
     }
 
+    public function isResized()
+    {
+        return count($this->resizeParams) > 0;
+    }
+
     /*
      * Get cache prefix
      */
@@ -46,6 +51,11 @@ trait HasResizer
         $this->cachePrefix = $cachePrefix;
 
         return $this;
+    }
+
+    public function externalStorageResizer()
+    {
+        return config('admin.resizer.storage', true) === true;
     }
 
     /**
@@ -109,7 +119,7 @@ trait HasResizer
         //If image processign is ask to be completed in actual request
         if ($force === true) {
             //Set image for processing if does not exists yet
-            if ( $this->existsCached($cachedPath) == false ) {
+            if ( $this->existsCached($cachedPath, false, $this->getCacheStorage()) == false ) {
                 $this->processImageMutators($cachedPath, $mutators);
             }
         } else {
@@ -178,7 +188,7 @@ trait HasResizer
             $image = call_user_func_array([$image, $mutator], $params);
         }
 
-        //Save image with compression
+        //Save image on local disk with compression
         ImageCompressor::saveImageWithCompression(
             $adminStorage,
             $model,
@@ -197,7 +207,8 @@ trait HasResizer
             $this->getStorage()->put($this->getBackupCacheImageName($destinationPath), '');
         }
 
-        $model->moveToFinalStorage($this->fieldKey, $destinationPath);
+        //If storage cache is turned on. We will send resized cache images to the storage
+        $model->moveToFinalStorage($this->fieldKey, $destinationPath, $this->getCacheStorage());
 
         $this->setCachedFileExistance($destinationPath, true);
 
@@ -268,7 +279,7 @@ trait HasResizer
 
         $encoded = $image->encode('webp', 85);
 
-        $this->getStorage()->put($outputFilepath, $encoded);
+        $this->getCacheStorage()->put($outputFilepath, $encoded);
 
         return $this;
     }
