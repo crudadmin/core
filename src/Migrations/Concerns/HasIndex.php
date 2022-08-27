@@ -16,13 +16,15 @@ trait HasIndex
      */
     protected function getIndexName(AdminModel $model, $key, $prefix = null)
     {
+        $key = implode('_', array_wrap($key));
+
         return $model->getTable().'_'.$key.'_'.($prefix ?: 'foreign');
     }
 
     /**
      * Returns if table has index builded from column name and table name.
      * @param  AdminModel $model
-     * @param  string     $key
+     * @param  string|array     $key
      * @param  string     $prefix
      * @param  string     $indexKey
      * @return int
