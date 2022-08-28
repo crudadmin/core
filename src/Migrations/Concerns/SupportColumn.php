@@ -182,7 +182,9 @@ trait SupportColumn
 
                 //Ability to create multi-columns indexes.
                 else {
-                    $table->index($columns);
+                    $indexName = $this->getIndexName($model, $columns, 'index');
+
+                    $table->index($columns, $indexName);
                 }
             }
         }

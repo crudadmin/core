@@ -151,7 +151,7 @@ trait SupportRelations
      * @param  string  $string
      * @return string
      */
-    private function removeEverySecondCharInMiddle($string)
+    public function removeEverySecondCharInMiddle($string)
     {
         $string = str_replace('_', '', $string);
 
