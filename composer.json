@@ -9,8 +9,8 @@
         { "name": "Marek Gogoľ", "email": "info@marekgogol.sk" }
     ],
     "require": {
-        "php": ">=7.1.0",
-        "laravel/framework": "^5.4|^6|^7|^8|^9",
+        "php": ">=8.0",
+        "laravel/framework": "^6|^7|^8|^9",
         "doctrine/dbal": "^2.6.3",
         "intervention/image": "^2.3.0",
         "spatie/image-optimizer": "^1.1",
