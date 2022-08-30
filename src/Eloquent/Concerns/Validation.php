@@ -2,10 +2,12 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Fields;
-use Validator;
-use Localization;
+use Admin\Core\Fields\FieldsValidator;
+use Admin\Core\Fields\Validation\FileMutator;
 use Admin\Exceptions\ValidationException;
+use Fields;
+use Localization;
+use Validator;
 
 trait Validation
 {
@@ -15,7 +17,7 @@ trait Validation
      * @param  array  $field
      * @return array
      */
-    protected function fieldToString(array $field)
+    public function fieldToString(array $field)
     {
         $data = [];
 
@@ -85,7 +87,11 @@ trait Validation
 
         $data = [];
 
-        $default_language = Localization::getDefaultLanguage();
+        if ( method_exists($this, 'getDefaultLanguage') ) {
+            $defaultLanguage = $this->getDefaultLanguage() ?: Localization::getDefaultLanguage();
+        } else {
+            $defaultLanguage = Localization::getDefaultLanguage();
+        }
 
         foreach ($fields as $key => $field) {
             $orig_key = $key;
@@ -94,9 +100,9 @@ trait Validation
 
             //If is available default locale, then set default key name, if
             //language is not available, then apply for all langs...
-            if ($has_locale = $this->hasFieldParam($orig_key, 'locale')) {
-                if ($default_language) {
-                    $key = $orig_key.'.'.$default_language->slug;
+            if ($has_locale = $this->hasFieldParam($orig_key, 'locale', true)) {
+                if ($defaultLanguage) {
+                    $key = $orig_key.'.'.$defaultLanguage->slug;
                 } else {
                     $key = $orig_key.'.*';
                 }
@@ -111,14 +117,14 @@ trait Validation
             }
 
             //If field is not required
-            if (! $this->hasFieldParam($orig_key, 'required')) {
+            if (! $this->hasFieldParam($orig_key, 'required', true)) {
                 $field['nullable'] = true;
             }
 
             //If is existing row is file type and required file already exists
             if ($row
                 && ! empty($row[$orig_key])
-                && $this->hasFieldParam($orig_key, 'required')
+                && $this->hasFieldParam($orig_key, 'required', true)
                 && $this->isFieldType($orig_key, 'file')
             ) {
                 $field['required'] = false;
@@ -130,13 +136,11 @@ trait Validation
             //If field has locales, then clone rules for specific locale
             if ($has_locale) {
                 foreach (Localization::getLanguages() as $lang) {
-                    if ($lang->getKey() != $default_language->getKey()) {
+                    if ($lang->getKey() != $defaultLanguage->getKey()) {
                         $lang_rules = array_unique(array_merge($data[$key], ['nullable']));
 
                         //Remove required rule for other languages
-                        if (($k = array_search('required', $lang_rules)) !== false) {
-                            unset($lang_rules[$k]);
-                        }
+                        $lang_rules = $this->removeRequiredProperties($lang_rules);
 
                         //Apply also for multiple files support
                         $field_key = $is_multiple
@@ -153,19 +157,28 @@ trait Validation
     }
 
     /**
-     * Returns error response after wrong validation.
+     * Remove all properties from given array
      *
-     * @param  Illuminate\Validation\Validator  $validator
-     * @return Illuminate\Http\Response
+     * @param  array  $rules
+     * @param  array|null  $attributes
+     * @return  array
      */
-    private function buildFailedValidationResponse($validator)
+    private function removeRequiredProperties($rules, $attributes = null)
     {
-        //If is ajax request
-        if (request()->expectsJson()) {
-            return response()->json($validator->errors(), 422);
+        $attributes = is_null($attributes) ? FileMutator::$requiredAttributes : null;
+
+        foreach ($rules as $k => $key) {
+            foreach ($attributes as $attribute) {
+                $attributeLength = strlen($attribute);
+
+                if ( $key === $attribute || substr($key, 0, $attributeLength + 1) === $attribute.':' ) {
+                    unset($rules[$k]);
+                    break;
+                }
+            }
         }
 
-        return redirect(url()->previous())->withErrors($validator)->withInput();
+        return array_values($rules);
     }
 
     /**
@@ -174,11 +187,11 @@ trait Validation
      * @param  array  $fields
      * @return array
      */
-    protected function muttatorsResponse($fields)
+    public function muttatorsResponse($requestData, $fields, $rules = null)
     {
-        $request = new \Admin\Requests\DataRequest(request()->all());
+        $request = new \Admin\Requests\DataRequest($requestData);
 
-        $request->applyMutators($this, $fields);
+        $request->applyMutators($this, $fields, $rules);
 
         $data = $request->allWithMutators()[0];
 
@@ -201,6 +214,9 @@ trait Validation
         }
 
         $rules = $this->getValidationRules($row);
+
+        $request = request();
+        $requestData = $request->all();
 
         $only = [];
         $replace = [];
@@ -246,15 +262,24 @@ trait Validation
             $rules = array_diff_key($rules, array_flip($except));
         }
 
-        $validator = Validator::make(request()->all(), $rules);
+        $validator = Validator::make($requestData, $rules);
 
         if ($validator->fails()) {
-            throw new ValidationException($this->buildFailedValidationResponse($validator));
+            throw new ValidationException(
+                (new FieldsValidator($this, $request))->buildFailedValidationResponse($validator)
+            );
         }
 
         //Modify request data with admin mutators
         if ($mutators == true) {
-            return $this->muttatorsResponse(count($only) > 0 ? $only : null);
+            return $this->muttatorsResponse($requestData, count($only) > 0 ? $only : null, $rules);
         }
+    }
+
+    public function scopeValidator($query, $request = null)
+    {
+        $validator = new FieldsValidator($this, request());
+
+        return $validator;
     }
 }

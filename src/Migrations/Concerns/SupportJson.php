@@ -12,6 +12,11 @@ trait SupportJson
      */
     public function checkForCorrectMysqlVersion($model, $type = null)
     {
+        //Allow check only for mysql
+        if ( env('DB_CONNECTION') != 'mysql' ) {
+            return;
+        }
+
         $pdo = $model->getConnection()->getPdo();
         $version = $pdo->query('select version()')->fetchColumn();
 
@@ -85,7 +90,7 @@ trait SupportJson
             return;
         }
 
-        $languages = Localization::getLanguages(true);
+        $languages = Localization::getLanguages();
 
         $slug = ($lang = $languages->first()) ? $lang->slug : 'en';
 

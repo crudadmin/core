@@ -16,15 +16,25 @@ trait HasIndex
      */
     protected function getIndexName(AdminModel $model, $key, $prefix = null)
     {
+        $key = array_wrap($key);
+
+        if ( count($key) >= 2 ){
+            $key = array_map(function($key){
+                return $this->removeEverySecondCharInMiddle($key);
+            }, $key);
+        }
+
+        $key = implode('_', $key);
+
         return $model->getTable().'_'.$key.'_'.($prefix ?: 'foreign');
     }
 
     /**
-     * Returns if table has index.
-     *
+     * Returns if table has index builded from column name and table name.
      * @param  AdminModel $model
-     * @param  string     $key
+     * @param  string|array     $key
      * @param  string     $prefix
+     * @param  string     $indexKey
      * @return int
      */
     protected function hasIndex(AdminModel $model, $key, $prefix = null)
@@ -70,6 +80,16 @@ trait HasIndex
     {
         return $model->getConnection()->select(
             DB::raw('alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix).'`')
+        );
+    }
+
+    /*
+     * Drops foreign key in table
+     */
+    protected function addIndex($model, $key, $prefix = null)
+    {
+        return $model->getConnection()->select(
+            DB::raw('alter table `'.$model->getTable().'` add INDEX '.$this->getIndexName($model, $key, $prefix).' (`'.$key.'`)')
         );
     }
 }

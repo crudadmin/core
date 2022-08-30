@@ -29,11 +29,19 @@ class Publishable extends Column
      */
     public function registerStaticColumn(Blueprint $table, AdminModel $model, bool $update, $columnExists = null)
     {
+        $indexName = $this->getIndexName($model, $this->column, 'index');
+
         //Add Sluggable column support
         if ($columnExists) {
+            //We need check index also on existing columns. Because crudadmin < 3.3 does not use index
+            //what is huge performance issue
+            if ( $this->hasIndex($model, $this->column, 'index') == false ) {
+                $this->addIndex($model, $this->column, 'index');
+            }
+
             return;
         }
 
-        return $table->timestamp($this->column)->nullable()->default(DB::raw('CURRENT_TIMESTAMP'));
+        return $table->timestamp($this->column)->nullable()->index($indexName)->default(DB::raw('CURRENT_TIMESTAMP'));
     }
 }

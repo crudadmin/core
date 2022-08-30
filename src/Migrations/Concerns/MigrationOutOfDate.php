@@ -25,11 +25,11 @@ trait MigrationOutOfDate
             return false;
         }
 
-        $namespace = 'admin_migrations.'.md5(get_class($model));
+        $cacheKey = 'admin_migrations.'.md5(get_class($model));
 
-        $hash = md5_file($path);
+        $hash = $this->getModelUpdateHash($model, $path);
 
-        if ($this->option('force') === false && Cache::get($namespace) == $hash) {
+        if ($this->option('force') === false && Cache::get($cacheKey) == $hash) {
             return true;
         }
 
@@ -37,8 +37,27 @@ trait MigrationOutOfDate
         call_user_func($migration);
 
         //Cache model after migration done
-        Cache::forever($namespace, $hash);
+        Cache::forever($cacheKey, $hash);
 
         return false;
+    }
+
+    /*
+     * Generate hash of configruation for given model
+     */
+    public function getModelUpdateHash($model, $path)
+    {
+        $fields = $model->getFields();
+
+        try {
+            $fieldsTimestamp = json_encode($fields);
+        } catch (\Exception $e) {
+            $fieldsTimestamp = implode(';', array_keys($fields));
+        }
+
+        return md5(implode('-', [
+            md5_file($path),
+            $fieldsTimestamp
+        ]));
     }
 }

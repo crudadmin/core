@@ -46,6 +46,7 @@ class AdminMigrationCommand extends MigrationBuilder
     {
         return [
             ['force', 'f', InputOption::VALUE_NONE, 'Forced migration of all models'],
+            ['unknown', 'u', InputOption::VALUE_NONE, 'Check uknown tables and ask to delete them'],
             ['auto-drop', null, InputOption::VALUE_NONE, 'Automatically drop all unnecessary columns'],
         ];
     }

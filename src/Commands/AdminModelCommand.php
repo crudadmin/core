@@ -62,7 +62,24 @@ class AdminModelCommand extends GeneratorCommand
      */
     public function getNameInput()
     {
-        return trim($this->argument('name'));
+        return $this->qualifyClass(trim($this->argument('name')));
+    }
+
+    /**
+     * Get the default namespace for the class.
+     *
+     * @param  string  $rootNamespace
+     * @return string
+     */
+    protected function getDefaultNamespace($rootNamespace)
+    {
+        if ( is_dir(app_path('Models')) ) {
+            return $rootNamespace.'\\Models';
+        } else if ( is_dir(app_path('Model')) ) {
+            return $rootNamespace.'\\Model';
+        }
+
+        return $rootNamespace;
     }
 
     /**
@@ -131,7 +148,7 @@ class AdminModelCommand extends GeneratorCommand
      */
     protected function getBelongsTo()
     {
-        $parent = $this->getParentModelName();
+        $parent = class_basename($this->getParentModelName());
 
         //If creating model has not parent and is not belonging to any model
         if (! AdminCore::hasAdminModel($parent)) {
@@ -187,7 +204,7 @@ class AdminModelCommand extends GeneratorCommand
             $lines[] = "'$key' => '$field',";
         }
 
-        return $this->fixParameterSpacing(implode("\n", $lines), '        ');
+        return $this->fixParameterSpacing(implode("\n", $lines), '            ');
     }
 
     /**

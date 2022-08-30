@@ -11,6 +11,11 @@ trait RelationsBuilder
 {
     private $saveCollection = null;
 
+    private function getOriginalTableName()
+    {
+        return Str::snake(Str::pluralStudly(class_basename($this)));
+    }
+
     /**
      * Returns admin relation key.
      *
@@ -207,8 +212,12 @@ trait RelationsBuilder
 
             //If needed method is matched with end of parent model from belongsToModel relation
             if (last(explode('_', snake_case($basename))) == $method) {
-                return $this->relationResponse($method, 'belongsTo', $namespace, $get, [
-                    4 => $this->getForeignColumn((new $namespace)->getTable()),
+                //We want retrieve not class from package, but local class. This class may differ
+                //then classname in package's belongsToModel property
+                $replacedModel = AdminCore::getModel($basename);
+
+                return $this->relationResponse($method, 'belongsTo', get_class($replacedModel), $get, [
+                    4 => $this->getForeignColumn($replacedModel->getTable()),
                 ]);
             }
         }
@@ -353,9 +362,9 @@ trait RelationsBuilder
      */
     public function getBelongsToRelation($baseName = false)
     {
-        $items = array_filter(is_array($this->belongsToModel)
-                    ? $this->belongsToModel
-                    : [$this->belongsToModel]);
+        $items = array_filter(
+            array_wrap($this->getProperty('belongsToModel'))
+        );
 
         if ($baseName !== true) {
             return $items;
@@ -430,13 +439,13 @@ trait RelationsBuilder
      */
     public function getForeignColumn($table = null)
     {
-        if ($this->belongsToModel == null) {
+        if ($this->getProperty('belongsToModel') == null) {
             return;
         }
 
         $columns = [];
 
-        foreach (array_wrap($this->belongsToModel) as $parent) {
+        foreach (array_wrap($this->getProperty('belongsToModel')) as $parent) {
             $model_table_name = Str::snake(class_basename($parent));
 
             $columns[str_plural($model_table_name)] = $model_table_name.'_id';
@@ -464,14 +473,14 @@ trait RelationsBuilder
      * Returns properties of field with belongsTo or belongsToMany relationship.
      *
      * @param  string  $key
-     * @param  string  $relation
+     * @param  string  $relationType
      * @return array
      */
-    public function getRelationProperty(string $key, string $relation)
+    public function getRelationProperty(string $key, string $relationType)
     {
         $field = $this->getField($key);
 
-        $properties = explode(',', $field[$relation]);
+        $properties = explode(',', $field[$relationType]);
 
         //If is not defined references column for other table
         if (count($properties) == 1) {
@@ -482,10 +491,12 @@ trait RelationsBuilder
             $properties[] = 'id';
         }
 
-        if ($relation == 'belongsToMany') {
+        if ($relationType == 'belongsToMany') {
             //Table names in singular
             $tables = [
-                str_singular($this->getTable()),
+                //We need use original table name, because laravel may change table name with alias for example like
+                //"products as laravel_alias_0"... so table relation wont be correct in this case
+                str_singular($this->getOriginalTableName()),
                 str_singular($properties[0]),
             ];
 
@@ -498,6 +509,11 @@ trait RelationsBuilder
             $properties[] = $tables[1];
             $properties[] = $tables[0].'_id';
             $properties[] = $tables[1].'_id';
+
+            //If is same relationship
+            if ( $properties[6] == $properties[7] ){
+                $properties[7] = '_'.$properties[7];
+            }
         } else {
             $properties[] = str_singular($properties[0]);
             $properties[] = $key;
@@ -553,5 +569,18 @@ trait RelationsBuilder
         }
 
         return $columns;
+    }
+
+    /**
+     * Return rows by given model
+     *
+     * @param  Builder  $query
+     * @param  BaseModel  $row
+     * @return  [type]
+     */
+    public function scopeWhereGlobalRelation($query, BaseModel $row)
+    {
+        $query->where('_table', $row->getTable());
+        $query->where('_row_id', $row->getKey());
     }
 }

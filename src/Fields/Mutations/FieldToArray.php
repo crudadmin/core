@@ -21,7 +21,6 @@ class FieldToArray
         if ($count == 2) {
             return $row[1];
         }
-
         if ($count > 2) {
             return implode(':', array_slice($row, 1));
         }

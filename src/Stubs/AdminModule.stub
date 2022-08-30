@@ -1,0 +1,22 @@
+<?php
+
+namespace DummyNamespace;
+
+use Admin\Core\Eloquent\Concerns\AdminModelModule;
+use Admin\Core\Eloquent\Concerns\AdminModelModuleSupport;
+
+class DummyClass extends AdminModelModule implements AdminModelModuleSupport
+{
+    public function isActive($model)
+    {
+        return $model->getProperty('someModuleProperty') === true;
+    }
+
+    public function mutateFields($fields)
+    {
+        //push fields..
+        // $fields->push([
+        // ...
+        // ]);
+    }
+}

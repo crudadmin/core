@@ -2,12 +2,14 @@
 
 namespace Admin\Core\Migrations;
 
-use Fields;
-use Schema;
-use Illuminate\Console\Command;
 use Admin\Core\Eloquent\AdminModel;
-use Illuminate\Filesystem\Filesystem;
+use Admin\Core\Migrations\Concerns\SupportFulltext;
+use Fields;
+use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\DB;
+use Schema;
 
 class MigrationBuilder extends Command
 {
@@ -18,12 +20,22 @@ class MigrationBuilder extends Command
         Concerns\SupportRelations,
         Concerns\SupportColumn,
         Concerns\SupportJson,
+        Concerns\SupportFulltext,
         Concerns\HasIndex;
 
     /*
      * Files
      */
     protected $files;
+
+    /*
+     * All migrated tables
+     */
+    protected $initializedTables = [
+        'migrations', 'jobs', 'failed_jobs', 'password_resets',
+        'oauth_access_tokens', 'oauth_auth_codes', 'oauth_clients', 'oauth_personal_access_clients', 'oauth_refresh_tokens',
+        'personal_access_tokens',
+    ];
 
     public function __construct()
     {
@@ -67,7 +79,7 @@ class MigrationBuilder extends Command
         }
 
         if ($migrated === 0) {
-            return $this->line('<info>Noting to migrate.</info>');
+            return $this->line('<info>Nothing to migrate.</info>');
         }
 
         /*
@@ -76,6 +88,19 @@ class MigrationBuilder extends Command
         foreach ($models as $model) {
             $this->fireMigrationEvents($model, 'fire_after_all');
         }
+
+        //Check unknown tables
+        if ( $this->option('unknown') == true ) {
+            $this->checkUneccesaryTables();
+        }
+    }
+
+    /*
+     * Add table into tables list
+     */
+    public function registerTable($table)
+    {
+        $this->initializedTables[] = $table;
     }
 
     /**
@@ -84,13 +109,19 @@ class MigrationBuilder extends Command
      */
     protected function generateMigration($model)
     {
+        $this->registerTable($model->getTable());
+
         $this->fireModelEvent($model, 'beforeMigrate');
 
         if ($model->getSchema()->hasTable($model->getTable())) {
             $this->updateTable($model);
         } else {
             $this->createTable($model);
+
+            $this->fireModelEvent($model, 'onTableCreate');
         }
+
+        $this->setTableFullText($model);
 
         $this->fireModelEvent($model, 'afterMigrate');
 
@@ -292,5 +323,32 @@ class MigrationBuilder extends Command
     protected function getSchema($model)
     {
         return Schema::connection($model->getProperty('connection'));
+    }
+
+    /*
+     * Display all uneccessary tables
+     */
+    public function checkUneccesaryTables()
+    {
+        //We need have turned on force flag. because we need check all tables for receiving their table names.
+        if ( $this->option('force') == false ){
+            $this->error('Check for uneccessary tables is possible only with -f/--force flag.');
+            return;
+        }
+
+        $tables = array_map(function($item){
+            return array_values((array)$item)[0];
+        }, DB::select('SHOW TABLES'));
+
+        foreach (array_diff($tables, $this->initializedTables) as $table) {
+            $this->info('Unknown table: <comment>'.$table.'</comment>');
+
+            if ( $this->confirm('Would you like to drop <comment>'.$table.'</comment> table with <comment>'.DB::table($table)->count().' rows</comment>? [y|N]') ) {
+                Schema::drop($table);
+                $this->line('<comment>+ Dropped table:</comment> '.$table);
+            } else {
+                $this->line('<info>+ Skipped table:</info> '.$table);
+            }
+        }
     }
 }

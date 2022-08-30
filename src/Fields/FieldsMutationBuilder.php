@@ -146,12 +146,20 @@ class FieldsMutationBuilder
     /**
      * Add fields into end of model.
      *
-     * @param  array  $fields
+     * @param  array|Group  $fields
+     * @param  array|string|null  $field
      * @param  string  $type
      * @return $this
      */
-    public function push($fields, $type = 'push')
+    public function push($fields, $field = null, $type = 'push')
     {
+        //Push single line key with field data
+        if ( !is_null($field) && is_string($fields) ) {
+            $fields = [
+                $fields => $field,
+            ];
+        }
+
         //Push group or fields
         if ($fields instanceof Group) {
             $this->{$type}[] = $fields;
@@ -160,7 +168,13 @@ class FieldsMutationBuilder
         //Push fields set
         else {
             foreach ($fields as $key => $field) {
-                $this->{$type}[$key] = $field;
+                //We does not want to overide existing keys
+                //so we need push items instead of inserting keys...
+                if ( is_numeric($key) ) {
+                    $this->{$type}[] = $field;
+                } else {
+                    $this->{$type}[$key] = $field;
+                }
             }
         }
 
@@ -177,6 +191,20 @@ class FieldsMutationBuilder
     public function group($id, $callback)
     {
         return $this->applyMultipleCallbacks($this->groups, $id, $callback);
+    }
+
+    /**
+     * Push fields into given group
+     *
+     * @param  string  $id
+     * @param  array|Group  $fields
+     * @return  $this
+     */
+    public function pushGroup($id, $fields)
+    {
+        return $this->group($id, function($group) use ($fields) {
+            $group->push($fields);
+        });
     }
 
     /**
@@ -201,7 +229,7 @@ class FieldsMutationBuilder
     public function pushBefore($selectorKey, $fields = null)
     {
         if (is_null($fields) && (is_array($selectorKey) || is_object($selectorKey))) {
-            return $this->push($selectorKey, 'push_before');
+            return $this->push($selectorKey, null, 'push_before');
         }
 
         return $this->before($selectorKey, $fields);
@@ -253,16 +281,17 @@ class FieldsMutationBuilder
      */
     private function applyMultipleCallbacks(&$property, $key, $callback)
     {
-        //Remove multiple fields/groups
-        if (is_array($key)) {
-            foreach ($key as $k) {
+        $keys = array_wrap($key);
+
+        foreach ($keys as $k) {
+            if ( array_key_exists($k, $property) ) {
+                $values = array_wrap($property[$k]);
+                $values[] = $callback;
+
+                $property[$k] = $values;
+            } else {
                 $property[$k] = $callback;
             }
-        }
-
-        //Remove single item
-        else {
-            $property[$key] = $callback;
         }
 
         return $this;

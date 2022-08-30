@@ -23,6 +23,7 @@ trait FieldTypes
         Types\IntegerType::class,
         Types\DecimalType::class,
         Types\DateTimeType::class,
+        Types\TimestampType::class,
         Types\BooleanType::class,
     ];
 
@@ -82,7 +83,7 @@ trait FieldTypes
      */
     public function getColumnType(AdminModel $model, string $key)
     {
-        return $this->cache($model->getTable() . '.fields.type.'.$key, function() use ($model, $key) {
+        return $this->cache($this->getModelKey($model) . '.fields.type.'.$key, function() use ($model, $key) {
             $classes = [];
 
             foreach ($this->getColumnTypes() as $columnClass) {

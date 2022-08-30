@@ -4,6 +4,7 @@ namespace Admin\Core\Migrations\Concerns;
 
 use AdminCore;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 trait SupportRelations
 {
@@ -38,13 +39,13 @@ trait SupportRelations
 
             $column = $table->integer($foreignColumn)->unsigned();
 
-            //If parent belongs to more models, or just itself
-            if (
-                count($belongsToModel) > 1
+            $isNullable = count($belongsToModel) > 1
                 || $model->getProperty('withoutParent') === true
                 || $model->getProperty('nullableRelation') === true
-                || $isRecursive
-            ) {
+                || $isRecursive;
+
+            //If parent belongs to more models, or just itself
+            if ($isNullable) {
                 $column->nullable();
             }
 
@@ -57,7 +58,7 @@ trait SupportRelations
                     //If is one foreign column, this columns is not null
                     //so if some rows exists, we need push values into this row
                     if (count($belongsToModel) == 1 && $model->count() > 0) {
-                        $this->checkForReferenceTable($model, $foreignColumn, $parent->getTable());
+                        $this->checkForReferenceTable($model, $foreignColumn, $parent->getTable(), $isNullable);
                     }
 
                     $this->getCommand()->line('<comment>+ Added column:</comment> '.$foreignColumn);
@@ -85,35 +86,58 @@ trait SupportRelations
      * @param  object $model
      * @param  string $key
      * @param  string $referenceTable
+     * @param  bool $isNullable
      * @return void
      */
-    protected function checkForReferenceTable($model, $key, $referenceTable)
+    protected function checkForReferenceTable($model, $key, $referenceTable, $isNullable = false)
     {
-        $this->getCommand()->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table.</comment>');
-        $this->getCommand()->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
+        if ( $isNullable === false ) {
+            $this->getCommand()->line('<comment>+ Cannot add foreign key for</comment> <error>'.$key.'</error> <comment>column into</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table.</comment>');
+            $this->getCommand()->line('<comment>  Because table has already inserted rows. But you can insert value for existing rows for this</comment> <error>'.$key.'</error> <comment>column.</comment>');
+        } else {
+            $this->getCommand()->line('<comment>+ Would you like to insert some of preddefined values into</comment> <error>'.$key.'</error> <comment>column in</comment> <error>'.$model->getTable().'</error> <comment>table with reference on</comment> <error>'.$referenceTable.'</error> <comment>table?</comment>');
+        }
 
-        $referenceTableIds = AdminCore::getModelByTable($referenceTable)->take(10)->select('id')->pluck('id');
+        $referenceModel = AdminCore::getModelByTable($referenceTable);
+        $referenceTableIds = $referenceModel->take(10)->select('id')->pluck('id');
+        $relationRequiredEvent = 'onRequired'.Str::studly($key).'Relation';
+        $requestedId = false;
 
         if (count($referenceTableIds) > 0) {
-            $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode($referenceTableIds->toArray(), ', '));
-
             //Define ids for existing rows
-            do {
-                $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?');
+            if ( method_exists($model, $relationRequiredEvent) === false ) {
+                $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode(', ', $referenceTableIds->toArray()));
 
-                if (! is_numeric($requestedId)) {
-                    continue;
-                }
+                do {
+                    $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?'.($isNullable ? ' (Press enter for skip)' : ''));
 
-                if (AdminCore::getModelByTable($referenceTable)->where('id', $requestedId)->count() == 0) {
-                    $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
-                    $requestedId = false;
-                }
-            } while (! is_numeric($requestedId));
+                    if (! is_numeric($requestedId)) {
+                        if ( $isNullable === true ){
+                            $this->getCommand()->line('Continuing without any preddefined value.');
+
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    if ($referenceModel->where('id', $requestedId)->count() == 0) {
+                        $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
+                        $requestedId = false;
+                    }
+                } while (! is_numeric($requestedId));
+            } else {
+                $this->getCommand()->line('<comment>+ Column required fill initialized for '.$key.' table:</comment> ');
+            }
 
             //Register event after this migration will be done
-            $this->registerAfterMigration($model, function () use ($model, $key, $requestedId) {
-                DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
+            $this->registerAfterMigration($model, function () use ($model, $key, $requestedId, $relationRequiredEvent) {
+                //Custom update event
+                if ( method_exists($model, $relationRequiredEvent) ) {
+                    $this->fireModelEvent($model, $relationRequiredEvent);
+                } else {
+                    DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
+                }
             });
         } else {
             $this->getCommand()->line('<error>+ You have to insert at least one row into '.$referenceTable.' reference table or remove all existing data in actual '.$model->getTable().' table:</error>');
@@ -127,7 +151,7 @@ trait SupportRelations
      * @param  string  $string
      * @return string
      */
-    private function removeEverySecondCharInMiddle($string)
+    public function removeEverySecondCharInMiddle($string)
     {
         $string = str_replace('_', '', $string);
 
@@ -169,7 +193,7 @@ trait SupportRelations
         //If table name is too long for MySql
         for ( $i = 0; $i < 2; $i++ )
         {
-            $totalLength = strlen($prefix) + strlen($table) + strlen($key);
+            $totalLength = strlen($prefix) + strlen($table) + 1 + strlen($key);
 
             if ( strlen($table) > 10 && $totalLength > $fkStringLimit ) {
                 $table = $this->removeEverySecondCharInMiddle($table);

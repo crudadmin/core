@@ -12,6 +12,13 @@ class MutationRule
     protected $fields = [];
 
     /**
+     * Get model of mutation
+     *
+     * @var  AdminModel
+     */
+    protected $model;
+
+    /**
      * Actual field of mutation.
      *
      * @var array
@@ -55,6 +62,17 @@ class MutationRule
     }
 
     /**
+     * Set model of actual mutation.
+     *
+     * @param  array  AdminModel
+     * @return void
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
+    }
+
+    /**
      * Set key of mutated field.
      *
      * @param  string  $field
@@ -73,6 +91,16 @@ class MutationRule
     public function getKey()
     {
         return $this->key;
+    }
+
+    /**
+     * Get model of given mutation
+     *
+     * @return  AdminModel|null
+     */
+    public function getModel()
+    {
+        return $this->model;
     }
 
     /**

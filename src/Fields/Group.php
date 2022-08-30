@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Fields;
 
+use BadMethodCallException;
+
 class Group
 {
     /*
@@ -28,6 +30,27 @@ class Group
      * Group type
      */
     public $type = 'default';
+
+    /**
+     * Prefix for all columns
+     *
+     * @var  string|null
+     */
+    public $prefix = null;
+
+    /**
+     * State if registred group should be injected into fields or not.
+     * Good for package modulation
+     *
+     * @var  bool
+     */
+    public $enabled = true;
+
+    /*
+     * Forward methods to support nonstatic/stattic...
+     * origMethodName => alias
+     */
+    protected $forwardCalls = [];
 
     /*
      * Boot group and add fields into class
@@ -98,6 +121,34 @@ class Group
     }
 
     /**
+     * Push fields into given group
+     *
+     * @param  array  $fields
+     * @return  Group
+     */
+    public function push($fields)
+    {
+        $fields = array_wrap($fields);
+
+        $this->fields = array_merge($this->fields, $fields);
+
+        return $this;
+    }
+
+    /**
+     * Push fields into given before all fields
+     *
+     * @param  array  $fields
+     * @return  Group
+     */
+    public function pushBefore($fields)
+    {
+        $this->fields = array_merge($fields, $this->fields);
+
+        return $this;
+    }
+
+    /**
      * Set type of group.
      * @param $type string group/tab
      * @return Group
@@ -107,5 +158,67 @@ class Group
         $this->type = $type;
 
         return $this;
+    }
+
+    /**
+     * Set prefix for all columns
+     *
+     * @param  string  $prefix
+     * @return  Group
+     */
+    public function prefix(string $prefix)
+    {
+        $this->prefix = $prefix;
+
+        return $this;
+    }
+
+    /**
+     * Set if group should be registred into fields
+     *
+     * @param  bool  $state
+     *
+     * @return  Group
+     */
+    public function if(bool $state)
+    {
+        $this->enabled = $state;
+
+        return $this;
+    }
+
+    /**
+     * Handle dynamic method calls into the model.
+     * And forawd some methods
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters) {
+        foreach ($this->forwardCalls ?: [] as $originalName => $alias) {
+            if ( $originalName == $method ){
+                return $this->{$alias}(...$parameters);
+            }
+        }
+
+        if ( method_exists($this, $method) ) {
+            return $this->$method(...$parameters);
+        } else {
+            throw new BadMethodCallException(sprintf(
+                'Call to undefined method %s::%s()', static::class, $method
+            ));
+        }
+    }
+
+    /**
+     * Handle dynamic static method calls into the method.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public static function __callStatic($method, $parameters) {
+        return (new static)->$method(...$parameters);
     }
 }

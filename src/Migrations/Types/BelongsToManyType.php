@@ -44,35 +44,33 @@ class BelongsToManyType extends Type
 
         //Get pivot rows from belongsTo column relation, and move this data into belongsToMany relation
         //but only with migrateToPivot parameter
-        $pivot_rows = $this->getPivotRowsFromSingleRelation($model, $singularColumn, $properties);
+        $pivotRows = $this->getPivotRowsFromSingleRelation($model, $singularColumn, $properties);
 
-        $this->registerAfterAllMigrations($model, function () use ($table, $model, $key, $properties, $pivot_rows, $singularColumn) {
+        $this->registerAfterAllMigrations($model, function () use ($table, $model, $key, $properties, $pivotRows, $singularColumn) {
+            //Register this pivot table
+            $this->getCommand()->registerTable($properties[3]);
+
             //If pivot table does not exists
             if (! $model->getSchema()->hasTable($properties[3])) {
                 //Create pivot table
-                $model->getSchema()->create($properties[3], function (Blueprint $table) use ($model, $properties) {
-                    //Increment
-                    $table->increments('id');
-
-                    //Add integer reference for owner table
-                    $table->integer($properties[6])->unsigned();
-                    $table->foreign($properties[6], $this->makeShortForeignIndex($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
-
-                    //Add integer reference for belongs to table
-                    $table->integer($properties[7])->unsigned();
-                    $table->foreign($properties[7], $this->makeShortForeignIndex($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
+                $model->getSchema()->create($properties[3], function (Blueprint $table) use ($model, $properties, $key) {
+                    $this->buildBelongsToManyTable($table, $model, $properties, $key);
                 });
 
                 $this->getCommand()->line('<comment>Created table:</comment> '.$properties[3]);
 
                 //Sync data from previous belongsTo relation into belongsToMany
-                if (count($pivot_rows) > 0) {
-                    $model->{$key}()->sync($pivot_rows);
+                if (count($pivotRows) > 0) {
+                    $model->{$key}()->sync($pivotRows);
 
-                    $this->getCommand()->line('<comment>Imported rows ('.count($pivot_rows).'):</comment> from <info>'.$singularColumn.'</info> into pivot <info>'.$properties[3].'</info> table');
+                    $this->getCommand()->line('<comment>Imported rows ('.count($pivotRows).'):</comment> from <info>'.$singularColumn.'</info> into pivot <info>'.$properties[3].'</info> table');
                 }
             } else {
                 $this->getCommand()->line('<info>Checked table:</info> '.$properties[3]);
+
+                $model->getSchema()->table($properties[3], function (Blueprint $table) use ($model, $properties, $key) {
+                    $this->buildBelongsToManyTable($table, $model, $properties, $key, true);
+                });
 
                 if (! $model->getSchema()->hasColumn($properties[3], 'id')) {
                     $model->getSchema()->table($properties[3], function (Blueprint $table) use ($model, $properties) {
@@ -86,6 +84,28 @@ class BelongsToManyType extends Type
         });
 
         return true;
+    }
+
+    private function buildBelongsToManyTable($table, $model, $properties, $key, $update = false)
+    {
+        if ( $update === false ) {
+            //Increment
+            $table->increments('id');
+
+            //Add integer reference for owner table
+            $table->integer($properties[6])->unsigned();
+            $table->foreign($properties[6], $this->makeShortForeignIndex($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
+
+            //Add integer reference for belongs to table
+            $table->integer($properties[7])->unsigned();
+            $table->foreign($properties[7], $this->makeShortForeignIndex($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
+        }
+
+
+        $method = 'setBelongsToMany'.$key;
+        if ( method_exists($model, $method) === true ) {
+            $model->{$method}($table, $update, $properties);
+        }
     }
 
     /**

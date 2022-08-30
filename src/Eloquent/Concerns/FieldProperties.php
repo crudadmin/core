@@ -2,10 +2,12 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use Fields;
-use Localization;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Fields\Group;
+use Admin\Helpers\Localization\AdminResourcesSyncer;
+use Fields;
+use Localization;
+use AdminCore;
 
 trait FieldProperties
 {
@@ -108,10 +110,12 @@ trait FieldProperties
                 continue;
             }
 
+            $group->name = AdminResourcesSyncer::translate($group->name);
             $group->fields = $this->recursivelyBuildAllGroups($group->fields);
 
-            if ( method_exists($group, 'build') )
+            if ( method_exists($group, 'build') ) {
                 $groups[$key] = $group->build();
+            }
         }
 
         return $groups;
@@ -140,9 +144,9 @@ trait FieldProperties
      */
     public function getFieldType(string $key)
     {
-        $field = $this->getField($key);
-
-        return @$field['type'];
+        if ( $field = $this->getField($key) ) {
+            return $field['type'];
+        }
     }
 
     /**
@@ -330,23 +334,45 @@ trait FieldProperties
      */
     public function returnLocaleValue($object, $lang = null)
     {
-        $slug = $lang ?: Localization::get()->slug;
-
-        if (! $object || ! is_array($object)) {
+        if ( ! $object ) {
             return;
         }
 
+        else if (! is_array($object)) {
+            return $object;
+        }
+
         //If row has saved actual value
-        if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
-            return $object[$slug];
+        foreach ($this->getLanguageSlugsByPriority($lang) as $slug) {
+            if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
+                return $object[$slug];
+            }
         }
 
         //Return first available translated value in admin
         foreach ($object as $value) {
-            if (! empty($value) || $value === 0) {
+            if (!is_null($value)) {
                 return $value;
             }
         }
+    }
+
+    /**
+     * Returns selected language slug, or default to try
+     *
+     * @param  string  $lang
+     *
+     * @return  array
+     */
+    private function getLanguageSlugsByPriority($lang)
+    {
+        return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
+            $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
+
+            $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];
+
+            return $slugs;
+        });
     }
 
     /**
@@ -365,13 +391,25 @@ trait FieldProperties
         }
 
         if (
-            ! array_key_exists($field, $options)
-            || ! array_key_exists($value, $options[$field])
+            ! array_key_exists($field, (array)$options)
+            || ! array_key_exists($value, (array)$options[$field])
         ) {
             return;
         }
 
         return $options[$field][$value];
+    }
+
+    /**
+     * alias for getSelectOption
+     *
+     * @param  string  $field
+     * @param  string|int  $value
+     * @return string
+     */
+    public function getOptionValue(string $field, $value)
+    {
+        return $this->getSelectOption($field, $value);
     }
 
     /**
@@ -427,5 +465,20 @@ trait FieldProperties
 
             return $fields;
         });
+    }
+
+    /**
+     * Return decimal length of given field
+     *
+     * @param  string  $key
+     * @return  array
+     */
+    public function getDecimalLength($key)
+    {
+        $decimalLength = $this->getFieldParam($key, 'decimal_length') ?: '8,2';
+        $decimalLength = str_replace(':', ',', $decimalLength);
+        $decimalLength = explode(',', $decimalLength);
+
+        return $decimalLength;
     }
 }

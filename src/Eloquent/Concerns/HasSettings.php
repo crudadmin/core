@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
+use Admin\Helpers\Localization\AdminResourcesSyncer;
+
 trait HasSettings
 {
     /**
@@ -36,11 +38,9 @@ trait HasSettings
     /**
      * Returns model settings in array.
      *
-     * @param  string  $separator
-     * @param  array  &$arr
      * @return array
      */
-    public function getModelSettings($separator = '.', &$arr = [])
+    public function getModelSettings()
     {
         $settings = (array) $this->getProperty('settings');
 
@@ -53,6 +53,30 @@ trait HasSettings
             $this->assignArrayByPath($row, $path, $value);
 
             $data = array_merge_recursive($data, $row);
+        }
+
+        //Translate columns and values
+        foreach (['title', 'buttons'] as $key) {
+            if ( array_key_exists($key, $data) ){
+                foreach ($data[$key] as $k => $value) {
+                    if ( is_string($value) ){
+                        $data[$key][$k] = AdminResourcesSyncer::translate($value);
+                    }
+                }
+            }
+        }
+
+        //Translate columns
+        if ( array_key_exists('columns', $data) ){
+            foreach ($data['columns'] as $key => $item) {
+                if ( isset($data['columns'][$key]['name']) ){
+                    $data['columns'][$key]['name'] = AdminResourcesSyncer::translate($data['columns'][$key]['name']);
+                }
+
+                if ( isset($data['columns'][$key]['title']) ){
+                    $data['columns'][$key]['title'] = AdminResourcesSyncer::translate($data['columns'][$key]['title']);
+                }
+            }
         }
 
         return $data;

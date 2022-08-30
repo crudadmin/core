@@ -16,6 +16,7 @@ trait StaticFields
     public $staticColumns = [
         Columns\Sluggable::class,
         Columns\Publishable::class,
+        Columns\PublishableAdmin::class,
         Columns\CreatedAt::class,
         Columns\UpdatedAt::class,
         Columns\DeletedAt::class,
@@ -58,7 +59,7 @@ trait StaticFields
      */
     public function getEnabledStaticFields(AdminModel $model)
     {
-        return Fields::cache('models.'.$model->getTable().'.static_columns.', function () use ($model) {
+        return $this->cache('models.'.$this->getModelKey($model).'.static_columns.', function () use ($model) {
             $classes = [];
 
             foreach ($this->getStaticColumns() as $columnClass) {

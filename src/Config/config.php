@@ -28,8 +28,19 @@ return [
         'decimal' => 'numeric',
         'file' => 'max:10240|file|nullable',
         'checkbox' => 'boolean',
-        'date' => 'date_format:d.m.Y|nullable',
-        'datetime' => 'date_format:d.m.Y H:i|nullable',
-        'time' => 'date_format:H:i|nullable',
+        'date' => 'date_format_multiple:d.m.Y,Y-m-d,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP|nullable',
+        'datetime' => 'date_format_multiple:d.m.Y H:i,Y-m-d H:i,Y-m-d H:i:s,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP|nullable',
+        'timestamp' => 'date_format_multiple:d.m.Y H:i,Y-m-d H:i,Y-m-d H:i:s,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP|nullable',
+        'time' => 'date_format_multiple:H:i,Y-m-d\TH:i:s.u\Z,Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vP,Y-m-d\TH:i:s.v\Z|nullable',
+    ],
+
+    'modules' => [
+        'App\Admin\Modules' => app_path('Admin/Modules'),
+    ],
+
+    'file' => [
+        'exists_cache_days' => 31,
+        'exists_cache' => false,
+        'redirect_after_resize' => true,
     ],
 ];

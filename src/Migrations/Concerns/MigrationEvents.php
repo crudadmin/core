@@ -32,6 +32,9 @@ trait MigrationEvents
         $model->getSchema()->table($modelTable, function (Blueprint $table) use ($modelTable, $name) {
             AdminCore::fire('migrations.'.$modelTable.'.'.$name, [$table]);
         });
+
+        //Update without scheme, just run commands
+        AdminCore::fire('migrations.'.$modelTable.'.'.$name.'_noScheme');
     }
 
     /**
@@ -40,9 +43,11 @@ trait MigrationEvents
      * @param  $callback
      * @return void
      */
-    public function registerAfterMigration(AdminModel $model, $callback)
+    public function registerAfterMigration(AdminModel $model, $callback, $schemaUpdate = true)
     {
-        $this->migrationEvent($model, 'fire_after_migration', $callback);
+        $postFix = ($schemaUpdate ? '' : '_noScheme');
+
+        $this->migrationEvent($model, 'fire_after_migration'.$postFix, $callback);
     }
 
     /**
@@ -51,9 +56,11 @@ trait MigrationEvents
      * @param  $callback
      * @return void
      */
-    public function registerAfterAllMigrations(AdminModel $model, $callback)
+    public function registerAfterAllMigrations(AdminModel $model, $callback, $schemaUpdate = true)
     {
-        $this->migrationEvent($model, 'fire_after_all', $callback);
+        $postFix = ($schemaUpdate ? '' : '_noScheme');
+
+        $this->migrationEvent($model, 'fire_after_all'.$postFix, $callback);
     }
 
     /*

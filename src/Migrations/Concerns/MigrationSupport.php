@@ -4,6 +4,8 @@ namespace Admin\Core\Migrations\Concerns;
 
 use Illuminate\Support\Facades\DB;
 use Doctrine\DBAL\Types\Type as DBType;
+use Doctrine\DBAL\Types\JsonArrayType;
+use Illuminate\Database\DBAL\TimestampType;
 
 trait MigrationSupport
 {
@@ -12,6 +14,12 @@ trait MigrationSupport
         $this->fixEnumType();
 
         $this->fixJsonType();
+        $this->fixTimestamp();
+    }
+
+    private function fixTimestamp()
+    {
+        DBType::addType('timestamp', TimestampType::class);
     }
 
     /**
@@ -29,7 +37,7 @@ trait MigrationSupport
     {
         //Add json support
         if (! DBType::hasType('json')) {
-            DBType::addType('json', \Doctrine\DBAL\Types\JsonArrayType::class);
+            DBType::addType('json', JsonArrayType::class);
             DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('json', 'string');
         }
     }
