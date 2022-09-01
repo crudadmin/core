@@ -187,6 +187,18 @@ class AdminFile
     }
 
     /**
+     * Returns base64 file version
+     *
+     * @return  string
+     */
+    public function getBase64()
+    {
+        $base64 = base64_encode($this->get());
+
+        return 'data:;base64,'.$base64;
+    }
+
+    /**
      * Returns filename
      *
      * @return  string|null
