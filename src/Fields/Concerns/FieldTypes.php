@@ -16,9 +16,9 @@ trait FieldTypes
     public $types = [
         Types\BelongsToType::class,
         Types\BelongsToManyType::class,
+        Types\TextType::class,
         Types\JsonType::class,
         Types\StringType::class,
-        Types\TextType::class,
         Types\LongTextType::class,
         Types\IntegerType::class,
         Types\DecimalType::class,

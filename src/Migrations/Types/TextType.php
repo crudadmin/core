@@ -15,6 +15,11 @@ class TextType extends Type
      */
     public function isEnabled(AdminModel $model, string $key)
     {
+        //Encrypted JSON columns
+        if ( $model->hasFieldParam($key, 'encrypted') ){
+            return true;
+        }
+
         return $model->isFieldType($key, ['text']);
     }
 

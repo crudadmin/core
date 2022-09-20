@@ -9,6 +9,7 @@ use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
+use Admin\Core\Eloquent\Concerns\HasEncryption;
 use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasPublishable;
@@ -38,7 +39,8 @@ class AdminModel extends Model
         HasStorage,
         Uploadable,
         HasLocalizedValues,
-        HasPublishable;
+        HasPublishable,
+        HasEncryption;
 
     /**
      * Model Parent
@@ -459,6 +461,14 @@ class AdminModel extends Model
                 $this->casts[$key] = 'integer';
             } elseif ($this->isFieldType($key, 'decimal')) {
                 $this->casts[$key] = 'float';
+            }
+
+            if ($this->hasFieldParam($key, 'encrypted')) {
+                if ( ($encryptedValue = $this->getFieldParam($key, 'encrypted')) && is_string($encryptedValue) ){
+                    $this->casts[$key] = 'encrypted:'.$encryptedValue;
+                } else {
+                    $this->casts[$key] = 'encrypted';
+                }
             }
         }
 
