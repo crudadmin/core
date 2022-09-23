@@ -2,12 +2,13 @@
 
 namespace Admin\Core\Helpers\Storage;
 
+use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use Admin\Core\Helpers\Storage\Mutators\ImageUploadMutator;
 use File;
 use Illuminate\Http\UploadedFile;
 use Storage;
-use AdminCore;
 
 class AdminUploader
 {
@@ -31,6 +32,7 @@ class AdminUploader
 
     static $uploadMutators = [
         ImageUploadMutator::class,
+        EncryptorMutator::class,
     ];
 
     public function __construct(AdminModel $model, $fieldKey, $fileOrPathToUpload, $options = [])
@@ -100,17 +102,27 @@ class AdminUploader
             ] = $this->uploadFileFromLocal($fileOrPathToUpload, $filenameWithoutExt, $uploadDirectory);
         }
 
-        $fileStoragePath = $uploadDirectory.'/'.$filename;
-
-        $this->mutateUploadedFile($fileStoragePath, $filename, $extension);
-
-        $this->model->moveToFinalStorage($this->fieldKey, $fileStoragePath, $this->getFieldStorage());
-
         $this->filename = $filename;
 
         $this->extension = $extension;
 
+        $this->mutateUploadedFile();
+
+        //We can retrieve final storage path, which can be mutated from mutators.
+        $fileStoragePath = $this->getFileStoragePath();
+
+        $this->model->moveToFinalStorage(
+            $this->fieldKey,
+            $fileStoragePath,
+            $this->getFieldStorage()
+        );
+
         return $fileStoragePath;
+    }
+
+    private function getFileStoragePath()
+    {
+        return $this->model->getStorageFilePath($this->fieldKey).'/'.$this->filename;
     }
 
     /**
@@ -206,7 +218,7 @@ class AdminUploader
      * @param  string  $filename
      * @param  string  $extension
      */
-    private function mutateUploadedFile($storagePath, $filename, $extension)
+    private function mutateUploadedFile()
     {
         $localStorage = $this->getUploadsStorage();
 
@@ -215,12 +227,20 @@ class AdminUploader
                 $localStorage,
                 $this->model,
                 $this->fieldKey,
-                $storagePath,
-                $filename,
-                $extension
+                $this->getFileStoragePath(),
+                $this->filename,
+                $this->extension
             );
 
+            if ( $mutator->isActive() === false ){
+                continue;
+            }
+
             $mutator->mutate();
+
+            //We can mutate filename or extension during mutate process
+            $this->filename = $mutator->getFilename();
+            $this->extension = $mutator->getExtension();
         }
     }
 

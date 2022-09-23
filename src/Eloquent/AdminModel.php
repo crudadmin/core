@@ -462,8 +462,13 @@ class AdminModel extends Model
             }
 
             if ($this->hasFieldParam($key, 'encrypted')) {
+                //Custom encryption types fields
                 if ( ($encryptedValue = $this->getFieldParam($key, 'encrypted')) && is_string($encryptedValue) ){
                     $this->casts[$key] = 'encrypted:'.$encryptedValue;
+                }
+                //Suport for array/json casts
+                else if ( ($this->casts[$key] ?? '') === 'json' ) {
+                    $this->casts[$key] = 'encrypted:array';
                 } else {
                     $this->casts[$key] = 'encrypted';
                 }

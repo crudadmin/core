@@ -7,6 +7,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Helpers\Storage\Concerns\FileHelper;
 use Admin\Core\Helpers\Storage\Concerns\HasDownloads;
 use Admin\Core\Helpers\Storage\Concerns\HasResizer;
+use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
 use Storage;
 
@@ -101,6 +102,11 @@ class AdminFile
         return $this->{$key};
     }
 
+    public function isEncrypted()
+    {
+        return str_ends_with($this->path, EncryptorMutator::ENCRYPTOR_EXTENSION);
+    }
+
     /**
      * Returns file storage
      *
@@ -183,7 +189,13 @@ class AdminFile
      */
     public function get()
     {
-        return $this->getStorage()->get($this->path);
+        $data = $this->getStorage()->get($this->path);
+
+        if ( $this->isEncrypted() ){
+            return EncryptorMutator::decrypt($data);
+        }
+
+        return $data;
     }
 
     /**
@@ -399,5 +411,21 @@ class AdminFile
     public function getOriginalObject()
     {
         return $this->originalObject;
+    }
+
+    public function download()
+    {
+        if ( $this->isEncrypted() ){
+            $encryptedData = $this->get();
+            $filename = str_replace_last(EncryptorMutator::ENCRYPTOR_EXTENSION, '', $this->filename);
+
+            return response($encryptedData, 200, [
+                'Content-Disposition' => 'attachment;filename='.$filename,
+            ]);
+        }
+
+        return $this->getStorage()->download(
+            $this->path
+        );
     }
 }

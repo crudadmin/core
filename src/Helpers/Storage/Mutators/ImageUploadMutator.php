@@ -7,13 +7,13 @@ use ImageCompressor;
 
 class ImageUploadMutator extends UploadMutator
 {
+    public function isActive()
+    {
+        return in_array($this->getExtension(), ['jpg', 'jpeg', 'png']);
+    }
+
     public function mutate()
     {
-        //Skip non image files
-        if ( in_array($this->getExtension(), ['jpg', 'jpeg', 'png']) === false ){
-            return true;
-        }
-
         $localStorage = $this->getStorage();
 
         $image = Image::make($localStorage->path($this->getPath()));

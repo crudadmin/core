@@ -175,7 +175,7 @@ trait HasResizer
         //Load example image if source is missing. Or load from storage.
         $imageData = $backupImageIfSourceMissing
                         ? $this->getBackupResourcePath()
-                        : $this->getStorage()->get($this->path);
+                        : $this->get();
 
         $image = Image::make($imageData);
 
