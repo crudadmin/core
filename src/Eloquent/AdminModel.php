@@ -9,7 +9,6 @@ use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
-use Admin\Core\Eloquent\Concerns\HasEncryption;
 use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
 use Admin\Core\Eloquent\Concerns\HasPublishable;
@@ -39,8 +38,7 @@ class AdminModel extends Model
         HasStorage,
         Uploadable,
         HasLocalizedValues,
-        HasPublishable,
-        HasEncryption;
+        HasPublishable;
 
     /**
      * Model Parent
