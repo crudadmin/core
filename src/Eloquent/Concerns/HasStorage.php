@@ -17,7 +17,14 @@ trait HasStorage
      */
     public function getFieldDiskName(string $fieldKey)
     {
-        return config('admin.disk');
+        $diskName = config('admin.disk');
+
+        //If is local disk name, we can switch this disks according to field visibility
+        if ( $diskName == AdminCore::getUploadsStorageName() && $this->isPrivateFile($fieldKey) ){
+            return AdminCore::getUploadsStorageName(true);
+        }
+
+        return $diskName;
     }
 
     /**
@@ -30,6 +37,18 @@ trait HasStorage
     {
         return Storage::disk(
             $this->getFieldDiskName($fieldKey)
+        );
+    }
+
+    /**
+     * Returns local storage
+     *
+     * @return  Storage
+     */
+    public function getLocalFieldStorage(string $fieldKey)
+    {
+        return AdminCore::getUploadsStorage(
+            $this->isPrivateFile($fieldKey)
         );
     }
 
@@ -84,10 +103,11 @@ trait HasStorage
     {
         $fieldStorage = $fieldStorage ?: $this->getFieldStorage($fieldKey);
 
-        $localStorage = AdminCore::getUploadsStorage();
+        $localStorage = $this->getLocalFieldStorage($fieldKey);
 
         //If file should be sent into other storage than temporary crudadmin storage
-        if ( $fieldStorage === $localStorage ) {
+        //Or given storage is public, we does not want to move here again for resized images.
+        if ( $fieldStorage === $localStorage || $fieldStorage === AdminCore::getUploadsStorage() ) {
             return;
         }
 

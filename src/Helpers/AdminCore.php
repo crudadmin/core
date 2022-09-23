@@ -29,9 +29,18 @@ class AdminCore
         return Storage::disk('crudadmin');
     }
 
-    public function getUploadsStorage()
+    public function getUploadsStorageName($private = false)
     {
-        return Storage::disk('crudadmin.uploads');
+        return $private === true
+            ? 'crudadmin.uploads_private'
+            : 'crudadmin.uploads';
+    }
+
+    public function getUploadsStorage($private = false)
+    {
+        return Storage::disk(
+            $this->getUploadsStorageName($private)
+        );
     }
 
     /*

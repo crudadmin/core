@@ -50,9 +50,9 @@ class AdminUploader
         $this->compression = $options['compression'] ?? true;
     }
 
-    public function getUploadsStorage()
+    public function getLocalUploadsStorage()
     {
-        return AdminCore::getUploadsStorage();
+        return $this->model->getLocalFieldStorage($this->fieldKey);
     }
 
     public function getFieldStorage()
@@ -109,7 +109,7 @@ class AdminUploader
         $this->mutateUploadedFile();
 
         //We can retrieve final storage path, which can be mutated from mutators.
-        $fileStoragePath = $this->getFileStoragePath();
+        $fileStoragePath = $this->getLocalStoragePath();
 
         $this->model->moveToFinalStorage(
             $this->fieldKey,
@@ -120,7 +120,7 @@ class AdminUploader
         return $fileStoragePath;
     }
 
-    private function getFileStoragePath()
+    private function getLocalStoragePath()
     {
         return $this->model->getStorageFilePath($this->fieldKey).'/'.$this->filename;
     }
@@ -153,7 +153,7 @@ class AdminUploader
         $destinationPath = $uploadPath.'/'.$filename;
 
         //Copy file from server, or directory into uploads for field
-        $this->getUploadsStorage()->put(
+        $this->getLocalUploadsStorage()->put(
             $destinationPath,
             file_get_contents($file)
         );
@@ -173,7 +173,7 @@ class AdminUploader
 
                 $newDestinationPath = $uploadPath.'/'.$newFilename;
 
-                $this->getUploadsStorage()->move($destinationPath, $newDestinationPath);
+                $this->getLocalUploadsStorage()->move($destinationPath, $newDestinationPath);
 
                 $filename = $newFilename;
             }
@@ -190,7 +190,7 @@ class AdminUploader
      */
     private function guessExtensionFromRemoteFile($path, $filename)
     {
-        $mimeType = $this->getUploadsStorage()->mimeType($path);
+        $mimeType = $this->getLocalUploadsStorage()->mimeType($path);
 
         $replace = [
             'image/jpeg' => 'jpg',
@@ -220,14 +220,14 @@ class AdminUploader
      */
     private function mutateUploadedFile()
     {
-        $localStorage = $this->getUploadsStorage();
+        $localStorage = $this->getLocalUploadsStorage();
 
         foreach (self::$uploadMutators as $classname) {
             $mutator = new $classname(
                 $localStorage,
                 $this->model,
                 $this->fieldKey,
-                $this->getFileStoragePath(),
+                $this->getLocalStoragePath(),
                 $this->filename,
                 $this->extension
             );
@@ -309,11 +309,15 @@ class AdminUploader
             return false;
         }
 
+        $disk = AdminCore::getUploadsStorageName(
+            $this->model->isPrivateFile($this->fieldKey)
+        );
+
         //Move photo from request to directory
         $uploadedFile = $uploadedFile->storeAs(
             $this->model->getStorageFilePath($fieldKey),
             $filename,
-            [ 'disk' => 'crudadmin.uploads' ]
+            [ 'disk' => $disk ]
         );
 
         return true;
@@ -381,7 +385,7 @@ class AdminUploader
         $postfix = ($this->options['postfix'] ?? false) === true;
 
         //If is cloud storage or other storage solution
-        if ( $this->getFieldStorage() !== $this->getUploadsStorage() || $postfix === true ) {
+        if ( $this->getFieldStorage() !== $this->getLocalUploadsStorage() || $postfix === true ) {
             return $this->generateFilenamePostfix($filenameWithoutExtension);
         }
 

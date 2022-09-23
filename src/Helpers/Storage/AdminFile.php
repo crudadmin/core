@@ -412,20 +412,4 @@ class AdminFile
     {
         return $this->originalObject;
     }
-
-    public function download()
-    {
-        if ( $this->isEncrypted() ){
-            $encryptedData = $this->get();
-            $filename = str_replace_last(EncryptorMutator::ENCRYPTOR_EXTENSION, '', $this->filename);
-
-            return response($encryptedData, 200, [
-                'Content-Disposition' => 'attachment;filename='.$filename,
-            ]);
-        }
-
-        return $this->getStorage()->download(
-            $this->path
-        );
-    }
 }

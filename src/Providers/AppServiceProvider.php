@@ -124,6 +124,13 @@ class AppServiceProvider extends ServiceProvider
             'visibility' => 'public',
         ]);
 
+        $this->app['config']->set('filesystems.disks.crudadmin.uploads_private', [
+            'driver' => 'local',
+            'root' => $uploadsDirectory = $crudAdminStoragePath.'/'.AdminFile::UPLOADS_DIRECTORY.'_private',
+            'url' => (env('ASSET_URL') ?: env('APP_URL')).'/'.AdminFile::UPLOADS_DIRECTORY,
+            'visibility' => 'private',
+        ]);
+
         $this->app['config']->set('filesystems.disks.crudadmin.lang', [
             'driver' => 'local',
             'root' => $crudAdminStoragePath.'/lang',

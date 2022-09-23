@@ -2,6 +2,8 @@
 
 namespace Admin\Core\Helpers\Storage\Concerns;
 
+use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
+
 trait HasDownloads
 {
     /**
@@ -37,5 +39,26 @@ trait HasDownloads
         ];
 
         return $action.'?'.http_build_query($query);
+    }
+
+    /**
+     * Returns file download response
+     *
+     * @return  Response
+     */
+    public function downloadResponse()
+    {
+        if ( $this->isEncrypted() ){
+            $encryptedData = $this->get();
+            $filename = str_replace_last(EncryptorMutator::ENCRYPTOR_EXTENSION, '', $this->filename);
+
+            return response($encryptedData, 200, [
+                'Content-Disposition' => 'attachment;filename='.$filename,
+            ]);
+        }
+
+        return $this->getStorage()->download(
+            $this->path
+        );
     }
 }

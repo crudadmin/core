@@ -8,6 +8,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use File;
 use Image;
 use ImageCompressor;
+use AdminCore;
 
 trait Uploadable
 {
@@ -15,6 +16,29 @@ trait Uploadable
      * Message with error will be stored in this property
      */
     private $uploadErrors = [];
+
+    /**
+     * Determine if all uploaded file are privated
+     *
+     * @var  bool
+     */
+    protected $privateUploads = false;
+
+    /**
+     * Determine if field has private uploads folder
+     *
+     * @param  string  $field
+     *
+     * @return  bool
+     */
+    public function isPrivateFile($field)
+    {
+        if ( $this->privateUploads === true ){
+            return true;
+        }
+
+        return $this->hasFieldParam($field, 'private');
+    }
 
     /*
      * Returns error in upload
@@ -99,7 +123,7 @@ trait Uploadable
     public function uploadLocaly(string $fieldKey, $fileOrPathToUpload, $options = [])
     {
         $options = $options + [
-            'disk' => 'crudadmin.uploads'
+            'disk' => AdminCore::getUploadsStorageName($this->isPrivateFile($fieldKey))
         ];
 
         return $this->upload($fieldKey, $fileOrPathToUpload, $options);
