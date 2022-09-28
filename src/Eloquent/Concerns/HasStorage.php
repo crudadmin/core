@@ -113,7 +113,10 @@ trait HasStorage
 
         $fieldStorage->writeStream(
             $fileStoragePath,
-            $localStorage->readStream($fileStoragePath)
+            $localStorage->readStream($fileStoragePath),
+            [
+                'visibility' => $this->isPrivateFile($fieldKey) ? 'private' : 'public',
+            ]
         );
 
         //After file process we can delete file from temporary crudadmin location
