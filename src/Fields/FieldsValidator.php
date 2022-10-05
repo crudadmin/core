@@ -173,9 +173,9 @@ class FieldsValidator
      *
      * @return  this
      */
-    public function use(string $classname)
+    public function use($classname)
     {
-        $class = new $classname;
+        $class = is_object($classname) ? $classname : new $classname;
 
         //Check request authorization
         if ( method_exists($class, 'authorize') && $class->authorize() !== true ){
