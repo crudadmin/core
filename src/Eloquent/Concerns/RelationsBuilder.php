@@ -474,21 +474,33 @@ trait RelationsBuilder
      *
      * @param  string  $key
      * @param  string  $relationType
+     *
      * @return array
      */
     public function getRelationProperty(string $key, string $relationType)
     {
         $field = $this->getField($key);
 
-        $properties = explode(',', $field[$relationType]);
+        return $this->getRelationPropertyData($field, $key, $relationType);
+    }
+
+    /**
+     * Returns properties of field with belongsTo or belongsToMany relationship.
+     *
+     * @param  array  $field
+     * @param  string  $relationType
+     *
+     * @return array
+     */
+    public function getRelationPropertyData(array $field, string $key, string $relationType = null)
+    {
+        $relationType = $relationType ?: (array_key_exists('belongsToMany', $field) ? 'belongsToMany' : 'belongsTo');
+
+        $properties = explode(',', $field[$relationType] ?? '');
 
         //If is not defined references column for other table
         if (count($properties) == 1) {
             $properties[] = 'NULL';
-        }
-
-        if (count($properties) == 2) {
-            $properties[] = 'id';
         }
 
         if ($relationType == 'belongsToMany') {
@@ -500,21 +512,24 @@ trait RelationsBuilder
                 str_singular($properties[0]),
             ];
 
-            //Pivot table name
-            $pivot_table = $tables[1].'_'.$tables[0].'_'.$key;
 
             //Add pivot table into properties
-            $properties[] = $pivot_table;
-            $properties[] = $tables[0];
-            $properties[] = $tables[1];
-            $properties[] = $tables[0].'_id';
-            $properties[] = $tables[1].'_id';
+            $properties[3] = ($properties[2] ?? null) ?: $tables[1].'_'.$tables[0].'_'.$key;
+            $properties[4] = $tables[0];
+            $properties[5] = $tables[1];
+            $properties[6] = $tables[0].'_id';
+            $properties[7] = $tables[1].'_id';
+            $properties[2] = 'id'; //Reference
 
             //If is same relationship
             if ( $properties[6] == $properties[7] ){
                 $properties[7] = '_'.$properties[7];
             }
         } else {
+            if (!($properties[2] ?? null)) {
+                $properties[2] = ($properties[2] ?? null) ?: 'id'; //Reference
+            }
+
             $properties[] = str_singular($properties[0]);
             $properties[] = $key;
         }

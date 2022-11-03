@@ -5,6 +5,7 @@ namespace Admin\Core\Migrations\Types;
 use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Concerns\SupportRelations;
 use Illuminate\Database\Schema\Blueprint;
+use AdminCore;
 
 class BelongsToManyType extends Type
 {
@@ -37,6 +38,11 @@ class BelongsToManyType extends Type
     public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update)
     {
         $properties = $model->getRelationProperty($key, 'belongsToMany');
+
+        //We are using admin model table for belongs to model relation
+        if ( AdminCore::getModelByTable($properties[3]) ){
+            return;
+        }
 
         $singularColumn = ($migrateToPivot = $model->getFieldParam($key, 'migrateToPivot')) && is_string($migrateToPivot)
                            ? $migrateToPivot
