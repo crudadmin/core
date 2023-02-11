@@ -100,7 +100,7 @@ class AdminCore
      * @param  string $model
      * @return object/null
      */
-    public function getModel($model)
+    public function getModel($model, $namespace = false)
     {
         $namespaces = $this->getAdminModelNamespaces();
 
@@ -110,6 +110,10 @@ class AdminCore
             $model_name = $this->toModelBaseName($path);
 
             if ($model_name == $model) {
+                if ( $namespace === true ){
+                    return $path;
+                }
+
                 return new $path;
             }
         }
