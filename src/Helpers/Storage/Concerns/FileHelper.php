@@ -31,8 +31,8 @@ trait FileHelper
      */
     public function hasStorageExistanceCache()
     {
-        //If we are not saving resized images into storage, there is no need to activate this feature.
-        if ( $this->externalStorageResizer() === false ){
+        //We does not need to cache local storage
+        if ( $this->isLocalStorage() ){
             return false;
         }
 
@@ -55,7 +55,7 @@ trait FileHelper
 
         //If storage existance is turned off.
         //Or when existance is turned on, but is local storage... then we can check immidiatelly
-        if ( $this->hasStorageExistanceCache() == false || $this->isLocalStorage() || $force === true ) {
+        if ( $this->hasStorageExistanceCache() == false || $force === true ) {
             return $storage->exists($path);
         }
 
@@ -69,7 +69,7 @@ trait FileHelper
 
     public function flushExistanceFromCache()
     {
-        if ( $this->hasStorageExistanceCache() == true && $this->isLocalStorage() == false ){
+        if ( $this->hasStorageExistanceCache() == true ){
             Cache::forget($this->getFilepathExistanceCacheKey($this->path));
         }
 
@@ -78,7 +78,7 @@ trait FileHelper
 
     public function setCachedFileExistance($path, bool $state)
     {
-        if ( $this->hasStorageExistanceCache() == true && $this->isLocalStorage() === false ) {
+        if ( $this->hasStorageExistanceCache() == true ) {
             $key = $this->getFilepathExistanceCacheKey($path);
             $period = $this->getExistanceCachePeriod();
 

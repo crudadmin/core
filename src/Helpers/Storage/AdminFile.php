@@ -149,7 +149,7 @@ class AdminFile
                 //We can return resized storage path image url.
                 //This is usefull when we does not have CDN available. Then we can cache internaly
                 //if resized image is available, and redirect directly to the storage url
-                || ($this->hasStorageExistanceCache() && $this->existsCached())
+                || ($this->hasStorageExistanceCache() && $this->externalStorageResizer() && $this->existsCached())
             ) {
                 $url = $this->getCacheStorage()->url($this->path);
             }
