@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Database\Query\Expression;
+
 if (! function_exists('trim_end')) {
     function trim_end($string, $trim)
     {
@@ -9,4 +11,17 @@ if (! function_exists('trim_end')) {
 
         return $string;
     }
+}
+
+function dbRaw($raw, $modelOrConnection = null)
+{
+    if ( $raw instanceof Expression ){
+        $expression = $raw;
+    } else {
+        $expression = \DB::raw($raw);
+    }
+
+    $connection = $modelOrConnection;
+
+    return $expression->getValue($connection->getQueryGrammar());
 }

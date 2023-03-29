@@ -421,14 +421,28 @@ class AdminModel extends Model
      */
     protected function makeDateable()
     {
+        $columns = [];
+
         foreach ($this->getFields() as $key => $field) {
             if ($this->isFieldType($key, ['timestamp', 'date', 'datetime', 'time']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
-                $this->dates[] = $key;
+                $columns[] = $key;
             }
         }
 
         //Add dates
-        $this->dates[] = 'published_at';
+        $columns[] = 'published_at';
+
+        //Laravel <=9
+        if ( property_exists($this, 'dates') ) {
+            $this->dates = array_unique(array_merge($this->dates, $columns));
+        }
+
+        //Laravel 10+
+        else {
+            foreach ($columns as $key) {
+                $this->casts[$key] = 'datetime';
+            }
+        }
     }
 
     /**

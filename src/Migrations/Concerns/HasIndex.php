@@ -78,9 +78,14 @@ trait HasIndex
      */
     protected function dropIndex($model, $key, $prefix = null)
     {
-        return $model->getConnection()->select(
-            DB::raw('alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix).'`')
+        $connection = $model->getConnection();
+
+        $expression = dbRaw(
+            'alter table `'.$model->getTable().'` drop '.($prefix ?: 'foreign key').' `'.$this->getIndexName($model, $key, $prefix).'`',
+            $connection
         );
+
+        return $connection->select($expression);
     }
 
     /*
@@ -88,8 +93,13 @@ trait HasIndex
      */
     protected function addIndex($model, $key, $prefix = null)
     {
-        return $model->getConnection()->select(
-            DB::raw('alter table `'.$model->getTable().'` add INDEX '.$this->getIndexName($model, $key, $prefix).' (`'.$key.'`)')
+        $connection = $model->getConnection();
+
+        $expression = dbRaw(
+            'alter table `'.$model->getTable().'` add INDEX '.$this->getIndexName($model, $key, $prefix).' (`'.$key.'`)',
+            $connection
         );
+
+        return $connection->select($expression);
     }
 }

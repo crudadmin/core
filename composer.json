@@ -10,8 +10,8 @@
     ],
     "require": {
         "php": ">=8.0",
-        "laravel/framework": "^6|^7|^8|^9",
-        "doctrine/dbal": "^2.6.3",
+        "laravel/framework": "^6|^7|^8|^9|^10",
+        "doctrine/dbal": "^2.6.3|^3.0.0",
         "intervention/image": "^2.3.0",
         "spatie/image-optimizer": "^1.1",
         "laravel/helpers": "^1.1"

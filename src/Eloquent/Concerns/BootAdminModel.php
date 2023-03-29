@@ -49,7 +49,9 @@ trait BootAdminModel
 
             //Save booted properties
             foreach ($this->cacheProperties as $key) {
-                $cachedProperties[$key] = $this->{$key};
+                if ( property_exists($this, $key) ){
+                    $cachedProperties[$key] = $this->{$key};
+                }
             }
 
             AdminCore::push('booted_models', $cachedProperties, $cacheKey);
