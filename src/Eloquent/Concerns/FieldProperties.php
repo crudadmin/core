@@ -33,13 +33,6 @@ trait FieldProperties
     protected $parentRow = null;
 
     /**
-     * Returns just base fields in getAdminAttributes.
-     *
-     * @var bool
-     */
-    protected $justBaseFields = false;
-
-    /**
      * Skip belongsToMany properties in getAdminModelAttributes.
      *
      * @var bool
@@ -284,21 +277,6 @@ trait FieldProperties
     public function getAllowedOptions()
     {
         return $this->withOptions;
-    }
-
-    /**
-     * Returns just base fields of model.
-     *
-     * @param  bool|null  $set
-     * @return bool
-     */
-    public function justBaseFields($set = null)
-    {
-        if ($set === true || $set === false) {
-            $this->justBaseFields = $set;
-        }
-
-        return $this->justBaseFields;
     }
 
     /**
