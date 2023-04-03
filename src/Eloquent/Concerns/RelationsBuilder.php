@@ -63,8 +63,9 @@ trait RelationsBuilder
         $cache = AdminCore::get('relations');
 
         //If key exists in cache
-        if ( array_key_exists($relationKey, $cache) )
+        if ( array_key_exists($relationKey, $cache) ){
             return $cache[$relationKey];
+        }
     }
 
     /**
@@ -94,21 +95,8 @@ trait RelationsBuilder
     {
         $relation = $this->getRelationFromCache($method);
 
-        //If is in relation buffer saved collection and not admin relation object
-        if (! is_array($relation) || ! array_key_exists('type', $relation)) {
-            //If is saved collection, and requested is also collection
-            if (! (($is_collection = $relation instanceof Collection) && $get === false)) {
-                return $relation;
-            }
-
-            //If is saved collection, but requested is object, then save old collection and return new relation object
-            elseif ($is_collection) {
-                $this->saveCollection = $relation;
-            }
-        }
-
         //If is in relation buffer saved admin relation object
-        else {
+        if (is_array($relation) && array_key_exists('type', $relation)) {
             //Returns relationship builder
             if ($get === false || (! $this->exists && ! parent::relationLoaded($method))) {
                 //Save old collection when is generating new object
@@ -132,6 +120,25 @@ trait RelationsBuilder
                     return $relation['relation'];
                 } else {
                     return $this->returnRelationItems($relation);
+                }
+            }
+        }
+
+        //If is in relation buffer saved collection and not admin relation object
+        else {
+            $isCollection = $relation instanceof Collection;
+
+            if ( $get === true ) {
+                //If is saved collection or model, and requested is also collection
+                if ($isCollection || $relation instanceof BaseModel) {
+                    return $relation;
+                }
+            }
+
+            else {
+                //If is saved collection, but requested is object, then save old collection and return new relation object
+                if ($isCollection) {
+                    $this->saveCollection = $relation;
                 }
             }
         }
