@@ -187,10 +187,10 @@ trait Validation
      * @param  array  $fields
      * @return array
      */
-    public function muttatorsResponse($requestData, $fields, $rules = null)
+    public function muttatorsResponse($requestData, $fields, $rules = null, $isAdmin = null)
     {
         $request = new \Admin\Requests\DataRequest($requestData);
-
+        $request->setIsAdmin($isAdmin);
         $request->applyMutators($this, $fields, $rules);
 
         $data = $request->allWithMutators()[0];
