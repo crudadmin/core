@@ -127,19 +127,16 @@ trait RelationsBuilder
         //If is in relation buffer saved collection and not admin relation object
         else {
             $isCollection = $relation instanceof Collection;
+            $isModel = $relation instanceof BaseModel;
 
-            if ( $get === true ) {
-                //If is saved collection or model, and requested is also collection
-                if ($isCollection || $relation instanceof BaseModel) {
-                    return $relation;
-                }
+            //If is saved collection, and requested is also collection
+            if (! (($isCollection || $isModel) && $get === false)) {
+                return $relation;
             }
 
-            else {
-                //If is saved collection, but requested is object, then save old collection and return new relation object
-                if ($isCollection) {
-                    $this->saveCollection = $relation;
-                }
+            //If is saved collection, but requested is object, then save old collection and return new relation object
+            if ($isCollection) {
+                $this->saveCollection = $relation;
             }
         }
 
