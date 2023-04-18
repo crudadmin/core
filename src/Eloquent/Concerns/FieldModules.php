@@ -28,7 +28,7 @@ trait FieldModules
 
     private function getGlobalModulesAutoLoad()
     {
-        return AdminCore::cache('bootloader_admin_modules', function(){
+        return AdminCore::cache('bootloader_admin_modules.'.implode(';', config('admin.modules')), function(){
             $modules = [];
 
             $modulesPaths = AdminCore::getNamespacesList('modules');
