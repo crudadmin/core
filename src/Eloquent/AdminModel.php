@@ -187,27 +187,6 @@ class AdminModel extends Model
     }
 
     /**
-     * On calling method.
-     * @see Illuminate\Database\Eloquent\Model
-     *
-     * @param  string  $method
-     * @param  mixed  $parameters
-     * @return mixed
-     */
-    public function __call($method, $parameters)
-    {
-        //Check if called method is not property, method of actual model or new query model
-        // if (! method_exists($this, $method) && ! $parameters && ! method_exists(parent::newQuery(), $method)) {
-        //     // Checks for db relationship of childrens into actual model
-        //     if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
-        //         return $this->checkIfIsRelationNull($relation);
-        //     }
-        // }
-
-        return parent::__call($method, $parameters);
-    }
-
-    /**
      * On calling property.
      *
      * @see Illuminate\Database\Eloquent\Model
@@ -240,8 +219,6 @@ class AdminModel extends Model
      */
     public function getValue($key, $force = true)
     {
-        $forceCheckRelation = false;
-
         // If is called field existing field
         if (($field = $this->getField($key)) || ($field = $this->getField($key.'_id'))) {
             //Register file type response
@@ -323,43 +300,11 @@ class AdminModel extends Model
             }
 
             //If field has not relationship, then return field value... This condition is here for better framework performance
-            elseif (! array_key_exists('belongsTo', $field) && ! array_key_exists('belongsToMany', $field) || substr($key, -3) == '_id') {
-                //Does not allow get specific locale value from localized slug column
-                if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
-                    $object = $this->getParentValue($key);
+            else if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
+                $object = $this->getParentValue($key);
 
-                    return $this->returnLocaleValue($object);
-                }
-
-                return $this->getParentValue($key);
-            } else {
-                $forceCheckRelation = true;
+                return $this->returnLocaleValue($object);
             }
-        }
-
-        // Register this offen called properties for better performance
-        elseif (in_array($key, ['id', 'slug', 'created_at', 'published_at', 'deleted_at', 'pivot'])) {
-            if ($key != 'slug' || $this->sluggable == true && $key == 'slug') {
-                return $this->getParentValue($key);
-            }
-        }
-
-        //If is fields called from outside of class, then try to search relationship
-        if (in_array($key, ['fields']) || $force == true) {
-            $forceCheckRelation = true;
-        }
-
-        // Checks for relationship
-        if ($forceCheckRelation === true || ! property_exists($this, $key) && ! method_exists($this, $key) && ! array_key_exists($key, $this->attributes) && ! $this->hasGetMutator($key)) {
-            //If relations has been in buffer, but returns nullable value
-            // if ($relation = $this->returnAdminRelationship($key, true)) {
-            //     return $this->checkIfIsRelationNull($relation);
-            // }
-
-            // //Checks for db relationship childrens into actual model
-            // elseif ($relation = $this->checkForChildrenModels($key, true)) {
-            //     return $this->checkIfIsRelationNull($relation);
-            // }
         }
 
         return $this->getParentValue($key);
