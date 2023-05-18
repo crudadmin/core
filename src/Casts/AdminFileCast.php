@@ -3,6 +3,7 @@
 namespace Admin\Core\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Support\Collection;
 
 class AdminFileCast implements CastsAttributes
 {
@@ -23,11 +24,15 @@ class AdminFileCast implements CastsAttributes
         }
 
         if (is_array($file) || $model->hasFieldParam($key, ['multiple'], true)) {
-            $file = is_string($file) ? json_decode($file, true) : $file;
+            $files = collect(
+                is_string($file)
+                    ? json_decode($file, true)
+                    : array_wrap($file)
+            );
 
-            return array_map(function($file) use ($model, $key) {
+            return $files->map(function($file) use ($model, $key) {
                 return $model->getAdminFile($key, $file);
-            }, array_wrap($file));
+            });
         }
 
         return $model->getAdminFile($key, $file);
@@ -44,6 +49,10 @@ class AdminFileCast implements CastsAttributes
      */
     public function set($model, $key, $value, $attributes)
     {
+        if ( is_array($value) ){
+            return json_encode($value);
+        }
+
         return $value;
     }
 }

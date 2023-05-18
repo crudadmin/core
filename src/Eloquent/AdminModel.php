@@ -222,36 +222,6 @@ class AdminModel extends Model
     {
         // If is called field existing field
         if (($field = $this->getField($key))) {
-            // Register file type response
-            if ($field['type'] == 'file' && ! $this->hasGetMutator($key)) {
-                if ($file = $this->getParentValue($key)) {
-                    //If is multilanguage file/s
-                    if ($this->hasFieldParam($key, ['locale'], true)) {
-                        $file = $this->returnLocaleValue($file);
-                    }
-
-                    if (is_array($file) || $this->hasFieldParam($key, ['multiple'], true)) {
-                        $files = [];
-
-                        if (! is_array($file)) {
-                            $file = [$file];
-                        }
-
-                        foreach ($file as $value) {
-                            if (is_string($value)) {
-                                $files[] = $this->getAdminFile($key, $value);
-                            }
-                        }
-
-                        return $files;
-                    } else {
-                        return $this->getAdminFile($key, $file);
-                    }
-                }
-
-                return;
-            }
-
             //Casts time value, because laravel does not casts time
             if ($field['type'] == 'time') {
                 if ( ($value = $this->getParentValue($key)) ) {
