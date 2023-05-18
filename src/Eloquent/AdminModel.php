@@ -15,6 +15,7 @@ use Admin\Core\Eloquent\Concerns\HasPublishable;
 use Admin\Core\Eloquent\Concerns\HasSettings;
 use Admin\Core\Eloquent\Concerns\HasStorage;
 use Admin\Core\Eloquent\Concerns\RelationsBuilder;
+use Admin\Core\Eloquent\Concerns\RelationsMapBuilder;
 use Admin\Core\Eloquent\Concerns\Sluggable;
 use Admin\Core\Eloquent\Concerns\Uploadable;
 use Admin\Core\Eloquent\Concerns\Validation;
@@ -31,6 +32,7 @@ class AdminModel extends Model
         HasSettings,
         HasProperties,
         RelationsBuilder,
+        RelationsMapBuilder,
         FieldProperties,
         FieldModules,
         Validation,
@@ -146,6 +148,9 @@ class AdminModel extends Model
 
                 //Boot all admin eloquent modules
                 $this->bootAdminModules();
+
+                //Register relationships tree
+                $this->bootRelationships();
             });
 
             $this->bootCachableProperties();
@@ -192,12 +197,12 @@ class AdminModel extends Model
     public function __call($method, $parameters)
     {
         //Check if called method is not property, method of actual model or new query model
-        if (! method_exists($this, $method) && ! $parameters && ! method_exists(parent::newQuery(), $method)) {
+        // if (! method_exists($this, $method) && ! $parameters && ! method_exists(parent::newQuery(), $method)) {
             //Checks for db relationship of childrens into actual model
-            if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
-                return $this->checkIfIsRelationNull($relation);
-            }
-        }
+            // if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
+            //     return $this->checkIfIsRelationNull($relation);
+            // }
+        // }
 
         return parent::__call($method, $parameters);
     }
@@ -346,15 +351,19 @@ class AdminModel extends Model
 
         // Checks for relationship
         if ($forceCheckRelation === true || ! property_exists($this, $key) && ! method_exists($this, $key) && ! array_key_exists($key, $this->attributes) && ! $this->hasGetMutator($key)) {
-            //If relations has been in buffer, but returns nullable value
-            if ($relation = $this->returnAdminRelationship($key, true)) {
-                return $this->checkIfIsRelationNull($relation);
-            }
+            // if ( $relation = $this->getTreeRelation($key) ){
+                // dd('lala', $relation);
+            // }
 
-            //Checks for db relationship childrens into actual model
-            elseif ($relation = $this->checkForChildrenModels($key, true)) {
-                return $this->checkIfIsRelationNull($relation);
-            }
+            // //If relations has been in buffer, but returns nullable value
+            // if ($relation = $this->returnAdminRelationship($key, true)) {
+            //     return $this->checkIfIsRelationNull($relation);
+            // }
+
+            // //Checks for db relationship childrens into actual model
+            // elseif ($relation = $this->checkForChildrenModels($key, true)) {
+            //     return $this->checkIfIsRelationNull($relation);
+            // }
         }
 
         return $this->getParentValue($key);
@@ -457,7 +466,10 @@ class AdminModel extends Model
             if (
                 (
                      $this->isFieldType($key, ['select', 'file', 'date', 'time'])
-                     && $this->hasFieldParam($key, 'multiple', true)
+                     && (
+                        $this->hasFieldParam($key, 'multiple', true)
+                        && !$this->hasFieldParam($key, 'belongsToMany')
+                    )
                  )
                  || $this->hasFieldParam($key, 'locale')
                  || $this->isFieldType($key, 'json')

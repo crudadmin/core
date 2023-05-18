@@ -3,9 +3,9 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model as BaseModel;
+use Illuminate\Support\Str;
 
 trait RelationsBuilder
 {
