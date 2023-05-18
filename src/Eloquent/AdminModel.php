@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
+use Admin\Core\Casts\AdminFileCast;
 use Admin\Core\Casts\LocalizedJsonCast;
 use Admin\Core\Eloquent\Concerns\AdminModelFieldValue;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
@@ -220,8 +221,8 @@ class AdminModel extends Model
     public function getValue($key, $force = true)
     {
         // If is called field existing field
-        if (($field = $this->getField($key)) || ($field = $this->getField($key.'_id'))) {
-            //Register file type response
+        if (($field = $this->getField($key))) {
+            // Register file type response
             if ($field['type'] == 'file' && ! $this->hasGetMutator($key)) {
                 if ($file = $this->getParentValue($key)) {
                     //If is multilanguage file/s
@@ -252,7 +253,7 @@ class AdminModel extends Model
             }
 
             //Casts time value, because laravel does not casts time
-            elseif ($field['type'] == 'time') {
+            if ($field['type'] == 'time') {
                 if ( ($value = $this->getParentValue($key)) ) {
                     if ( isset($field['multiple']) ) {
                         $dates = [];
@@ -403,17 +404,19 @@ class AdminModel extends Model
     protected function makeCastable()
     {
         foreach ($this->getFields() as $key => $field) {
+            if ( $this->isFieldType($key, ['file']) ) {
+                $this->casts[$key] = AdminFileCast::class;
+            }
+
             //Add cast attribute for fields with multiple select
-            if (
+            else if (
                 (
-                     $this->isFieldType($key, ['select', 'file', 'date', 'time'])
-                     && (
-                        $this->hasFieldParam($key, 'multiple', true)
-                        && !$this->hasFieldParam($key, 'belongsToMany')
-                    )
-                 )
-                 || $this->hasFieldParam($key, 'locale')
-                 || $this->isFieldType($key, 'json')
+                    $this->isFieldType($key, ['select', 'date', 'time'])
+                    && !$this->hasFieldParam($key, 'belongsToMany')
+                    && $this->hasFieldParam($key, 'multiple', true)
+                )
+                || $this->hasFieldParam($key, 'locale')
+                || $this->isFieldType($key, 'json')
              ) {
                 if ( $this->hasFieldParam($key, 'locale') ) {
                     $this->addLocalizedCast($key);

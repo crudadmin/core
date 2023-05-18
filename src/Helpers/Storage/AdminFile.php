@@ -9,9 +9,10 @@ use Admin\Core\Helpers\Storage\Concerns\HasDownloads;
 use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
+use Illuminate\Contracts\Support\Arrayable;
 use Storage;
 
-class AdminFile
+class AdminFile implements Arrayable
 {
     use FileHelper,
         HasDownloads,
@@ -83,6 +84,16 @@ class AdminFile
     public function __toString()
     {
         return $this->url();
+    }
+
+    /**
+     * Returns array value for file
+     *
+     * @return  String
+     */
+    public function toArray()
+    {
+        return basename($this->path);
     }
 
     /**
