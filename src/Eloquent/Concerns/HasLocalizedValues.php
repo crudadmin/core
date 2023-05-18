@@ -20,15 +20,6 @@ trait HasLocalizedValues
     public $localizedResponseLocalArray = false;
 
     /**
-     * Return localized array all the time
-     * This property exists for rewriting localizedResponseArray property
-     * but only in getValue method
-     *
-     * @var  bool
-     */
-    private $forcedLocalizedArray = false;
-
-    /**
      * Turn on localized responses as final locale strings in toArray()
      *
      * @param  bool  $state
@@ -38,17 +29,6 @@ trait HasLocalizedValues
         $this->localizedResponseLocalArray = $state;
 
         return $this;
-    }
-
-    /**
-     * Returns if localized array is forced
-     * because in getValue methods etc, we want return correct array value
-     *
-     * @return  bool
-     */
-    public function isForcedLocalizedArray()
-    {
-        return $this->forcedLocalizedArray;
     }
 
     /**

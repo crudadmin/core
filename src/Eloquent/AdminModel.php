@@ -203,11 +203,7 @@ class AdminModel extends Model
 
     private function getParentValue($key)
     {
-        $this->forcedLocalizedArray = true;
-
         $value = parent::__get($key);
-
-        $this->forcedLocalizedArray = false;
 
         return $value;
     }

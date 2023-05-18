@@ -123,9 +123,9 @@ trait Validation
 
             //If is existing row is file type and required file already exists
             if ($row
-                && ! empty($row[$orig_key])
                 && $this->hasFieldParam($orig_key, 'required', true)
                 && $this->isFieldType($orig_key, 'file')
+                && ! empty($row->getAttribute($orig_key))
             ) {
                 $field['required'] = false;
             }

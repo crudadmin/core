@@ -314,7 +314,7 @@ trait FieldProperties
     public function getLocaleValue($object, $lang = null)
     {
         //When Localized arary response is forced
-        if ( (static::$localizedResponseArray === false || $this->isLocalizedResponseLocalArray()) && $this->isForcedLocalizedArray() === false ){
+        if ( static::$localizedResponseArray === false || $this->isLocalizedResponseLocalArray() ){
             return $object;
         }
 

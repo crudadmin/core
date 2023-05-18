@@ -139,9 +139,10 @@ trait RelationsMapBuilder
             if ( isset($field['belongsTo']) ){
                 $properties = $this->getRelationProperty($fieldKey, 'belongsTo');
 
-                $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
 
-                $relation = function($model) use ($fieldRelationModel, $properties) {
+                $relation = function($model) use ($properties) {
+                    $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
+
                     return $model->belongsTo(
                         $fieldRelationModel,
                         $properties[4]
