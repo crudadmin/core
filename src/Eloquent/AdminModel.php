@@ -249,7 +249,7 @@ class AdminModel extends Model
                 $value = $this->getParentValue($key);
 
                 if ($this->hasFieldParam($key, ['locale'], true)) {
-                    $value = $this->returnLocaleValue($value);
+                    $value = $this->getLocaleValue($value);
                 }
 
                 if ( $value && class_exists('Admin') && \Admin::isFrontend() ) {
@@ -274,7 +274,7 @@ class AdminModel extends Model
             else if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
                 $object = $this->getParentValue($key);
 
-                return $this->returnLocaleValue($object);
+                return $this->getLocaleValue($object);
             }
         }
 

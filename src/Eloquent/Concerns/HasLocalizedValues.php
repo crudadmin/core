@@ -56,7 +56,7 @@ trait HasLocalizedValues
      *
      * @return  bool
      */
-    public function isSocalizedResponseLocalArray()
+    public function isLocalizedResponseLocalArray()
     {
         return $this->localizedResponseLocalArray;
     }

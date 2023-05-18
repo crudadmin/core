@@ -19,11 +19,7 @@ class LocalizedJsonCast implements CastsAttributes
     {
         $array = json_decode($value, true);
 
-        if ( ($model::$localizedResponseArray === false || $model->isSocalizedResponseLocalArray()) && $model->isForcedLocalizedArray() === false ) {
-            return $model->returnLocaleValue($array);
-        }
-
-        return $array;
+        return $model->getLocaleValue($array);
     }
 
     /**

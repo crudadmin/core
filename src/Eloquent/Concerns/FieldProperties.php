@@ -2,12 +2,13 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
+use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Eloquent\Collection\LocalizedCollection;
 use Admin\Core\Fields\Group;
 use Admin\Helpers\Localization\AdminResourcesSyncer;
 use Fields;
 use Localization;
-use AdminCore;
 
 trait FieldProperties
 {
@@ -310,13 +311,22 @@ trait FieldProperties
      * @param  string|null  $lang
      * @return mixed
      */
-    public function returnLocaleValue($object, $lang = null)
+    public function getLocaleValue($object, $lang = null)
     {
+        //When Localized arary response is forced
+        if ( (static::$localizedResponseArray === false || $this->isLocalizedResponseLocalArray()) && $this->isForcedLocalizedArray() === false ){
+            return $object;
+        }
+
         if ( ! $object ) {
             return;
         }
 
-        else if (! is_array($object)) {
+        if ( $object instanceof LocalizedCollection ){
+            $object = $object->toArray();
+        }
+
+        else if (! is_array($object) ) {
             return $object;
         }
 

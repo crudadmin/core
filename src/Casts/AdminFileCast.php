@@ -18,11 +18,11 @@ class AdminFileCast implements CastsAttributes
      */
     public function get($model, $key, $file, $attributes)
     {
-        //If is multilanguage file/s
         if ($model->hasFieldParam($key, ['locale'], true)) {
-            $file = $model->returnLocaleValue($file);
+            $file = (new LocalizedJsonCast)->get($model, $key, $file, $attributes);
         }
 
+        //Array is when files are localized
         if (is_array($file) || $model->hasFieldParam($key, ['multiple'], true)) {
             $files = collect(
                 is_string($file)
