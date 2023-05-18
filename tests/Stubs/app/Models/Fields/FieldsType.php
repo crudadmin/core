@@ -33,6 +33,7 @@ class FieldsType extends AdminModel
             'decimal' => 'name:my decimal field|type:decimal|required',
             'file' => 'name:my file field|type:file|required',
             'date' => 'name:my date field|type:date|required',
+            'timestamp' => 'name:my timestamp field|type:timestamp|required',
             'datetime' => 'name:my datetime field|type:datetime|required',
             'time' => 'name:my time field|type:time|required',
             'checkbox' => 'name:my checkbox field|type:checkbox',

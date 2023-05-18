@@ -5,6 +5,7 @@ namespace Admin\Core\Eloquent;
 use AdminCore;
 use Admin\Core\Casts\AdminFileCast;
 use Admin\Core\Casts\LocalizedJsonCast;
+use Admin\Core\Casts\DateableCast;
 use Admin\Core\Eloquent\Concerns\AdminModelFieldValue;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
@@ -222,30 +223,7 @@ class AdminModel extends Model
     {
         // If is called field existing field
         if (($field = $this->getField($key))) {
-            //Casts time value, because laravel does not casts time
-            if ($field['type'] == 'time') {
-                if ( ($value = $this->getParentValue($key)) ) {
-                    if ( isset($field['multiple']) ) {
-                        $dates = [];
-
-                        foreach ($value as $time) {
-                            $dates[] = Carbon::createFromFormat('H:i', $time);
-                        }
-
-                        return $dates;
-                    }
-
-                    if ( $value instanceof Carbon ){
-                        return $value;
-                    } else {
-                        return Carbon::createFromFormat('H:i:s', $value);
-                    }
-                }
-
-                return;
-            }
-
-            else if ( in_array($field['type'], ['editor', 'longeditor']) ) {
+            if ( in_array($field['type'], ['editor', 'longeditor']) ) {
                 $value = $this->getParentValue($key);
 
                 if ($this->hasFieldParam($key, ['locale'], true)) {
@@ -342,16 +320,9 @@ class AdminModel extends Model
      */
     protected function makeDateable()
     {
-        $columns = [];
-
-        foreach ($this->getFields() as $key => $field) {
-            if ($this->isFieldType($key, ['timestamp', 'date', 'datetime', 'time']) && ! $this->hasFieldParam($key, ['multiple', 'locale'], true)) {
-                $columns[] = $key;
-            }
-        }
-
-        //Add dates
-        $columns[] = 'published_at';
+        $columns = [
+            'published_at'
+        ];
 
         //Laravel <=9
         if ( property_exists($this, 'dates') ) {
@@ -378,10 +349,14 @@ class AdminModel extends Model
                 $this->casts[$key] = AdminFileCast::class;
             }
 
+            else if ( $this->isFieldType($key, ['time', 'date', 'datetime', 'timestamp']) ) {
+                $this->casts[$key] = DateableCast::class;
+            }
+
             //Add cast attribute for fields with multiple select
             else if (
                 (
-                    $this->isFieldType($key, ['select', 'date', 'time'])
+                    $this->isFieldType($key, ['select'])
                     && !$this->hasFieldParam($key, 'belongsToMany')
                     && $this->hasFieldParam($key, 'multiple', true)
                 )

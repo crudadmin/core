@@ -2,6 +2,7 @@
 
 namespace Admin\Core\Casts;
 
+use Admin\Core\Helpers\Storage\AdminFile;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
@@ -16,18 +17,18 @@ class AdminFileCast implements CastsAttributes
      * @param  array  $attributes
      * @return array
      */
-    public function get($model, $key, $file, $attributes)
+    public function get($model, $key, $value, $attributes)
     {
         if ($model->hasFieldParam($key, ['locale'], true)) {
-            $file = (new LocalizedJsonCast)->get($model, $key, $file, $attributes);
+            $value = (new LocalizedJsonCast)->get($model, $key, $value, $attributes);
         }
 
         //Array is when files are localized
-        if (is_array($file) || $model->hasFieldParam($key, ['multiple'], true)) {
+        if (is_array($value) || $model->hasFieldParam($key, ['multiple'], true)) {
             $files = collect(
-                is_string($file)
-                    ? json_decode($file, true)
-                    : array_wrap($file)
+                is_string($value)
+                    ? json_decode($value, true)
+                    : array_wrap($value)
             );
 
             return $files->map(function($file) use ($model, $key) {
@@ -35,7 +36,7 @@ class AdminFileCast implements CastsAttributes
             });
         }
 
-        return $model->getAdminFile($key, $file);
+        return $model->getAdminFile($key, $value);
     }
 
     /**
@@ -49,7 +50,12 @@ class AdminFileCast implements CastsAttributes
      */
     public function set($model, $key, $value, $attributes)
     {
-        if ( is_array($value) ){
+        if ( $value instanceof AdminFile ) {
+           return $value->toArray();
+        }
+
+        //Localized files
+        else if ( is_array($value) ) {
             return json_encode($value);
         }
 
