@@ -198,10 +198,10 @@ class AdminModel extends Model
     {
         //Check if called method is not property, method of actual model or new query model
         // if (! method_exists($this, $method) && ! $parameters && ! method_exists(parent::newQuery(), $method)) {
-            //Checks for db relationship of childrens into actual model
-            // if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
-            //     return $this->checkIfIsRelationNull($relation);
-            // }
+        //     // Checks for db relationship of childrens into actual model
+        //     if (($relation = $this->checkForChildrenModels($method)) || ($relation = $this->returnAdminRelationship($method))) {
+        //         return $this->checkIfIsRelationNull($relation);
+        //     }
         // }
 
         return parent::__call($method, $parameters);
@@ -351,11 +351,7 @@ class AdminModel extends Model
 
         // Checks for relationship
         if ($forceCheckRelation === true || ! property_exists($this, $key) && ! method_exists($this, $key) && ! array_key_exists($key, $this->attributes) && ! $this->hasGetMutator($key)) {
-            // if ( $relation = $this->getTreeRelation($key) ){
-                // dd('lala', $relation);
-            // }
-
-            // //If relations has been in buffer, but returns nullable value
+            //If relations has been in buffer, but returns nullable value
             // if ($relation = $this->returnAdminRelationship($key, true)) {
             //     return $this->checkIfIsRelationNull($relation);
             // }
