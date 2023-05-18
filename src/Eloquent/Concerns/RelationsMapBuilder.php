@@ -7,8 +7,17 @@ use Str;
 
 trait RelationsMapBuilder
 {
+    private static $bootingRelations = [];
+
     public function getRelationsTree()
     {
+        //Fix infinite loop
+        if ( (static::$bootingRelations[static::class] ?? false) === true ) {
+            return [];
+        }
+
+        static::$bootingRelations[static::class] = true;
+
         $tree = [];
 
         foreach ([
@@ -22,9 +31,7 @@ trait RelationsMapBuilder
             );
         }
 
-        // if ( $this->getTable() == 'fields_relations' ){
-            // dd($tree);
-        // }
+        static::$bootingRelations[static::class] = false;
 
         return $tree;
     }
