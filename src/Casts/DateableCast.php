@@ -19,48 +19,27 @@ class DateableCast implements CastsAttributes
      */
     public function get($model, $key, $value, $attributes)
     {
-        if ($model->hasFieldParam($key, ['locale'], true)) {
-            $value = (new LocalizedJsonCast)->get($model, $key, $value, $attributes);
+       if ( !$value || $value == '0000-00-00 00:00:00' ){
+            return;
         }
 
         if ( $model->isFieldType($key, 'time') ){
-            $parse = function($time){
-                $format = strlen($time) == '5' ? 'H:i' : 'H:i:s';
+            $format = strlen($value) == '5' ? 'H:i' : 'H:i:s';
 
-                return Carbon::createFromFormat($format, $time);
-            };
+            if ( Carbon::hasFormat($value, $format) ) {
+                return Carbon::createFromFormat($format, $value);
+            }
         } else if ( $model->isFieldType($key, 'date') ){
-            $parse = function($date){
-                $format = preg_match('/^[0-9]{2}.([0-9]{2}).([0-9]{4})$/', $date)
-                            ? 'd.m.Y' //Legacy depreaced format support
-                            : 'Y-m-d';
+            $format = preg_match('/^[0-9]{2}.([0-9]{2}).([0-9]{4})$/', $value)
+                        ? 'd.m.Y' //Legacy depreaced format support
+                        : 'Y-m-d';
 
-                return Carbon::createFromFormat($format, $date)->setTimezone(config('app.timezone'))->setTime(0, 0, 0, 0);
-            };
+            if ( Carbon::hasFormat($value, $format) ) {
+                return Carbon::createFromFormat($format, $value)->setTimezone(config('app.timezone'))->setTime(0, 0, 0, 0);
+            }
         } else if ( $model->isFieldType($key, ['datetime', 'timestamp']) ){
-            $parse = function($date){
-                if ( $date == '0000-00-00 00:00:00' ){
-                    return;
-                }
-
-                return (new Carbon($date))->setTimezone(config('app.timezone'));
-            };
+            return (new Carbon($value))->setTimezone(config('app.timezone'));
         }
-
-        //Array is when dates are localized
-        if (is_array($value) || $model->hasFieldParam($key, ['multiple'], true)) {
-            $values = collect(
-                is_string($value)
-                    ? json_decode($value, true)
-                    : array_wrap($value)
-            )->filter();
-
-            return $values->map(function($time) use ($parse) {
-                return $parse($time);
-            });
-        }
-
-        return $value ? $parse($value) : null;
     }
 
     /**
@@ -74,30 +53,79 @@ class DateableCast implements CastsAttributes
      */
     public function set($model, $key, $value, $attributes)
     {
-        $parse = function($value) use ($model, $key) {
-            if ( $model->isFieldType($key, 'time') ){
-                return $value->format('H:i:s');
-            } else if ( $model->isFieldType($key, 'date') ){
-                return $value->format('Y-m-d');
-            } else if ( $model->isFieldType($key, ['datetime', 'timestamp']) ){
-                return $value->format('Y-m-d H:i:s');
-            }
+        $dbFormat = $this->getFinalDatabaseFormat($model, $key);
 
-            return $value->toJson();
-        };
-
-        if ( $value instanceof Carbon ) {
-            return $parse($value);
-        } else if ( $value instanceof Collection || is_array($value) ) {
-            if ( is_array($value) ){
-                $value = collect($value);
-            }
-
-            $value = $value->map(function($value) use ($parse) {
-                return $parse($value);
-            })->toJson();
+        //Correct format has been given already
+        if ( Carbon::hasFormat($value, $dbFormat) ) {
+            return $value;
         }
 
-        return $value;
+        //Guess given date string format
+        if ( is_string($value) ) {
+            $value = $this->getUniversalDateFormat($value, $model, $key);
+        }
+
+        //Formate carbon
+        if ( $value && $value instanceof Carbon ) {
+            return $dbFormat ? $value->format($dbFormat) : $value->toJson();
+        }
+    }
+
+    private function getFinalDatabaseFormat($model, $key)
+    {
+        if ( $model->isFieldType($key, 'time') ){
+            return 'H:i:s';
+        } else if ( $model->isFieldType($key, 'date') ){
+            return 'Y-m-d';
+        } else if ( $model->isFieldType($key, ['datetime', 'timestamp']) ){
+            return 'Y-m-d H:i:s';
+        }
+    }
+
+    private function getUniversalDateFormat($value, $model, $key)
+    {
+        $field = $model->getField($key);
+
+        $supportedFormats = array_values(array_filter(array_merge(
+            [ $field['date_format'] ?? null ],
+            explode(',', $field['date_format_multiple'] ?? '')
+        )));
+
+        foreach ($supportedFormats as $format) {
+            if ( !Carbon::hasFormat($value, $format) ){
+                continue;
+            }
+
+            if ( strpos($value, 'Z') ) {
+                $date = Carbon::createFromFormat($format, $value, 'UTC')->setTimezone(config('app.timezone'));
+            } else {
+                $date = Carbon::createFromFormat($format, $value);
+            }
+
+            return $this->resetDateFromFormat($date, $format);
+        }
+    }
+
+    private function resetDateFromFormat($date, $format)
+    {
+        $reset = [
+            'd' => ['day', 1],
+            'm' => ['month', 1],
+            'y' => ['year', 1970],
+            'h' => ['hour', 0],
+            'i' => ['minute', 0],
+            's' => ['second', 0],
+        ];
+
+        $format = strtolower($format);
+
+        foreach ($reset as $identifier => $arr) {
+            //Reset hours if are not in date format
+            if (strpos($format, $identifier) === false) {
+                $date->{$arr[0]}($arr[1]);
+            }
+        }
+
+        return $date;
     }
 }

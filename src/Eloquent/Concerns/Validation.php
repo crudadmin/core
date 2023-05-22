@@ -94,38 +94,36 @@ trait Validation
         }
 
         foreach ($fields as $key => $field) {
-            $orig_key = $key;
+            $origKey = $key;
 
             $this->removeMultiFields($key, $field);
 
             //If is available default locale, then set default key name, if
             //language is not available, then apply for all langs...
-            if ($has_locale = $this->hasFieldParam($orig_key, 'locale', true)) {
-                if ($defaultLanguage) {
-                    $key = $orig_key.'.'.$defaultLanguage->slug;
-                } else {
-                    $key = $orig_key.'.*';
-                }
+            if ($hasLocale = $this->hasFieldParam($origKey, 'locale', true)) {
+                $key = $defaultLanguage
+                            ? $origKey.'.'.$defaultLanguage->slug
+                            : $origKey.'.*';
             }
 
             //Add multiple validation support for files
             if (
-                $is_multiple = $this->hasFieldParam($orig_key, 'array', true)
-                && $this->isFieldType($key, ['file', 'date', 'time'])
+                $isMultiple = $this->hasFieldParam($origKey, 'array', true)
+                && $this->isFieldType($origKey, ['file', 'date', 'time'])
             ) {
                 $key = $key.'.*';
             }
 
             //If field is not required
-            if (! $this->hasFieldParam($orig_key, 'required', true)) {
+            if (! $this->hasFieldParam($origKey, 'required', true)) {
                 $field['nullable'] = true;
             }
 
             //If is existing row is file type and required file already exists
             if ($row
-                && $this->hasFieldParam($orig_key, 'required', true)
-                && $this->isFieldType($orig_key, 'file')
-                && ! empty($row->getAttribute($orig_key))
+                && $this->hasFieldParam($origKey, 'required', true)
+                && $this->isFieldType($origKey, 'file')
+                && ! empty($row->getAttribute($origKey))
             ) {
                 $field['required'] = false;
             }
@@ -134,20 +132,20 @@ trait Validation
             $data[$key] = $this->removeAdminProperties($field);
 
             //If field has locales, then clone rules for specific locale
-            if ($has_locale) {
+            if ($hasLocale) {
                 foreach (Localization::getLanguages() as $lang) {
                     if ($lang->getKey() != $defaultLanguage->getKey()) {
-                        $lang_rules = array_unique(array_merge($data[$key], ['nullable']));
+                        $langRules = array_unique(array_merge($data[$key], ['nullable']));
 
                         //Remove required rule for other languages
-                        $lang_rules = $this->removeRequiredProperties($lang_rules);
+                        $langRules = $this->removeRequiredProperties($langRules);
 
                         //Apply also for multiple files support
-                        $field_key = $is_multiple
-                                        ? $orig_key.'.'.$lang->slug.'.*'
-                                        : $orig_key.'.'.$lang->slug;
+                        $field_key = $isMultiple
+                                        ? $origKey.'.'.$lang->slug.'.*'
+                                        : $origKey.'.'.$lang->slug;
 
-                        $data[$field_key] = $lang_rules;
+                        $data[$field_key] = $langRules;
                     }
                 }
             }

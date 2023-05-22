@@ -3,13 +3,10 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
-use Admin\Core\Casts\AdminFileCast;
-use Admin\Core\Casts\LocalizedJsonCast;
-use Admin\Core\Casts\DateableCast;
-use Admin\Core\Eloquent\Concerns\AdminModelFieldValue;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
+use Admin\Core\Eloquent\Concerns\HasAdminCasts;
 use Admin\Core\Eloquent\Concerns\HasChildrens;
 use Admin\Core\Eloquent\Concerns\HasLocalizedValues;
 use Admin\Core\Eloquent\Concerns\HasProperties;
@@ -30,6 +27,7 @@ use Schema;
 class AdminModel extends Model
 {
     use BootAdminModel,
+        HasAdminCasts,
         HasChildrens,
         HasSettings,
         HasProperties,
@@ -189,26 +187,7 @@ class AdminModel extends Model
     }
 
     /**
-     * On calling property.
-     *
-     * @see Illuminate\Database\Eloquent\Model
-     *
-     * @param  string  $key
-     * @return mixed
-     */
-    public function __get($key)
-    {
-        return $this->getValue($key, false);
-    }
-
-    private function getParentValue($key)
-    {
-        $value = parent::__get($key);
-
-        return $value;
-    }
-
-    /**
+     * DEPREACED:
      * Returns modified called property.
      *
      * @param string  $key
@@ -218,63 +197,30 @@ class AdminModel extends Model
     public function getValue($key, $force = true)
     {
         // If is called field existing field
-        if (($field = $this->getField($key))) {
-            if ( in_array($field['type'], ['editor', 'longeditor']) ) {
-                $value = $this->getParentValue($key);
+        // TODO: refactor gutenberg
+        // if (($field = $this->getField($key))) {
+            // if ( in_array($field['type'], ['editor', 'longeditor']) ) {
+            //     $value = $this->getParentValue($key);
 
-                if ($this->hasFieldParam($key, ['locale'], true)) {
-                    $value = $this->getLocaleValue($value);
-                }
+            //     if ($this->hasFieldParam($key, ['locale'], true)) {
+            //         $value = $this->getLocaleValue($value);
+            //     }
 
-                if ( $value && class_exists('Admin') && \Admin::isFrontend() ) {
-                    if ( \FrontendEditor::isActive() && admin()->hasAccess($this, 'update') ) {
-                        $hash = \FrontendEditor::makeHash($this->getTable(), $key, $this->getKey());
+            //     if ( $value && class_exists('Admin') && \Admin::isFrontend() ) {
+            //         if ( \FrontendEditor::isActive() && admin()->hasAccess($this, 'update') ) {
+            //             $hash = \FrontendEditor::makeHash($this->getTable(), $key, $this->getKey());
 
-                        $attributes = 'data-model="'.$this->getTable().'" data-key="'.$key.'" data-id="'.$this->getKey().'" data-hash="'.$hash.'"';
-                    }
+            //             $attributes = 'data-model="'.$this->getTable().'" data-key="'.$key.'" data-id="'.$this->getKey().'" data-hash="'.$hash.'"';
+            //         }
 
-                    return '<div data-crudadmin-editor'.(isset($attributes) ? (' '.$attributes) : '').'>'.$value.'</div>';
-                }
+            //         return '<div data-crudadmin-editor'.(isset($attributes) ? (' '.$attributes) : '').'>'.$value.'</div>';
+            //     }
 
-                return $value;
-            }
+            //     return $value;
+            // }
+        // }
 
-            //Register custom global module mutators
-            else if ( ($value = $this->getModuleFieldValue($key, $field)) && $value && $value instanceof AdminModelFieldValue ) {
-                return $value->getValue();
-            }
-
-            //If field has not relationship, then return field value... This condition is here for better framework performance
-            else if (array_key_exists('locale', $field) && $field['locale'] === true && $key != 'slug' ) {
-                $object = $this->getParentValue($key);
-
-                return $this->getLocaleValue($object);
-            }
-        }
-
-        return $this->getParentValue($key);
-    }
-
-    private function getModuleFieldValue($key, $field)
-    {
-        $returnResponse = null;
-
-        $value = $this->getParentValue($key);
-
-        $this->runAdminModules(function($module) use (&$returnResponse, $key, $field, &$value) {
-            if ( method_exists($module, 'fieldValue') ) {
-                $response = $module->fieldValue($this, $key, $field, $value);
-
-                if ( $response && $response instanceof AdminModelFieldValue ){
-                    //Rewrite previous value, to support multiple responses at once
-                    $value = $response->getValue();
-
-                    $returnResponse = $response;
-                }
-            }
-        });
-
-        return $returnResponse;
+        return parent::__get($key);
     }
 
     /**
@@ -306,119 +252,6 @@ class AdminModel extends Model
         //If is moddel sluggable
         if ($this->sluggable != null) {
             $this->fillable[] = 'slug';
-        }
-    }
-
-    /**
-     * Set date fields.
-     *
-     * @return void
-     */
-    protected function makeDateable()
-    {
-        $columns = [
-            'published_at'
-        ];
-
-        //Laravel <=9
-        if ( property_exists($this, 'dates') ) {
-            $this->dates = array_unique(array_merge($this->dates, $columns));
-        }
-
-        //Laravel 10+
-        else {
-            foreach ($columns as $key) {
-                $this->casts[$key] = 'datetime';
-            }
-        }
-    }
-
-    /**
-     * Set selectbox field to automatic json format.
-     *
-     * @return void
-     */
-    protected function makeCastable()
-    {
-        foreach ($this->getFields() as $key => $field) {
-            if ( $this->isFieldType($key, ['file']) ) {
-                $this->casts[$key] = AdminFileCast::class;
-            }
-
-            else if ( $this->isFieldType($key, ['time', 'date', 'datetime', 'timestamp']) ) {
-                $this->casts[$key] = DateableCast::class;
-            }
-
-            //Add cast attribute for fields with multiple select
-            else if (
-                (
-                    $this->isFieldType($key, ['select'])
-                    && !$this->hasFieldParam($key, 'belongsToMany')
-                    && $this->hasFieldParam($key, 'multiple', true)
-                )
-                || $this->hasFieldParam($key, 'locale')
-                || $this->isFieldType($key, 'json')
-             ) {
-                if ( $this->hasFieldParam($key, 'locale') ) {
-                    $this->addLocalizedCast($key);
-                } else {
-                    $this->casts[$key] = 'json';
-                }
-            } elseif ($this->isFieldType($key, 'checkbox')) {
-                $this->casts[$key] = 'boolean';
-            } elseif ($this->isFieldType($key, 'integer') || $this->hasFieldParam($key, 'belongsTo')) {
-                $this->casts[$key] = 'integer';
-            } elseif ($this->isFieldType($key, 'decimal')) {
-                $this->casts[$key] = 'float';
-            }
-
-            if ($this->hasFieldParam($key, 'encrypted')) {
-                //Custom encryption types fields
-                if ( ($encryptedValue = $this->getFieldParam($key, 'encrypted')) && is_string($encryptedValue) ){
-                    $this->casts[$key] = 'encrypted:'.$encryptedValue;
-                }
-                //Suport for array/json casts
-                else if ( ($this->casts[$key] ?? '') === 'json' ) {
-                    $this->casts[$key] = 'encrypted:array';
-                } else {
-                    $this->casts[$key] = 'encrypted';
-                }
-            }
-        }
-
-        //Casts foreign keys
-        if (is_array($relations = $this->getForeignColumn())) {
-            foreach ($relations as $key) {
-                $this->casts[$key] = 'integer';
-            }
-        }
-
-        //Add cast into localized slug column
-        if ( $this->hasLocalizedSlug() ){
-            $this->addLocalizedCast('slug');
-        }
-
-        //Publishable state
-        if ($this->publishableState == true){
-            $this->casts['published_state'] = 'json';
-        }
-    }
-
-    /**
-     * Add custom localized json cast
-     *
-     * @param  string  $key
-     */
-    private function addLocalizedCast($key)
-    {
-        //Add support for laravel 6 and lower.
-        if ( !interface_exists(\Illuminate\Contracts\Database\Eloquent\CastsAttributes::class) ) {
-            $this->casts[$key] = 'json';
-        }
-
-        //Laravel 7+
-        else {
-            $this->casts[$key] = LocalizedJsonCast::class;
         }
     }
 

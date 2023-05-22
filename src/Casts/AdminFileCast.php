@@ -19,23 +19,6 @@ class AdminFileCast implements CastsAttributes
      */
     public function get($model, $key, $value, $attributes)
     {
-        if ($model->hasFieldParam($key, ['locale'], true)) {
-            $value = (new LocalizedJsonCast)->get($model, $key, $value, $attributes);
-        }
-
-        //Array is when files are localized
-        if (is_array($value) || $model->hasFieldParam($key, ['multiple'], true)) {
-            $files = collect(
-                is_string($value)
-                    ? json_decode($value, true)
-                    : array_wrap($value)
-            );
-
-            return $files->map(function($file) use ($model, $key) {
-                return $model->getAdminFile($key, $file);
-            });
-        }
-
         return $model->getAdminFile($key, $value);
     }
 
@@ -50,15 +33,14 @@ class AdminFileCast implements CastsAttributes
      */
     public function set($model, $key, $value, $attributes)
     {
+        //If admin model has been given
         if ( $value instanceof AdminFile ) {
-           return $value->toArray();
+           return $value->filename;
         }
 
-        //Localized files
-        else if ( is_array($value) ) {
-            return json_encode($value);
+        //If filename string has been given
+        else if ( $value ) {
+            return $value;
         }
-
-        return $value;
     }
 }

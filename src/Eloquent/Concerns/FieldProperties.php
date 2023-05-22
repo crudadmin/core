@@ -4,7 +4,6 @@ namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
-use Admin\Core\Eloquent\Collection\LocalizedCollection;
 use Admin\Core\Fields\Group;
 use Admin\Helpers\Localization\AdminResourcesSyncer;
 use Fields;
@@ -301,66 +300,6 @@ trait FieldProperties
     public function getParentRow()
     {
         return $this->parentRow;
-    }
-
-    /**
-     * Return specific value in multi localization field by selected language
-     * if translations are missing, returns default, or first available language.
-     *
-     * @param  mixed  $object
-     * @param  string|null  $lang
-     * @return mixed
-     */
-    public function getLocaleValue($object, $lang = null)
-    {
-        //When Localized arary response is forced
-        if ( static::$localizedResponseArray === false || $this->isLocalizedResponseLocalArray() ){
-            return $object;
-        }
-
-        if ( ! $object ) {
-            return;
-        }
-
-        if ( $object instanceof LocalizedCollection ){
-            $object = $object->toArray();
-        }
-
-        else if (! is_array($object) ) {
-            return $object;
-        }
-
-        //If row has saved actual value
-        foreach ($this->getLanguageSlugsByPriority($lang) as $slug) {
-            if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
-                return $object[$slug];
-            }
-        }
-
-        //Return first available translated value in admin
-        foreach ($object as $value) {
-            if (!is_null($value)) {
-                return $value;
-            }
-        }
-    }
-
-    /**
-     * Returns selected language slug, or default to try
-     *
-     * @param  string  $lang
-     *
-     * @return  array
-     */
-    private function getLanguageSlugsByPriority($lang)
-    {
-        return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
-            $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
-
-            $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];
-
-            return $slugs;
-        });
     }
 
     /**

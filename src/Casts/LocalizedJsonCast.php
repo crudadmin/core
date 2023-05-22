@@ -2,37 +2,104 @@
 
 namespace Admin\Core\Casts;
 
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use AdminCore;
+use Admin\Core\Casts\Concerns\MultiCast;
+use Illuminate\Contracts\Database\Eloquent\Castable;
+use Illuminate\Support\Collection;
+use Localization;
 
-class LocalizedJsonCast implements CastsAttributes
+class LocalizedJsonCast implements Castable
 {
-    /**
-     * Cast the given value.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  array  $attributes
-     * @return array
-     */
-    public function get($model, $key, $value, $attributes)
+    public static function castUsing(array $arguments)
     {
-        $array = json_decode($value, true);
+        return new class($arguments) extends MultiCast
+        {
+            public function get($model, $key, $value, $attributes)
+            {
+                $localeValues = json_decode($value, true);
 
-        return $model->getLocaleValue($array);
-    }
+                //When Localized array response is forced
+                if ( $this->isArrayResponse($model) ){
+                    return collect($localeValues)->map(function($item) use ($model, $key, $attributes) {
+                        return parent::get($model, $key, $item, $attributes);
+                    });
+                }
 
-    /**
-     * Prepare the given value for storage.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  array  $value
-     * @param  array  $attributes
-     * @return string
-     */
-    public function set($model, $key, $value, $attributes)
-    {
-        return json_encode($value);
+                $value = $this->getLocaleValue($localeValues);
+
+                return parent::get($model, $key, $value, $attributes);
+            }
+
+            private function isArrayResponse($model)
+            {
+                return $model::$localizedResponseArray === false || $model->isLocalizedResponseLocalArray();
+            }
+
+            /**
+             * Return specific value in multi localization field by selected language
+             * if translations are missing, returns default, or first available language.
+             *
+             * @param  mixed  $object
+             * @param  string|null  $lang
+             * @return mixed
+             */
+            private function getLocaleValue($object, $lang = null)
+            {
+                if ( ! $object ) {
+                    return;
+                }
+
+                else if (! is_array($object) ) {
+                    return $object;
+                }
+
+                //If row has saved actual value
+                foreach ($this->getLanguageSlugsByPriority($lang) as $slug) {
+                    if (array_key_exists($slug, $object) && (! empty($object[$slug]) || $object[$slug] === 0)) {
+                        return $object[$slug];
+                    }
+                }
+
+                //Return first available translated value in admin
+                foreach ($object as $value) {
+                    if (!is_null($value)) {
+                        return $value;
+                    }
+                }
+            }
+
+            /**
+             * Returns selected language slug, or default to try
+             *
+             * @param  string  $lang
+             *
+             * @return  array
+             */
+            private function getLanguageSlugsByPriority($lang)
+            {
+                return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
+                    $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
+
+                    $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];
+
+                    return $slugs;
+                });
+            }
+
+            public function set($model, $key, $value, $attributes)
+            {
+                if ( is_array($value) || $value instanceof Collection ) {
+                    return collect($value)->map(function($item) use ($model, $key, $attributes) {
+                        return parent::set($model, $key, $item, $attributes);
+                    })->filter(function($value){
+                        return is_null($value) == false;
+                    })->toJson();
+                } else {
+                    $a = parent::set($model, $key, $value, $attributes);
+
+                    return $a;
+                }
+            }
+        };
     }
 }

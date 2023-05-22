@@ -93,7 +93,7 @@ class AdminFile implements Arrayable
      */
     public function toArray()
     {
-        return basename($this->path);
+        return $this->filename;
     }
 
     /**
