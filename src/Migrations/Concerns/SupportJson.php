@@ -68,7 +68,7 @@ trait SupportJson
                       ->whereNotNull($key)
                       ->take(5);
 
-        return $query->whereRaw('NOT JSON_VALID(`'.$key.'`)')->pluck($key, $model->getKeyName());
+        return $query->whereRaw('NOT JSON_VALID(`'.$key.'`) || `'.$key.'` REGEXP "^-?[0-9]+$" = 1')->pluck($key, $model->getKeyName());
     }
 
     /**
@@ -130,7 +130,7 @@ trait SupportJson
 
         $model->getConnection()
                 ->table( $model->getTable() )
-                ->whereRaw('NOT JSON_VALID('.$key.')')
+                ->whereRaw('NOT JSON_VALID('.$key.') || `'.$key.'` REGEXP "^-?[0-9]+$" = 1')
                 ->whereRaw('JSON_VALID('.$toJson.')')
                 ->update([
                     $key => DB::raw($toJson)
