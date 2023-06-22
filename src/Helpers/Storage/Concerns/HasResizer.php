@@ -89,7 +89,7 @@ trait HasResizer
 
         return $this->image([
             $action => [$width, $height],
-        ], $force, false);
+        ], $force);
     }
 
     /**
@@ -100,7 +100,7 @@ trait HasResizer
      *
      * @return File/Image class
      */
-    public function image($mutators = [], $force = false)
+    public function image($mutators = [], $force = false, $cacheDirectory = null)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
         if ( $this->canBeImageResized() === false ) {
@@ -108,7 +108,7 @@ trait HasResizer
         }
 
         //Prefix of directory for given resize parameters configuration
-        $cachePrefix = $this->getCacheMutatorsDirectory($mutators);
+        $cachePrefix = $cacheDirectory ?: $this->getCacheMutatorsDirectory($mutators);
 
         //Get directory path for file
         $cachedPath = $this->getCachePath($cachePrefix, $mutators);
@@ -364,17 +364,23 @@ trait HasResizer
      */
     private function getCacheMutatorsDirectory($mutators)
     {
-        $firstValue = array_first($mutators);
+        $hash = [];
 
-        foreach ($firstValue as $key => $mutator) {
-            if (! is_string($mutator) && ! is_numeric($mutator)) {
-                $firstValue[$key] = 0;
+        foreach ($mutators as $mk => $mutatorRow) {
+            $subHash = [];
+
+            foreach ($mutatorRow as $key => $mutator) {
+                if (! is_string($mutator) && ! is_numeric($mutator)) {
+                    $subHash[] = $mutator ? 1 : 0;
+                } else {
+                    $subHash[] = $mutator;
+                }
             }
+
+            $hash[] = implode('-', [$mk, implode('x', $subHash)]);
         }
 
-        $hash = key($mutators).'-'.implode('x', $firstValue);
-
-        return $hash;
+        return implode('_', $hash);
     }
 
     /**
