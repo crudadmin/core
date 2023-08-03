@@ -98,9 +98,9 @@ trait Uploadable
      * @param  array                    $options
      * @return object
      */
-    public function upload(string $fieldKey, $fileOrPathToUpload, $options = [])
+    public function upload(string $fieldKey, $fileOrPath, $options = [])
     {
-        $uploader = new AdminUploader($this, $fieldKey, $fileOrPathToUpload, $options);
+        $uploader = new AdminUploader($this, $fieldKey, $fileOrPath, $options);
 
         if ( !($path = $uploader->upload()) ) {
             return;
@@ -120,13 +120,13 @@ trait Uploadable
      *
      * @return object
      */
-    public function uploadLocaly(string $fieldKey, $fileOrPathToUpload, $options = [])
+    public function uploadLocaly(string $fieldKey, $fileOrPath, $options = [])
     {
         $options = $options + [
             'disk' => AdminCore::getUploadsStorageName($this->isPrivateFile($fieldKey))
         ];
 
-        return $this->upload($fieldKey, $fileOrPathToUpload, $options);
+        return $this->upload($fieldKey, $fileOrPath, $options);
     }
 
     /*

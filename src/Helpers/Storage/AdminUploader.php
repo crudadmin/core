@@ -4,6 +4,7 @@ namespace Admin\Core\Helpers\Storage;
 
 use AdminCore;
 use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Helpers\Storage\Concerns\HasUploadableFilenames;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use Admin\Core\Helpers\Storage\Mutators\ImageUploadMutator;
 use File;
@@ -12,11 +13,13 @@ use Storage;
 
 class AdminUploader
 {
+    use HasUploadableFilenames;
+
     protected $model;
 
     protected $fieldKey;
 
-    protected $fileOrPathToUpload;
+    protected $fileOrPath;
 
     protected $compression;
 
@@ -35,13 +38,13 @@ class AdminUploader
         EncryptorMutator::class,
     ];
 
-    public function __construct(AdminModel $model, $fieldKey, $fileOrPathToUpload, $options = [])
+    public function __construct(AdminModel $model, $fieldKey, $fileOrPath, $options = [])
     {
         $this->model = $model;
 
         $this->fieldKey = $fieldKey;
 
-        $this->fileOrPathToUpload = $fileOrPathToUpload;
+        $this->fileOrPath = $fileOrPath;
 
         $this->options = $options;
 
@@ -64,52 +67,39 @@ class AdminUploader
         return $this->model->getFieldStorage($this->fieldKey);
     }
 
+    public function getUploadDir()
+    {
+        return $this->model->getStorageFilePath($this->fieldKey);
+    }
+
+    private function getLocalFilePath()
+    {
+        return $this->getUploadDir().'/'.$this->filename;
+    }
+
     public function upload()
     {
-        $fieldKey = $this->fieldKey;
-
-        $fileOrPathToUpload = $this->fileOrPathToUpload;
-
-        $uploadDirectory = $this->model->getStorageFilePath($fieldKey);
-
-        //Get count of files in upload directory and set new filename
-        $filenameWithoutExt = $this->getUploadableFilename($uploadDirectory, $fileOrPathToUpload);
-
-        //We need bind this variables depending on given uploaded file type
-        $filename = null;
-        $extension = null;
+        $this->setUploadableFilename();
 
         //File input is file from request
-        if ($fileOrPathToUpload instanceof UploadedFile) {
-            //Get extension of file
-            $extension = strtolower($fileOrPathToUpload->getClientOriginalExtension());
-
-            //Build and mutate filename
-            $filename = $this->mergeExtensionName($filenameWithoutExt, $extension);
-            $filename = $this->model->filenameFromAttribute($filename, $fieldKey);
-
-            //Try upload from request file
-            if ( $this->uploadLocalyFromRequest($fileOrPathToUpload, $filename) === false ) {
+        if ($this->fileOrPath instanceof UploadedFile) {
+            //Try upload from request file (localy)
+            if ( $this->uploadFileFromRequestLocaly() === false ) {
                 return false;
             }
         }
 
         //Upload from local basepath or from website
         else {
-            [
-                $filename,
-                $extension
-            ] = $this->uploadFileFromLocal($fileOrPathToUpload, $filenameWithoutExt, $uploadDirectory);
+            $this->uploadFileFromExternalUrlLocaly();
         }
 
-        $this->filename = $filename;
-
-        $this->extension = $extension;
-
-        $this->mutateUploadedFile();
+        $this->mutateUploadedFile(function($mutator){
+            $mutator->mutate();
+        });
 
         //We can retrieve final storage path, which can be mutated from mutators.
-        $fileStoragePath = $this->getLocalStoragePath();
+        $fileStoragePath = $this->getLocalFilePath();
 
         $this->model->moveToFinalStorage(
             $this->fieldKey,
@@ -120,37 +110,16 @@ class AdminUploader
         return $fileStoragePath;
     }
 
-    private function getLocalStoragePath()
-    {
-        return $this->model->getStorageFilePath($this->fieldKey).'/'.$this->filename;
-    }
-
     /**
      * Upload file from local directory or server
      *
-     * @param  string  $file
-     * @param  string  $filename
-     * @param  string  $uploadPath / destinationPath
-     *
      * @return  array
      */
-    private function uploadFileFromLocal($file, $filenameWithoutExtension, $uploadPath)
+    private function uploadFileFromExternalUrlLocaly()
     {
-        $filename = $filenameWithoutExtension;
+        $file = $this->fileOrPath;
 
-        //If extension is available, we want mutate file name
-        if ($extension = File::extension($file)) {
-            $filename = $this->model->filenameFromAttribute(
-                $this->mergeExtensionName($filename, $extension),
-                $this->fieldKey
-            );
-
-            $filenameWithoutExtension = pathinfo($filename, PATHINFO_FILENAME);
-        }
-
-        $filenameWithoutExtension = $this->createUniqueFilename($uploadPath, $filenameWithoutExtension, $extension);
-        $filename = $filenameWithoutExtension.'.'.$extension;
-        $destinationPath = $uploadPath.'/'.$filename;
+        $destinationPath = $this->getLocalFilePath();
 
         //Copy file from server, or directory into uploads for field
         $this->getLocalUploadsStorage()->put(
@@ -160,35 +129,26 @@ class AdminUploader
 
         //If file is url adress, we want verify extension type
         if ( filter_var($file, FILTER_VALIDATE_URL) && !file_exists($file) ) {
-            $gussedExtension = $this->guessExtensionFromRemoteFile($destinationPath, $filename);
+            $gussedExtension = $this->guessExtensionFromRemoteFile($destinationPath);
 
-            if ( $gussedExtension != $extension ) {
-                $newFilename = $this->createUniqueFilename($uploadPath, $filenameWithoutExtension, $gussedExtension);
+            if ( $gussedExtension != $this->extension ) {
+                $this->filename = File::name($this->filename).'.'.$gussedExtension;
+                $this->extension = $gussedExtension;
 
-                //Modified filename
-                $newFilename = $this->model->filenameFromAttribute(
-                    $this->mergeExtensionName($newFilename, $gussedExtension),
-                    $this->fieldKey
+                $this->verifyUniqueFilename();
+
+                $this->getLocalUploadsStorage()->move(
+                    $destinationPath,
+                    $this->getLocalFilePath()
                 );
-
-                $newDestinationPath = $uploadPath.'/'.$newFilename;
-
-                $this->getLocalUploadsStorage()->move($destinationPath, $newDestinationPath);
-
-                $filename = $newFilename;
             }
         }
-
-        return [
-            $filename,
-            $extension,
-        ];
     }
 
     /*
      * Guess extension type from mimeType
      */
-    private function guessExtensionFromRemoteFile($path, $filename)
+    private function guessExtensionFromRemoteFile($path)
     {
         $mimeType = $this->getLocalUploadsStorage()->mimeType($path);
 
@@ -218,7 +178,7 @@ class AdminUploader
      * @param  string  $filename
      * @param  string  $extension
      */
-    private function mutateUploadedFile()
+    private function mutateUploadedFile($callback)
     {
         $localStorage = $this->getLocalUploadsStorage();
 
@@ -227,7 +187,7 @@ class AdminUploader
                 $localStorage,
                 $this->model,
                 $this->fieldKey,
-                $this->getLocalStoragePath(),
+                $this->getLocalFilePath(),
                 $this->filename,
                 $this->extension
             );
@@ -236,11 +196,7 @@ class AdminUploader
                 continue;
             }
 
-            $mutator->mutate();
-
-            //We can mutate filename or extension during mutate process
-            $this->filename = $mutator->getFilename();
-            $this->extension = $mutator->getExtension();
+            $callback($mutator);
         }
     }
 
@@ -293,18 +249,15 @@ class AdminUploader
     /**
      * Upload file into local crudadmin storage from quest
      *
-     * @param  UploadedFile  $uploadedFile
-     * @param  string  $filename
-     *
      * @return  bool
      */
-    private function uploadLocalyFromRequest(UploadedFile $uploadedFile, $filename)
+    private function uploadFileFromRequestLocaly()
     {
-        $fieldKey = $this->fieldKey;
+        $uploadedFile = $this->fileOrPath;
 
         //If is file aviable, but is not valid
         if (! $uploadedFile->isValid()) {
-            $this->addUploadError(_('Súbor "'.$fieldKey.'" nebol uložený na server, pre jeho chybnú štruktúru.'));
+            $this->addUploadError(_('Súbor "'.$this->fieldKey.'" nebol uložený na server, pre jeho chybnú štruktúru.'));
 
             return false;
         }
@@ -315,47 +268,12 @@ class AdminUploader
 
         //Move photo from request to directory
         $uploadedFile = $uploadedFile->storeAs(
-            $this->model->getStorageFilePath($fieldKey),
-            $filename,
+            $this->getUploadDir(),
+            $this->filename,
             [ 'disk' => $disk ]
         );
 
         return true;
-    }
-
-    /**
-     * Get filename from request or url
-     *
-     * @param  string  $path
-     * @param  UploadedFile|string  $file
-     *
-     * @return  string
-     */
-    private function getUploadableFilename($path, $file)
-    {
-        $extension = null;
-
-        //If file exists and is not from server, when is from server make unique name
-        if (method_exists($file, 'getClientOriginalName')) {
-            $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        } else {
-            $pathinfo = @pathinfo(basename($file));
-            $filename = @$pathinfo['filename'] ?: uniqid();
-
-            if ( $pathinfo['extension'] ?? null ){
-                $extension = $pathinfo['extension'];
-            }
-        }
-
-        //Trim filename
-        $filename = substr(str_slug($filename), 0, 40);
-
-        //If extension is from request
-        if ( method_exists($file, 'getClientOriginalExtension') ) {
-            $extension = $file->getClientOriginalExtension();
-        }
-
-        return $this->createUniqueFilename($path, $filename, $extension);
     }
 
     /**
@@ -369,77 +287,5 @@ class AdminUploader
     private function mergeExtensionName($filename, $extension)
     {
         return $extension ? ($filename.'.'.$extension) : $filename;
-    }
-
-    /**
-     * Create unique filename, to be sure we wont override existing files
-     *
-     * @param  string  $path
-     * @param  string  $filenameWithoutExtension
-     * @param  string  $extension
-     *
-     * @return  string
-     */
-    private function createUniqueFilename($path, $filenameWithoutExtension, $extension)
-    {
-        $postfix = ($this->options['postfix'] ?? false) === true;
-
-        //If is cloud storage or other storage solution
-        if ( $this->getFieldStorage() !== $this->getLocalUploadsStorage() || $postfix === true ) {
-            return $this->generateFilenamePostfix($filenameWithoutExtension);
-        }
-
-        //If field destination is crudadmin storage, we can check file existance iterate through existing files
-        //with increment assignemt at the end of file
-        return $this->createFilenameIncrement($path, $filenameWithoutExtension, $extension);
-    }
-
-    /**
-     * Create filename postfix
-     *
-     * @param  string  $filenameWithoutExtension
-     * @param  number  $randomKeyLength
-     *
-     * @return  string
-     */
-    private function generateFilenamePostfix($filenameWithoutExtension, $randomKeyLength = 20)
-    {
-        //If file already has generated key, we can let it be and may not generate new one..
-        if ( preg_match("/_[a-z|A-Z|0-9]{".$randomKeyLength."}$/", $filenameWithoutExtension) ) {
-            return $filenameWithoutExtension;
-        }
-
-        //To save resource in cloud storage, better will be random article name
-        return $filenameWithoutExtension.'_'.str_random($randomKeyLength);
-    }
-
-    /**
-     * Generate file name without extension by incrementing numbers after existing file
-     *
-     * @param  string  $path
-     * @param  string  $filename
-     * @param  string  $extension
-     *
-     * @return  string
-     */
-    private function createFilenameIncrement($path, $filename, $extension)
-    {
-        $fieldStorage = $this->getFieldStorage();
-
-        $basepath = $path.'/'.$this->mergeExtensionName($filename, $extension);
-
-        //If filename exists, then add number prefix of file
-        if ( $fieldStorage->exists($basepath) ) {
-            $i = 0;
-
-            //Check all numbers till file does not exists
-            while ( $fieldStorage->exists($path.'/'.$this->mergeExtensionName($filename.'-'.$i, $extension)) ) {
-                $i++;
-            }
-
-            $filename = $filename.'-'.$i;
-        }
-
-        return $filename;
     }
 }
