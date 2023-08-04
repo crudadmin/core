@@ -344,7 +344,7 @@ trait FieldProperties
      */
     private function getLanguageSlugsByPriority($lang)
     {
-        return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
+        return AdminCore::cache('localized.value.'.($lang ?: Localization::getLocale() ?: 'default'), function() use ($lang) {
             $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
 
             $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];
