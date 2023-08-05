@@ -495,14 +495,14 @@ class Fields extends MigrationDefinition
             }
 
             //Add/remove fields/groups
-            $mutated_groups = $this->mutateGroupFields($model, $group->fields, $parentGroup);
+            $mutatedGroups = $this->mutateGroupFields($model, $group->fields, $parentGroup);
 
             //Register sub groups or sub fields
-            foreach ($mutated_groups as $field_key => $field_from_group) {
-                $mutation_previous = isset($mutation_previous) ? $mutation_previous : $this->fields[$this->getModelKey($model)];
+            foreach ($mutatedGroups as $fieldKey => $fieldFromGroup) {
+                $mutationPrevious = isset($mutationPrevious) ? $mutationPrevious : $this->fields[$this->getModelKey($model)];
 
                 //If no mutation has been returned, we want skip this field group.
-                if ( !($mutation = $this->manageGroupFields($model, $field_key, $field_from_group, $group)) ){
+                if ( !($mutation = $this->manageGroupFields($model, $fieldKey, $fieldFromGroup, $group)) ){
                     continue;
                 }
 
@@ -510,16 +510,16 @@ class Fields extends MigrationDefinition
                 if ($mutation instanceof Group) {
                     $fields[] = $mutation;
 
-                    $mutation_previous = $this->fields[$this->getModelKey($model)];
+                    $mutationPrevious = $this->fields[$this->getModelKey($model)];
                 }
 
                 //Add new fields into group from fields mutations
                 else {
-                    foreach (array_diff_key($mutation, $mutation_previous) as $key => $field) {
+                    foreach (array_diff_key($mutation, $mutationPrevious) as $key => $field) {
                         $fields[] = $key;
                     }
 
-                    $mutation_previous = $mutation;
+                    $mutationPrevious = $mutation;
                 }
             }
 

@@ -284,7 +284,7 @@ trait Sluggable
                 if (
                     $this->exists
                     && $this->isAllowedHistorySlugs()
-                    && str_replace('": "', '":"', $this->attributes['slug']) != $slug
+                    && str_replace('": "', '":"', $attributes['slug'] ?? '') != $slug
                 ) {
                     $this->slugSnapshot();
                 }

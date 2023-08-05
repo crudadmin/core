@@ -43,7 +43,10 @@ class EncryptorMutator extends UploadMutator
 
     public function getFilename()
     {
-        return $this->filename.self::ENCRYPTOR_EXTENSION;
+        $e = self::ENCRYPTOR_EXTENSION;
+
+        //If filename already has encrypted extension, does not duplicate
+        return str_replace_last($e.$e, $e, $this->filename.$e);
     }
 
     public function mutate()
@@ -62,6 +65,9 @@ class EncryptorMutator extends UploadMutator
             $encryptedData
         );
 
-        $localStorage->delete($originalPath);
+        //Remove previous file
+        if ( $encryptedPath !== $originalPath ) {
+            $localStorage->delete($originalPath);
+        }
     }
 }

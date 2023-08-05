@@ -49,7 +49,7 @@ class LocalizedJsonCast implements Castable
                     return;
                 }
 
-                else if (! is_array($object) ) {
+                else if (! is_array($object)) {
                     return $object;
                 }
 
@@ -77,7 +77,7 @@ class LocalizedJsonCast implements Castable
              */
             private function getLanguageSlugsByPriority($lang)
             {
-                return AdminCore::cache('localized.value.'.($lang ?: 'default'), function() use ($lang) {
+                return AdminCore::cache('localized.value.'.($lang ?: Localization::getLocale() ?: 'default'), function() use ($lang) {
                     $selectedLanguageSlug = $lang ?: (Localization::get()->slug ?? null);
 
                     $slugs = [$selectedLanguageSlug, Localization::getDefaultLanguage()->slug];

@@ -246,7 +246,10 @@ class AdminFile implements Arrayable
      */
     public function extension($filename = null)
     {
-        $extension = explode('.', $filename ?: $this->filename);
+        $filename = $filename ?: $this->filename;
+        $filename = str_replace_last(EncryptorMutator::ENCRYPTOR_EXTENSION, '', $filename);
+
+        $extension = explode('.', $filename);
 
         return last($extension);
     }
