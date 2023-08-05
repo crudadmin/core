@@ -232,7 +232,11 @@ trait HasAdminCasts
                 $this->addMultiCast($key, LocalizedJsonCast::class.':');
             }
 
-            if ($this->hasFieldParam($key, 'multiple')) {
+            if ( $isMultipleSelect = (
+                    $this->isFieldType($key, ['select'])
+                    && !$this->hasFieldParam($key, 'belongsToMany')
+                    && $this->hasFieldParam($key, 'multiple', true)
+            ) ) {
                 $this->addMultiCast($key, MultipleJsonCast::class.':');
             }
 
@@ -244,11 +248,7 @@ trait HasAdminCasts
 
             //Add cast attribute for fields with multiple select
             if (
-                (
-                    $this->isFieldType($key, ['select'])
-                    && !$this->hasFieldParam($key, 'belongsToMany')
-                    && $this->hasFieldParam($key, 'multiple', true)
-                )
+                $isMultipleSelect
                 || $this->isFieldType($key, 'json')
              ) {
                 $this->addMultiCast($key, 'json');
