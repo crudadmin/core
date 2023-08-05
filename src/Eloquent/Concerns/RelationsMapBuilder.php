@@ -27,9 +27,16 @@ trait RelationsMapBuilder
         ] as $modelTree) {
             $tree = array_merge(
                 $tree,
-                $this->prepareUpperLowerCasesVariants($modelTree)
+                $this->prepareCasesVariants($modelTree)
+            );
+
+            $tree = array_merge(
+                $tree,
+                $this->prepareUpperLowerCasesVariants($tree)
             );
         }
+
+        ksort($tree);
 
         static::$bootingRelations[static::class] = false;
 
@@ -45,6 +52,39 @@ trait RelationsMapBuilder
         }
     }
 
+    /**
+     * Create all variants of forms
+     * eg: ->parentRelation, ->parent_relation
+     *
+     * @param  array  $tree
+     *
+     * @return  array
+     */
+    private function prepareCasesVariants($tree)
+    {
+        $variants = [];
+
+        foreach ($tree as $key => $relation) {
+            //Original forms
+            $variants[$key] = $relation;
+
+            //Snake: payment_method
+            $variants[Str::snake($key)] = $relation;
+
+            //Studly case: PaymentMethod
+            $variants[Str::studly($key)] = $relation;
+        }
+
+        return $variants;
+    }
+
+    /**
+     * Create all variants of uppercase/lowercase forms
+     *
+     * @param  array  $tree
+     *
+     * @return  array
+     */
     private function prepareUpperLowerCasesVariants($tree)
     {
         $variants = [];
@@ -149,7 +189,9 @@ trait RelationsMapBuilder
                     );
                 };
 
-                $tree[Str::replaceLast('_id', '', $fieldKey)] = $relation;
+                $relationName = Str::replaceLast('_id', '', $fieldKey);
+
+                $tree[$relationName] = $relation;
             }
         }
 
@@ -171,8 +213,11 @@ trait RelationsMapBuilder
 
                         $pluralBasename = Str::plural(class_basename($relationModel));
 
+                        //Full model name, eg: ->productsGallery
                         $tree[$pluralBasename] = $relation;
-                        $tree[Str::studly(implode('_', array_slice(explode('_', Str::snake($pluralBasename)), -1)))] = $relation;
+
+                        //Final model name, eg: ->gallery
+                        $tree[implode('_', array_slice(explode('_', Str::snake($pluralBasename)), -1))] = $relation;
                     }
                 }
             }
@@ -200,8 +245,7 @@ trait RelationsMapBuilder
                     )->orderBy($properties[3].'.id', 'asc');
                 };
 
-                $tree[$fieldKey] = $relation; //todo: may be removed?
-                $tree[Str::studly($fieldKey)] = $relation; //todo: test
+                $tree[$fieldKey] = $relation;
             }
         }
 
