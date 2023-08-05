@@ -12,6 +12,13 @@ use Illuminate\Contracts\Database\Eloquent\CastsInboundAttributes;
 
 trait HasAdminCasts
 {
+    /**
+     * Enable temporary multicast features for regular cast methods
+     *
+     * @var  bool
+     */
+    private static $withMultiCast = false;
+
     private function temporaryCastType($key, $type, $cache, $callback)
     {
         $originalCast = $this->casts[$key] ?? null;
@@ -99,9 +106,7 @@ trait HasAdminCasts
     {
         $multiCastClass = AdminMultiCast::class.':';
 
-        $casts = array_key_exists($key, $this->casts)
-                ? explode(',', str_replace_first($multiCastClass, '', $this->casts[$key]))
-                : [];
+        $casts = $this->getMultiCasts($key);
 
         $casts[] = $cast;
 
@@ -112,6 +117,69 @@ trait HasAdminCasts
         $this->casts[$key] = $multiCastClass.rtrim(implode('', $casts), ',');
 
         return $this;
+    }
+
+    private function getMultiCasts($key)
+    {
+        $multiCastClass = AdminMultiCast::class.':';
+
+        return array_key_exists($key, $this->casts)
+                ? explode(',', str_replace_first($multiCastClass, '', $this->casts[$key]))
+                : [];
+    }
+
+    /**
+     * Determine whether an attribute should be cast to a native type.
+     *
+     * @param  string  $key
+     * @param  array|string|null  $types
+     * @return bool
+     */
+    public function hasCast($key, $types = null)
+    {
+        if ( self::$withMultiCast ) {
+            return $this->hasMutliCast($key, $types);
+        }
+
+        return parent::hasCast($key, $types);
+    }
+
+    /**
+     * Determine whether an attribute should be cast to a native type.
+     *
+     * @param  string  $key
+     * @param  array|string|null  $types
+     * @return bool
+     */
+    public function hasMutliCast($key, $types = null)
+    {
+        if (array_key_exists($key, $this->getCasts())) {
+            if ( $types ) {
+                foreach ($this->getMultiCasts($key) as $castType) {
+                    if ( in_array($castType, (array) $types, true) ){
+                        return true;
+                    }
+                }
+            } else {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Enable temporary multicast features for regular cast methods
+     *
+     * @var  bool
+     */
+    public function withMultiCast($callback)
+    {
+        self::$withMultiCast = true;
+
+        $callback();
+
+        self::$withMultiCast = false;
     }
 
     /**
@@ -151,6 +219,7 @@ trait HasAdminCasts
                 if ( ($encryptedValue = $this->getFieldParam($key, 'encrypted')) && is_string($encryptedValue) ){
                     $this->addMultiCast($key, 'encrypted:'.$encryptedValue);
                 }
+
                 //Suport for array/json casts
                 else if ( ($this->casts[$key] ?? '') === 'json' ) {
                     $this->addMultiCast($key, 'encrypted:array');
