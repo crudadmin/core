@@ -51,6 +51,8 @@ trait RelationsMapBuilder
         if ( $this->hasRelationsCache() ) {
             $cacheKey = 'relations.'.$this->getFieldsCacheModelKey();
 
+            //TODO: split cache into one single TREE, not each model to have own cache file.
+            //This may slow down cache process. But cache is turned off for now.
             return Cache::rememberForever($cacheKey, function(){
                 return $this->getRelationsTree();
             });
