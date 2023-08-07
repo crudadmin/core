@@ -16,7 +16,7 @@ trait FieldProperties
      *
      * @var null|array
      */
-    private $_fields = null;
+    private static $adminFields = [];
 
     /**
      * Which options can be loaded in getFields (eg data from db).
@@ -39,6 +39,23 @@ trait FieldProperties
      */
     protected $skipBelongsToMany = false;
 
+
+    /**
+     * Fields cache key
+     *
+     * @return  string
+     */
+    public function getFieldsCacheModelKey()
+    {
+        return implode(';', array_merge(
+            [
+                get_class($this),
+            ],
+                $this->getModules(),
+            )
+        );
+    }
+
     /**
      * Return fields converted from string (key:value|otherkey:othervalue) into array format.
      *
@@ -48,20 +65,22 @@ trait FieldProperties
      */
     public function getFields($param = null, $force = false)
     {
-        $with_options = count($this->withOptions) > 0;
+        $withOptions = count($this->withOptions) > 0;
 
-        if ($param !== null || $with_options === true) {
+        if ($param !== null || $withOptions === true) {
             $force = true;
         }
 
+        $cacheKey = $this->getFieldsCacheModelKey();
+
         //Field mutations
-        if ($this->_fields == null || $force == true) {
-            $this->_fields = Fields::getFields($this, $param, $force);
+        if ( !array_key_exists($cacheKey, static::$adminFields) || $force == true) {
+            static::$adminFields[$cacheKey] = Fields::getFields($this, $param, $force);
 
             $this->withoutOptions();
         }
 
-        return $this->_fields;
+        return static::$adminFields[$cacheKey];
     }
 
     /**

@@ -31,14 +31,14 @@ class Fields extends MigrationDefinition
      *
      * @var array
      */
-    protected $base_fields = [];
+    protected $baseFields = [];
 
     /**
      * Loaded models completelly.
      *
      * @var array
      */
-    protected $loaded_fields = [];
+    protected $bootedModels = [];
 
     /**
      * Model groups of fields.
@@ -66,7 +66,7 @@ class Fields extends MigrationDefinition
      *
      * @var array
      */
-    protected $post_update = [];
+    protected $postUpdate = [];
 
     /**
      * Returns loaded column class.
@@ -146,22 +146,26 @@ class Fields extends MigrationDefinition
         //Get model table name
         $modelKey = $this->getModelKey($model);
 
+        //Added fields cache key
+        $cacheKey = $model->getFieldsCacheModelKey();
+
         //Return fields from cache
         if (
-            array_key_exists($modelKey, $this->base_fields)
-            && $this->isCompletedState($modelKey)
+            array_key_exists($modelKey, $this->baseFields)
+            && $this->isCompletedState($cacheKey)
             && $force === false
         ) {
-            return $this->base_fields[$modelKey];
+            return $this->baseFields[$modelKey];
         }
 
-        $this->setUncompletedState($modelKey);
+
+        $this->setUncompletedState($cacheKey);
 
         //Resets buffer
         $this->fields[$modelKey] = [];
         $this->groups[$modelKey] = [];
         $this->remove[$modelKey] = [];
-        $this->post_update[$modelKey] = [];
+        $this->postUpdate[$modelKey] = [];
         $this->mutationBuilder[$modelKey] = null;
 
         //Fields from model
@@ -177,13 +181,13 @@ class Fields extends MigrationDefinition
         $this->manageGroupFields($model, 0, $fields, null);
 
         //Set rendering of fields as completed
-        $this->setCompletedState($modelKey);
+        $this->setCompletedState($cacheKey);
 
         //First "postupdate" on modules
         $this->fireModulesPostUpdate($model, $modelKey, $param);
 
         //Register base fields without options for cached operations
-        $this->base_fields[$modelKey] = $this->removeOptions($this->fields[$modelKey]);
+        $this->baseFields[$modelKey] = $this->removeOptions($this->fields[$modelKey]);
 
         //Fire post updated on fields as queries, loading options etc...
         $this->fireMutatorsPostUpdate($model, $modelKey);
@@ -216,8 +220,8 @@ class Fields extends MigrationDefinition
      */
     private function setCompletedState(string $modelKey)
     {
-        if (! in_array($modelKey, $this->loaded_fields)) {
-            $this->loaded_fields[] = $modelKey;
+        if (! in_array($modelKey, $this->bootedModels)) {
+            $this->bootedModels[] = $modelKey;
         }
     }
 
@@ -229,8 +233,8 @@ class Fields extends MigrationDefinition
      */
     private function setUncompletedState(string $modelKey)
     {
-        if (in_array($modelKey, $this->loaded_fields)) {
-            unset($this->loaded_fields[array_search($modelKey, $this->loaded_fields)]);
+        if (in_array($modelKey, $this->bootedModels)) {
+            unset($this->bootedModels[array_search($modelKey, $this->bootedModels)]);
         }
     }
 
@@ -242,7 +246,7 @@ class Fields extends MigrationDefinition
      */
     private function isCompletedState(string $modelKey)
     {
-        return in_array($modelKey, $this->loaded_fields);
+        return in_array($modelKey, $this->bootedModels);
     }
 
     /**
@@ -257,8 +261,8 @@ class Fields extends MigrationDefinition
         $fields = $this->fields[$modelKey];
 
         if (
-            ! isset($this->post_update[$modelKey])
-            || count($updates = $this->post_update[$modelKey]) == 0
+            ! isset($this->postUpdate[$modelKey])
+            || count($updates = $this->postUpdate[$modelKey]) == 0
         ) {
             return $fields;
         }
@@ -318,7 +322,7 @@ class Fields extends MigrationDefinition
         }
 
         //Mutate fields in admin model modules
-        $model->runAdminModules(function($module) use ($builder, $param) {
+        $model->runAdminModules(function($module) use ($builder, $param, $model) {
             if ( method_exists($module, 'mutateFields') ) {
                 $module->mutateFields($builder, $param);
             }
@@ -734,7 +738,7 @@ class Fields extends MigrationDefinition
             return;
         }
 
-        $this->post_update[$this->getModelKey($model)][] = $mutation;
+        $this->postUpdate[$this->getModelKey($model)][] = $mutation;
     }
 
     /**

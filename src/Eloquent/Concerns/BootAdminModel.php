@@ -2,8 +2,6 @@
 
 namespace Admin\Core\Eloquent\Concerns;
 
-use AdminCore;
-
 trait BootAdminModel
 {
     /*
@@ -15,6 +13,11 @@ trait BootAdminModel
      * Which admin properties should be cachced through all admin models
      */
     protected $cacheProperties = ['fillable', 'dates', 'casts', 'hidden'];
+
+    /*
+     * Cache booted static models
+     */
+    private static $cacheModelProperties = [];
 
     /**
      * Save cachable fields properties which will be booted on model boot state
@@ -34,9 +37,9 @@ trait BootAdminModel
      */
     public function bootCachableProperties()
     {
-        $cacheKey = get_class($this);
+        $cacheKey = $this->getFieldsCacheModelKey();
 
-        $cachedModels = AdminCore::get('booted_models', []);
+        $cachedModels = static::$cacheModelProperties;
 
         //Check if model has been cached into admin cache
         if ( !array_key_exists($cacheKey, $cachedModels) ) {
@@ -54,13 +57,11 @@ trait BootAdminModel
                 }
             }
 
-            AdminCore::push('booted_models', $cachedProperties, $cacheKey);
-        } else {
-            $cachedProperties = AdminCore::get('booted_models', [])[$cacheKey];
+            static::$cacheModelProperties[$cacheKey] = $cachedProperties;
         }
 
         //Set all admin model properties from cache
-        foreach ($cachedProperties as $key => $property) {
+        foreach (static::$cacheModelProperties[$cacheKey] as $key => $property) {
             $this->{$key} = $property;
         }
     }

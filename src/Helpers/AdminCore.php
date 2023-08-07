@@ -171,8 +171,9 @@ class AdminCore
 
     /**
      * Returns all files of namespace path.
-     * @param  [type] $path
-     * @return [type]
+     * @param  string $path
+     *
+     * @return array
      */
     public function getNamespaceFiles($basepath)
     {

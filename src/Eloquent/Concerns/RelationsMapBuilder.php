@@ -9,6 +9,15 @@ trait RelationsMapBuilder
 {
     private static $bootingRelations = [];
 
+    protected function bootRelationships()
+    {
+        $tree = $this->getRelationsTree();
+
+        foreach ($tree as $key => $callback) {
+            $this->resolveRelationUsing($key, $callback);
+        }
+    }
+
     public function getRelationsTree()
     {
         //Fix infinite loop
@@ -41,15 +50,6 @@ trait RelationsMapBuilder
         static::$bootingRelations[static::class] = false;
 
         return $tree;
-    }
-
-    protected function bootRelationships()
-    {
-        $tree = $this->getRelationsTree();
-
-        foreach ($tree as $key => $callback) {
-            $this->resolveRelationUsing($key, $callback);
-        }
     }
 
     /**
