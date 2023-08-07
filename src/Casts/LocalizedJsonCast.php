@@ -95,9 +95,7 @@ class LocalizedJsonCast implements Castable
                         return is_null($value) == false;
                     })->toJson();
                 } else {
-                    $a = parent::set($model, $key, $value, $attributes);
-
-                    return $a;
+                    return parent::set($model, $key, $value, $attributes);
                 }
             }
         };
