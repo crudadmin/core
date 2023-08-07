@@ -4,17 +4,61 @@ namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
 use Str;
+use Cache;
 
 trait RelationsMapBuilder
 {
     private static $bootingRelations = [];
 
+    /*
+     * Relations cache turned off for now
+     */
+    protected function hasRelationsCache()
+    {
+        return false;
+    }
+
     protected function bootRelationships()
     {
-        $tree = $this->getRelationsTree();
+        $tree = $this->getCachedRelationTree();
 
         foreach ($tree as $key => $callback) {
-            $this->resolveRelationUsing($key, $callback);
+            $this->resolveRelationUsing($key, function($model) use ($callback) {
+                //Get cached array version, or unpack closure
+                $run = is_array($callback)
+                        ? $callback
+                        : $callback($model);
+
+                //Parse methods
+                foreach ($run as $method => $params) {
+                    foreach ($params as $k => $param) {
+                        //Boot model class
+                        if ( is_string($param) && $param[0] == '$' ){
+                            $params[$k] = AdminCore::getModelByTable(substr($param, 1));
+                        }
+                    }
+
+                    $model = $model->{$method}(...$params);
+                }
+
+                return $model;
+            });
+        }
+    }
+
+    public function getCachedRelationTree()
+    {
+        if ( $this->hasRelationsCache() ) {
+            $cacheKey = 'relations.'.$this->getFieldsCacheModelKey();
+
+            return Cache::rememberForever($cacheKey, function(){
+                return $this->getRelationsTree();
+            });
+        }
+
+        //APP Runtime relations
+        else {
+            return $this->getRelationsTree();
         }
     }
 
@@ -34,6 +78,8 @@ trait RelationsMapBuilder
             $this->getBelongsToFieldRelations(),
             $this->getBelongsManyToFieldRelations(),
         ] as $modelTree) {
+            $modelTree = $this->serializeRelationsForCache($modelTree);
+
             $tree = array_merge(
                 $tree,
                 $this->prepareCasesVariants($modelTree)
@@ -48,6 +94,18 @@ trait RelationsMapBuilder
         ksort($tree);
 
         static::$bootingRelations[static::class] = false;
+
+        return $tree;
+    }
+
+    private function serializeRelationsForCache($tree)
+    {
+        //Serialize relationship from closure into array
+        if ( $this->hasRelationsCache() ) {
+            foreach ($tree as $key => $callback) {
+                $tree[$key] = $callback($this);
+            }
+        }
 
         return $tree;
     }
@@ -121,31 +179,39 @@ trait RelationsMapBuilder
                     function($model) use ($relationModel) {
                         //Returns single child support
                         if ( $relationModel->maximum == 1 ){
-                            return $model->hasOne(
-                                $relationModel,
-                                $model->getForeignColumn($relationModel->getTable())
-                            );
+                            return [
+                                'hasOne' => [
+                                    $relationModel::class,
+                                    $model->getForeignColumn($relationModel->getTable())
+                                ]
+                            ];
                         }
 
                         //Support for recursive BelongsToModel in oposite direction
                         //When child is calling parent in singular mode.
                         if ( $model::class == $relationModel::class ){
-                            return $model->belongsTo(
-                                $relationModel,
-                                $model->getForeignColumn($relationModel->getTable())
-                            );
+                            return [
+                                'belongsTo' => [
+                                    $relationModel::class,
+                                    $model->getForeignColumn($relationModel->getTable())
+                                ]
+                            ];
                         }
 
-                        return $model->hasMany(
-                            $relationModel,
-                            $relationModel->getForeignColumn($model->getTable())
-                        );
+                        return [
+                            'hasMany' => [
+                                $relationModel::class,
+                                $relationModel->getForeignColumn($model->getTable())
+                            ]
+                        ];
                     },
                     function($model) use ($relationModel) {
-                        return $model->hasMany(
-                            $relationModel,
-                            $relationModel->getForeignColumn($model->getTable())
-                        );
+                        return [
+                            'hasMany' => [
+                                $relationModel::class,
+                                $relationModel->getForeignColumn($model->getTable()),
+                            ]
+                        ];
                     }
                 );
 
@@ -157,10 +223,12 @@ trait RelationsMapBuilder
                 $forms = $relationModel->getRelationForms(
                     $this,
                     function($model) use ($relationModel) {
-                        return $model->belongsTo(
-                            $relationModel,
-                            $model->getForeignColumn($relationModel->getTable())
-                        );
+                        return [
+                            'belongsTo' => [
+                                $relationModel::class,
+                                $model->getForeignColumn($relationModel->getTable())
+                            ]
+                        ];
                     }
                 );
 
@@ -181,12 +249,12 @@ trait RelationsMapBuilder
 
 
                 $relation = function($model) use ($properties) {
-                    $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
-
-                    return $model->belongsTo(
-                        $fieldRelationModel,
-                        $properties[4]
-                    );
+                    return [
+                        'belongsTo' => [
+                            '$'.$properties[0], //Table relation class
+                            $properties[4]
+                        ]
+                    ];
                 };
 
                 $relationName = Str::replaceLast('_id', '', $fieldKey);
@@ -204,11 +272,13 @@ trait RelationsMapBuilder
 
                     if ( $properties[0] == $this->getTable() ) {
                         $relation = function($model) use ($relationModel, $fieldKey) {
-                            return $model->hasMany(
-                                $relationModel,
-                                $fieldKey,
-                                $relationModel->getKeyName(),
-                            );
+                            return [
+                                'hasMany' => [
+                                    $relationModel::class,
+                                    $fieldKey,
+                                    $relationModel->getKeyName(),
+                                ]
+                            ];
                         };
 
                         $pluralBasename = Str::plural(class_basename($relationModel));
@@ -237,12 +307,17 @@ trait RelationsMapBuilder
                 $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
 
                 $relation = function($model) use ($fieldRelationModel, $properties) {
-                    return $model->belongsToMany(
-                        $fieldRelationModel,
-                        $properties[3],
-                        $properties[6],
-                        $properties[7]
-                    )->orderBy($properties[3].'.id', 'asc');
+                    return [
+                        'belongsToMany' => [
+                            $fieldRelationModel::class,
+                            $properties[3],
+                            $properties[6],
+                            $properties[7]
+                        ],
+                        'orderBy' => [
+                            $properties[3].'.id', 'asc'
+                        ],
+                    ];
                 };
 
                 $tree[$fieldKey] = $relation;
@@ -258,12 +333,14 @@ trait RelationsMapBuilder
 
                     if ( $properties[0] == $this->getTable() ) {
                         $relation = function($model) use ($relationModel, $properties) {
-                            return $model->belongsToMany(
-                                $relationModel,
-                                $properties[3],
-                                $properties[7],
-                                $properties[6],
-                            );
+                            return [
+                                'belongsToMany' => [
+                                    $relationModel::class,
+                                    $properties[3],
+                                    $properties[7],
+                                    $properties[6],
+                                ]
+                            ];
                         };
 
                         $pluralBasename = Str::plural(class_basename($relationModel));
