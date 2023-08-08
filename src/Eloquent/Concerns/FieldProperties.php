@@ -52,6 +52,7 @@ trait FieldProperties
                 get_class($this),
             ],
                 $this->getModules(),
+                AdminCore::getAdminModelNamespaces(),
             )
         );
     }

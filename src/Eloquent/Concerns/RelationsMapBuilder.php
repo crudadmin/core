@@ -20,7 +20,7 @@ trait RelationsMapBuilder
 
     protected function bootRelationships()
     {
-        $tree = $this->getCachedRelationTree();
+        $tree = $this->getCachedRelationsTree();
 
         foreach ($tree as $key => $callback) {
             $this->resolveRelationUsing($key, function($model) use ($callback) {
@@ -46,7 +46,7 @@ trait RelationsMapBuilder
         }
     }
 
-    public function getCachedRelationTree()
+    public function getCachedRelationsTree()
     {
         if ( $this->hasRelationsCache() ) {
             $cacheKey = 'relations.'.$this->getFieldsCacheModelKey();
@@ -365,8 +365,9 @@ trait RelationsMapBuilder
         $basenameSnake = Str::snake(class_basename($this));
 
         $forms = [
-            Str::singular($basename) => $relationSingular,
             Str::plural($basename) => $relationPlural,
+            Str::singular($basename) => $relationSingular,
+            array_slice(explode('_', Str::snake($basename)), -1)[0] => $relationSingular,
         ];
 
         if ( $parentModel ) {
