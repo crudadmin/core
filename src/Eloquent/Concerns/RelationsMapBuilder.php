@@ -302,31 +302,6 @@ trait RelationsMapBuilder
     {
         $tree = [];
 
-        foreach ($this->getFields() as $fieldKey => $field) {
-            if ( isset($field['belongsToMany']) ){
-                $properties = $this->getRelationProperty($fieldKey, 'belongsToMany');
-
-                $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
-
-                $relation = function($model) use ($fieldRelationModel, $properties) {
-                    return [
-                        'belongsToMany' => [
-                            $fieldRelationModel::class,
-                            $properties[3],
-                            $properties[6],
-                            $properties[7]
-                        ],
-                        'orderBy' => [
-                            $properties[3].'.id', 'asc'
-                        ],
-                    ];
-                };
-
-                $tree[$fieldKey] = $relation;
-            }
-        }
-
-
         //Reverse belongsToMany field relation
         foreach (AdminCore::getAdminModels() as $relationModel) {
             foreach ($relationModel->getFields() as $fieldKey => $field) {
@@ -351,6 +326,31 @@ trait RelationsMapBuilder
                         $tree[Str::studly(implode('_', array_slice(explode('_', Str::snake($pluralBasename)), -1)))] = $relation;
                     }
                 }
+            }
+        }
+
+        //Own fields has priority between parent
+        foreach ($this->getFields() as $fieldKey => $field) {
+            if ( isset($field['belongsToMany']) ){
+                $properties = $this->getRelationProperty($fieldKey, 'belongsToMany');
+
+                $fieldRelationModel = AdminCore::getModelByTable($properties[0]);
+
+                $relation = function($model) use ($fieldRelationModel, $properties) {
+                    return [
+                        'belongsToMany' => [
+                            $fieldRelationModel::class,
+                            $properties[3],
+                            $properties[6],
+                            $properties[7]
+                        ],
+                        'orderBy' => [
+                            $properties[3].'.id', 'asc'
+                        ],
+                    ];
+                };
+
+                $tree[$fieldKey] = $relation;
             }
         }
 
