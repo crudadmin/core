@@ -71,7 +71,7 @@ trait FieldProperties
             $force = true;
         }
 
-        $cacheKey = $this->getFieldsCacheModelKey();
+        $cacheKey = static::class;
 
         //Field mutations
         if ( !array_key_exists($cacheKey, static::$adminFields) || $force == true) {

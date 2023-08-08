@@ -8,11 +8,15 @@ use Illuminate\Filesystem\Filesystem;
 
 trait FieldModules
 {
-    static $globalModules = [];
+    private static $globalModules = [];
 
     public function getModules()
     {
-        return array_unique(array_merge($this->modules, self::$globalModules, $this->getGlobalModulesAutoLoad()));
+        return array_unique(array_merge(
+            $this->modules,
+            self::$globalModules,
+            AdminCore::getGlobalModulesAutoLoad()
+        ));
     }
 
     public function addModule($module)
@@ -24,29 +28,6 @@ trait FieldModules
     {
         self::$globalModules[] = $module;
         self::$globalModules = array_unique(self::$globalModules);
-    }
-
-    private function getGlobalModulesAutoLoad()
-    {
-        return AdminCore::cache('bootloader_admin_modules.'.implode(';', config('admin.modules')), function(){
-            $modules = [];
-
-            $modulesPaths = AdminCore::getNamespacesList('modules');
-
-            foreach ($modulesPaths as $path => $namespace) {
-                $files = AdminCore::getNamespaceFiles($path);
-
-                foreach ($files as $file) {
-                    $module = AdminCore::fromFilePathToNamespace((string) $file, dirname($path), $namespace);
-
-                    if ( class_exists($module) && is_a($module, AdminModelModule::class, true) ) {
-                        $modules[] = $module;
-                    }
-                }
-            }
-
-            return $modules;
-        });
     }
 
     /*

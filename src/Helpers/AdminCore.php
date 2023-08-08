@@ -2,17 +2,21 @@
 
 namespace Admin\Core\Helpers;
 
-use Admin\Core\Contracts\DataStore;
-use Admin\Core\Eloquent\AdminModel;
-use Illuminate\Support\Facades\Log;
 use Admin\Core\Contracts\AdminEvents;
+use Admin\Core\Contracts\DataStore;
+use Admin\Core\Contracts\HasConfig;
+use Admin\Core\Contracts\HasModules;
+use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Log;
 use Storage;
 
 class AdminCore
 {
     use DataStore,
-        AdminEvents;
+        AdminEvents,
+        HasModules,
+        HasConfig;
 
     /*
      * Filesystem provider
@@ -132,6 +136,8 @@ class AdminCore
 
         //All admin models has been properly loaded
         $this->set('booted', true);
+
+        $this->cacheConfig();
 
         //Returns namespaces list
         return $this->get('namespaces', []);

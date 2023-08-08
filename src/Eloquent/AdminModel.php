@@ -187,6 +187,20 @@ class AdminModel extends Model
     }
 
     /**
+     * Get table performance improvement with caching table name
+     *
+     * @return  string
+     */
+    public function getTable()
+    {
+        if ( !$this->table ){
+            $this->table = parent::getTable();
+        }
+
+        return $this->table;
+    }
+
+    /**
      * DEPREACED:
      * Returns modified called property.
      *
