@@ -114,7 +114,8 @@ trait HasAdminCasts
             return $cast.(str_ends_with($cast, ':') ? '' : ',');
         }, $casts);
 
-        $this->casts[$key] = $multiCastClass.rtrim(implode('', $casts), ',');
+        //Add multicastp prefix only if needed.
+        $this->casts[$key] = (count($casts) >= 2 ? $multiCastClass : '').rtrim(implode('', $casts), ',');
 
         return $this;
     }
