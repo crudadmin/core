@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Casts;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
@@ -19,17 +19,19 @@ class DateableCast implements CastsAttributes
      */
     public function get($model, $key, $value, $attributes)
     {
-       if ( !$value || $value == '0000-00-00 00:00:00' ){
+        if ( !$value || $value == '0000-00-00 00:00:00' ){
             return;
         }
 
-        if ( $model->isFieldType($key, 'time') ){
+        $type = $model->getFieldType($key);
+
+        if ( $type == 'time' ){
             $format = strlen($value) == '5' ? 'H:i' : 'H:i:s';
 
             if ( Carbon::hasFormat($value, $format) ) {
                 return Carbon::createFromFormat($format, $value);
             }
-        } else if ( $model->isFieldType($key, 'date') ){
+        } else if ( $type == 'date' ){
             $format = preg_match('/^[0-9]{2}.([0-9]{2}).([0-9]{4})$/', $value)
                         ? 'd.m.Y' //Legacy depreaced format support
                         : 'Y-m-d';
@@ -37,7 +39,7 @@ class DateableCast implements CastsAttributes
             if ( Carbon::hasFormat($value, $format) ) {
                 return Carbon::createFromFormat($format, $value)->setTimezone(config('app.timezone'))->setTime(0, 0, 0, 0);
             }
-        } else if ( $model->isFieldType($key, ['datetime', 'timestamp']) ){
+        } else if ( in_array($type, ['datetime', 'timestamp']) ){
             return (new Carbon($value))->setTimezone(config('app.timezone'));
         }
     }
@@ -56,12 +58,12 @@ class DateableCast implements CastsAttributes
         $dbFormat = $this->getFinalDatabaseFormat($model, $key);
 
         //Correct format has been given already
-        if ( Carbon::hasFormat($value, $dbFormat) ) {
-            return $value;
-        }
-
-        //Guess given date string format
         if ( is_string($value) ) {
+            if ( Carbon::hasFormat($value, $dbFormat) ) {
+                return $value;
+            }
+
+            //Guess given date string format
             $value = $this->getUniversalDateFormat($value, $model, $key);
         }
 
@@ -73,11 +75,13 @@ class DateableCast implements CastsAttributes
 
     private function getFinalDatabaseFormat($model, $key)
     {
-        if ( $model->isFieldType($key, 'time') ){
+        $fieldType = $model->getFieldType($key);
+
+        if ( $fieldType == 'time' ){
             return 'H:i:s';
-        } else if ( $model->isFieldType($key, 'date') ){
+        } else if ( $fieldType == 'date' ){
             return 'Y-m-d';
-        } else if ( $model->isFieldType($key, ['datetime', 'timestamp']) ){
+        } else if ( in_array($fieldType, ['datetime', 'timestamp']) ){
             return 'Y-m-d H:i:s';
         }
     }
