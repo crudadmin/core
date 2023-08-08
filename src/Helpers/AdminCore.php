@@ -137,6 +137,7 @@ class AdminCore
         //All admin models has been properly loaded
         $this->set('booted', true);
 
+        //Set config cache
         $this->cacheConfig();
 
         //Returns namespaces list

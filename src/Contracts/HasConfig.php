@@ -10,6 +10,11 @@ trait HasConfig
     {
         static::$config = config('admin');
 
+        //Refresh field if needed
+        foreach ($this->getAdminModels() as $model) {
+            $model->refreshFields();
+        }
+
         return $this;
     }
 

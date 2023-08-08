@@ -75,12 +75,30 @@ trait FieldProperties
 
         //Field mutations
         if ( !array_key_exists($cacheKey, static::$adminFields) || $force == true) {
-            static::$adminFields[$cacheKey] = Fields::getFields($this, $param, $force);
+            static::$adminFields[$cacheKey] = [
+                'fields' => Fields::getFields($this, $param, $force),
+                'key' => $this->getFieldsCacheModelKey(),
+            ];
 
             $this->withoutOptions();
         }
 
-        return static::$adminFields[$cacheKey];
+        return static::$adminFields[$cacheKey]['fields'];
+    }
+
+    /*
+     * Refresh fields when modules/or cache key has been changed
+     */
+    public function refreshFields()
+    {
+        $cacheKey = static::class;
+
+        if (
+            isset(static::$adminFields[$cacheKey])
+            && static::$adminFields[$cacheKey]['key'] != $this->getFieldsCacheModelKey()
+        ){
+            unset(static::$adminFields[$cacheKey]);
+        }
     }
 
     /**
