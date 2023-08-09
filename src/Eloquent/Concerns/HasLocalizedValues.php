@@ -24,7 +24,7 @@ trait HasLocalizedValues
      *
      * @param  bool  $state
      */
-    public function setLocalizedResponse($state = true)
+    public function setLocalizedResponse($state = false)
     {
         $this->localizedResponseLocalArray = $state;
 
