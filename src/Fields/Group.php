@@ -180,7 +180,7 @@ class Group
      *
      * @return  Group
      */
-    public function if(bool $state)
+    public function if($state)
     {
         $this->enabled = $state;
 
