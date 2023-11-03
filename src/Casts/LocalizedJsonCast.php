@@ -32,7 +32,7 @@ class LocalizedJsonCast implements Castable
 
             private function isArrayResponse($model)
             {
-                return $model::$localizedResponseArray === true || $model->isLocalizedResponseLocalArray();
+                return $model::$localizedResponseArray === true && $model->isLocalizedResponseLocalArray() === true;
             }
 
             /**

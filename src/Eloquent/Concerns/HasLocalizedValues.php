@@ -17,7 +17,7 @@ trait HasLocalizedValues
      *
      * @var  bool
      */
-    public $localizedResponseLocalArray = false;
+    public $localizedResponseLocalArray = true;
 
     /**
      * Turn on localized responses as final locale strings in toArray()
