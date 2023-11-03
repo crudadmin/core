@@ -160,6 +160,25 @@ class AdminModel extends Model
     }
 
     /**
+     * On calling property.
+     *
+     * @see Illuminate\Database\Eloquent\Model
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        $this->localizedResponseLocalArray = false;
+
+        $value = parent::__get($key);
+
+        $this->localizedResponseLocalArray = true;
+
+        return $value;
+    }
+
+    /**
      * Mutate fields method for parent::mutateFields() support
      *
      * @param  Admin\Tests\App\Models\Fields\FieldsMutator  $fields
