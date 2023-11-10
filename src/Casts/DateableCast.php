@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Casts;
 
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
