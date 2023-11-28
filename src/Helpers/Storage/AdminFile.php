@@ -19,9 +19,10 @@ class AdminFile implements Arrayable
         HasResizer;
 
     /**
-     * This directory will be visible for file downloads
+     * This directories will be visible for file downloads
      */
     const UPLOADS_DIRECTORY = 'uploads';
+    const CACHE_DIRECTORY = 'cache';
 
     /*
      * Related admin model
@@ -133,10 +134,16 @@ class AdminFile implements Arrayable
      *
      * @return  Illuminate\Filesystem\FilesystemAdapter
      */
-    public function getCacheStorage()
+    public static function getCacheStorage()
     {
-        if ( $this->externalStorageResizer() ) {
+        if ( self::isExternalStorageResizer() ) {
             return $this->getStorage();
+        }
+
+        //Custom disk name
+        $diskName = config('admin.resizer.storage');
+        if ( is_string($diskName) ) {
+            return Storage::disk($diskName);
         }
 
         return AdminCore::getUploadsStorage();
@@ -160,7 +167,7 @@ class AdminFile implements Arrayable
                 //We can return resized storage path image url.
                 //This is usefull when we does not have CDN available. Then we can cache internaly
                 //if resized image is available, and redirect directly to the storage url
-                || ($this->hasStorageExistanceCache() && $this->externalStorageResizer() && $this->existsCached())
+                || ($this->hasStorageExistanceCache() && self::isExternalStorageResizer() && $this->existsCached())
             ) {
                 $url = $this->getCacheStorage()->url($this->path);
             }

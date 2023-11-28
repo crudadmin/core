@@ -42,17 +42,6 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     /**
-     * Bootstrap the application events.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        //Load translations
-        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang/', 'admin.core');
-    }
-
-    /**
      * Register the service provider.
      *
      * @return void
@@ -69,6 +58,20 @@ class AppServiceProvider extends ServiceProvider
         $this->registerProviders();
 
         $this->addCrudadminStorage();
+    }
+
+    /**
+     * Bootstrap the application events.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        //Load translations
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang/', 'admin.core');
+
+        //Register final symlinks
+        $this->addCrudadminStorageSymlinks();
     }
 
     /*
@@ -119,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app['config']->set('filesystems.disks.crudadmin.uploads', [
             'driver' => 'local',
-            'root' => $uploadsDirectory = $crudAdminStoragePath.'/'.AdminFile::UPLOADS_DIRECTORY,
+            'root' => $crudAdminStoragePath.'/'.AdminFile::UPLOADS_DIRECTORY,
             'url' => (env('ASSET_URL') ?: env('APP_URL')).'/'.AdminFile::UPLOADS_DIRECTORY,
             'visibility' => 'public',
         ]);
@@ -136,13 +139,26 @@ class AppServiceProvider extends ServiceProvider
             'root' => $crudAdminStoragePath.'/lang',
             'visibility' => 'private',
         ]);
+    }
+
+    private function addCrudadminStorageSymlinks()
+    {
+        $uploadsPath = $this->app['config']->get('filesystems.disks.crudadmin.uploads')['root'];
+
+        $paths = [
+            public_path(AdminFile::UPLOADS_DIRECTORY) => $uploadsPath
+        ];
+
+        //If we are using cache in root crudadmin directory
+        if ( AdminFile::isCacheInRootFolder() ) {
+            $paths[public_path(AdminFile::CACHE_DIRECTORY)] = AdminFile::getCacheStorage()->path(AdminFile::CACHE_DIRECTORY);
+        }
 
         $this->app['config']->set(
             'filesystems.links',
             array_merge(
-                $this->app['config']->get('filesystems.links', []), [
-                    public_path(AdminFile::UPLOADS_DIRECTORY) => $uploadsDirectory
-                ]
+                $this->app['config']->get('filesystems.links', []),
+                $paths
             )
         );
     }

@@ -53,9 +53,9 @@ trait HasResizer
         return $this;
     }
 
-    public function externalStorageResizer()
+    public static function isExternalStorageResizer()
     {
-        return config('admin.resizer.storage', true) === true;
+        return config('admin.resizer.storage', false) === true;
     }
 
     /**
@@ -339,7 +339,27 @@ trait HasResizer
      */
     public static function getCacheDirectory($path)
     {
-        return 'cache/'.$path;
+        return self::CACHE_DIRECTORY.'/'.$path;
+    }
+
+    /**
+     * Return public version of cache directory
+     *
+     * @return  string
+     */
+    public static function getPublicCacheDirectory()
+    {
+        return (self::isCacheInRootFolder() ? '' : self::UPLOADS_DIRECTORY.'/').self::CACHE_DIRECTORY;
+    }
+
+    /**
+     * Is cache saved instead of /uploads/cache in /cache ?
+     *
+     * @return  bool
+     */
+    public static function isCacheInRootFolder()
+    {
+        return is_string(config('admin.resizer.storage'));
     }
 
     private function canBeImageResized()
