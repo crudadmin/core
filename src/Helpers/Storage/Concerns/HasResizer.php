@@ -30,7 +30,7 @@ trait HasResizer
 
     public function isResized()
     {
-        return count($this->resizeParams) > 0;
+        return $this->cachePrefix || count($this->resizeParams) > 0;
     }
 
     /*
