@@ -10,6 +10,7 @@ use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
 use Storage;
+use Exception;
 
 class AdminFile
 {
@@ -115,11 +116,13 @@ class AdminFile
      */
     public function getStorage()
     {
-        if ( $this->isResized() ){
-            return $this->getCacheStorage();
-        }
-
-        return Storage::disk($this->disk);
+        return AdminCore::cache('adminfile.storage.'.$this->disk, function(){
+            try {
+                return Storage::disk($this->disk);
+            } catch (Exception $e){
+                //..
+            }
+        });
     }
 
     /**
@@ -151,6 +154,11 @@ class AdminFile
      */
     public function url()
     {
+        //Storage does not work
+        if ( !$this->getStorage() ){
+            return '';
+        }
+
         if ( $this->isResized() ) {
             if (
                 //If is internal storage, we can use storage url, because

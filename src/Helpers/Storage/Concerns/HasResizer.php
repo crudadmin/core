@@ -30,7 +30,7 @@ trait HasResizer
 
     public function isResized()
     {
-        return $this->cachePrefix ? true : false;
+        return count($this->resizeParams) > 0;
     }
 
     /*
@@ -364,6 +364,11 @@ trait HasResizer
 
     private function canBeImageResized()
     {
+        //If storage is not working, .eg if external disk has been unmounted.
+        if ( !$this->getStorage() ){
+            return false;
+        }
+
         if ( config('admin.image_rewrite_missing_uploads', true) === false ) {
             return false;
         }
