@@ -35,7 +35,7 @@ trait HasStorage
      */
     public function getFieldStorage(string $fieldKey)
     {
-        return Storage::disk(
+        return AdminCore::getDiskByName(
             $this->getFieldDiskName($fieldKey)
         );
     }

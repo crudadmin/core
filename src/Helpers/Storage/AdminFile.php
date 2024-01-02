@@ -10,7 +10,6 @@ use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
 use Storage;
-use Exception;
 
 class AdminFile
 {
@@ -116,13 +115,7 @@ class AdminFile
      */
     public function getStorage()
     {
-        return AdminCore::cache('adminfile.storage.'.$this->disk, function(){
-            try {
-                return Storage::disk($this->disk);
-            } catch (Exception $e){
-                //..
-            }
-        });
+        return AdminCore::getDiskByName($this->disk);
     }
 
     /**
@@ -139,7 +132,7 @@ class AdminFile
         //Custom disk name
         $diskName = config('admin.resizer.storage');
         if ( is_string($diskName) ) {
-            return Storage::disk($diskName);
+            return AdminCore::getDiskByName($diskName);
         }
 
         return AdminCore::getUploadsStorage();

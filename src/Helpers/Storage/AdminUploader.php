@@ -61,7 +61,7 @@ class AdminUploader
     public function getFieldStorage()
     {
         if ( $this->disk ) {
-            return Storage::disk($this->disk);
+            return AdminCore::getDiskByName($this->disk);
         }
 
         return $this->model->getFieldStorage($this->fieldKey);

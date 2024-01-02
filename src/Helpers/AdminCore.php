@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Admin\Core\Contracts\AdminEvents;
 use Illuminate\Filesystem\Filesystem;
 use Storage;
+use Exception;
 
 class AdminCore
 {
@@ -26,7 +27,7 @@ class AdminCore
 
     public function getStorage()
     {
-        return Storage::disk('crudadmin');
+        return $this->getDiskByName('crudadmin');
     }
 
     public function getUploadsStorageName($private = false)
@@ -36,11 +37,22 @@ class AdminCore
             : 'crudadmin.uploads';
     }
 
-    public function getUploadsStorage($private = false)
+    public function getUploadsStorage($private = false, $disk = null)
     {
-        return Storage::disk(
+        return $this->getDiskByName(
             $this->getUploadsStorageName($private)
         );
+    }
+
+    public function getDiskByName($name)
+    {
+        return $this->cache('admin.storage.'.$name, function() use ($name) {
+            try {
+                return Storage::disk($name);
+            } catch (Exception $e){
+                //.. storage is not working, eg. mount failed.
+            }
+        });
     }
 
     /*
