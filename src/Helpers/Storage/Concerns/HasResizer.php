@@ -145,13 +145,18 @@ trait HasResizer
 
         $samplePath = $this->getBackupCacheImageName($cachedPath);
 
-        //If original/source image does exists and sample file is generated
-        //In this case we need reset all resized cache, which has been resized from sample image.
-        if ( !($this->exists() && $this->getStorage()->exists($samplePath)) ){
+        //Check if storage is present.
+        if ( !($storage = $this->getStorage()) ){
             return;
         }
 
-        $this->getStorage()->delete([
+        //If original/source image does exists and sample file is generated
+        //In this case we need reset all resized cache, which has been resized from sample image.
+        if ( !($this->exists() && $storage->exists($samplePath)) ){
+            return;
+        }
+
+        $storage->delete([
             $samplePath, $cachedPath
         ]);
     }
@@ -364,11 +369,6 @@ trait HasResizer
 
     private function canBeImageResized()
     {
-        //If storage is not working, .eg if external disk has been unmounted.
-        if ( !$this->getStorage() ){
-            return false;
-        }
-
         if ( config('admin.image_rewrite_missing_uploads', true) === false ) {
             return false;
         }

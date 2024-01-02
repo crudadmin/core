@@ -147,11 +147,6 @@ class AdminFile
      */
     public function url()
     {
-        //Storage does not work
-        if ( !$this->getStorage() ){
-            return '';
-        }
-
         if ( $this->isResized() ) {
             if (
                 //If is internal storage, we can use storage url, because
