@@ -170,7 +170,7 @@ class AdminFile
 
         //Source image
         else {
-            $url = $this->getStorage()->url($this->path);
+            $url = $this->getStorage()?->url($this->path);
         }
 
         //TODO: REFACTOR
