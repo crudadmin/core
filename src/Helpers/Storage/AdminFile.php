@@ -115,6 +115,10 @@ class AdminFile
      */
     public function getStorage()
     {
+        if ( $this->isResized() ) {
+            return $this->getCacheStorage();
+        }
+
         return AdminCore::getDiskByName($this->disk);
     }
 
