@@ -253,7 +253,7 @@ class AdminModel extends Model
             // }
         // }
 
-        return parent::__get($key);
+        return self::__get($key);
     }
 
     /**
