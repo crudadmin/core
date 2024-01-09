@@ -9,9 +9,10 @@ use Admin\Core\Helpers\Storage\Concerns\HasDownloads;
 use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
+use JsonSerializable;
 use Storage;
 
-class AdminFile
+class AdminFile implements JsonSerializable
 {
     use FileHelper,
         HasDownloads,
@@ -84,6 +85,16 @@ class AdminFile
     public function __toString()
     {
         return $this->url();
+    }
+
+    /**
+     * Formatting for json
+     *
+     * @return  string
+     */
+    public function jsonSerialize()
+    {
+        return $this->url;
     }
 
     /**
