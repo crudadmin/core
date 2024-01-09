@@ -126,7 +126,11 @@ class AdminFile implements Arrayable
      */
     public function getStorage()
     {
-        return Storage::disk($this->disk);
+        if ( $this->isResized() ) {
+            return $this->getCacheStorage();
+        }
+
+        return AdminCore::getDiskByName($this->disk);
     }
 
     /**
@@ -143,7 +147,7 @@ class AdminFile implements Arrayable
         //Custom disk name
         $diskName = config('admin.resizer.storage');
         if ( is_string($diskName) ) {
-            return Storage::disk($diskName);
+            return AdminCore::getDiskByName($diskName);
         }
 
         return AdminCore::getUploadsStorage();
@@ -181,7 +185,7 @@ class AdminFile implements Arrayable
 
         //Source image
         else {
-            $url = $this->getStorage()->url($this->path);
+            $url = $this->getStorage()?->url($this->path);
         }
 
         //TODO: REFACTOR
