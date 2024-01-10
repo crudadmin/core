@@ -71,7 +71,7 @@ trait HasResizer
     /*
      * Resize or fit image depending on dimensions
      */
-    public function resize($width = null, $height = null, $force = false)
+    public function resize($width = null, $height = null, $force = false, $cacheDirectory = null)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
         if ( $this->canBeImageResized() === false ) {
@@ -89,7 +89,7 @@ trait HasResizer
 
         return $this->image([
             $action => [$width, $height],
-        ], $force);
+        ], $force, $cacheDirectory);
     }
 
     /**
@@ -129,7 +129,7 @@ trait HasResizer
             $this->setCachedResizeData($cachePrefix, $mutators);
         }
 
-        return (new static($this->getModel(), $this->fieldKey, $cachedPath))
+        return (new static($this->getModel(), $this->fieldKey, $cachedPath, self::getCacheStorageDiskName()))
                 ->cloneModelData($this)
                 ->setCachePrefix($cachePrefix);
     }

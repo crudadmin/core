@@ -126,10 +126,6 @@ class AdminFile implements JsonSerializable
      */
     public function getStorage()
     {
-        if ( $this->isResized() ) {
-            return $this->getCacheStorage();
-        }
-
         return AdminCore::getDiskByName($this->disk);
     }
 
@@ -145,12 +141,23 @@ class AdminFile implements JsonSerializable
         }
 
         //Custom disk name
-        $diskName = config('admin.resizer.storage');
-        if ( is_string($diskName) ) {
+        if ( $diskName = self::getCacheStorageDiskName() ) {
             return AdminCore::getDiskByName($diskName);
         }
 
         return AdminCore::getUploadsStorage();
+    }
+
+    /**
+     * Returns cache storage name
+     */
+    public static function getCacheStorageDiskName()
+    {
+        $diskName = config('admin.resizer.storage');
+
+        if ( is_string($diskName) ) {
+            return $diskName;
+        }
     }
 
     /**
