@@ -71,7 +71,7 @@ trait HasResizer
     /*
      * Resize or fit image depending on dimensions
      */
-    public function resize($width = null, $height = null, $force = false)
+    public function resize($width = null, $height = null, $force = false, $cacheDirectory = null)
     {
         //When is file type svg, then image postprocessing subdirectories not exists
         if ( $this->canBeImageResized() === false ) {
@@ -89,7 +89,7 @@ trait HasResizer
 
         return $this->image([
             $action => [$width, $height],
-        ], $force);
+        ], $force, $cacheDirectory);
     }
 
     /**
@@ -114,7 +114,10 @@ trait HasResizer
         $cachedPath = $this->getCachePath($cachePrefix, $mutators);
 
         //If previously resized image has been resized from sample image, when source is missing...
-        $this->checkInactiveSampleImage($cachedPath);
+        //
+        // TODO: optimize this, on slow storage (wedos disk) this is huge slowdown
+        // because on every request, if there is hundreds or thoundsands of images, there is checking existance on the disk
+        // $this->checkInactiveSampleImage($cachedPath);
 
         //If image processign is ask to be completed in actual request
         if ($force === true) {
@@ -126,7 +129,7 @@ trait HasResizer
             $this->setCachedResizeData($cachePrefix, $mutators);
         }
 
-        return (new static($this->getModel(), $this->fieldKey, $cachedPath))
+        return (new static($this->getModel(), $this->fieldKey, $cachedPath, self::getCacheStorageDiskName()))
                 ->cloneModelData($this)
                 ->setCachePrefix($cachePrefix);
     }

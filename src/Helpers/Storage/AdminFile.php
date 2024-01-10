@@ -10,9 +10,10 @@ use Admin\Core\Helpers\Storage\Concerns\HasResizer;
 use Admin\Core\Helpers\Storage\Mutators\EncryptorMutator;
 use File;
 use Illuminate\Contracts\Support\Arrayable;
+use JsonSerializable;
 use Storage;
 
-class AdminFile implements Arrayable
+class AdminFile implements Arrayable, JsonSerializable
 {
     use FileHelper,
         HasDownloads,
@@ -97,6 +98,16 @@ class AdminFile implements Arrayable
         return $this->filename;
     }
 
+    /*
+     * Formatting for json
+     *
+     * @return  string
+     */
+    public function jsonSerialize()
+    {
+        return $this->url;
+    }
+
     /**
      * Forward property calls
      *
@@ -126,10 +137,6 @@ class AdminFile implements Arrayable
      */
     public function getStorage()
     {
-        if ( $this->isResized() ) {
-            return $this->getCacheStorage();
-        }
-
         return AdminCore::getDiskByName($this->disk);
     }
 
@@ -145,12 +152,23 @@ class AdminFile implements Arrayable
         }
 
         //Custom disk name
-        $diskName = config('admin.resizer.storage');
-        if ( is_string($diskName) ) {
+        if ( $diskName = self::getCacheStorageDiskName() ) {
             return AdminCore::getDiskByName($diskName);
         }
 
         return AdminCore::getUploadsStorage();
+    }
+
+    /**
+     * Returns cache storage name
+     */
+    public static function getCacheStorageDiskName()
+    {
+        $diskName = config('admin.resizer.storage');
+
+        if ( is_string($diskName) ) {
+            return $diskName;
+        }
     }
 
     /**
