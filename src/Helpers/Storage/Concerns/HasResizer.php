@@ -114,7 +114,10 @@ trait HasResizer
         $cachedPath = $this->getCachePath($cachePrefix, $mutators);
 
         //If previously resized image has been resized from sample image, when source is missing...
-        $this->checkInactiveSampleImage($cachedPath);
+        //
+        // TODO: optimize this, on slow storage (wedos disk) this is huge slowdown
+        // because on every request, if there is hundreds or thoundsands of images, there is checking existance on the disk
+        // $this->checkInactiveSampleImage($cachedPath);
 
         //If image processign is ask to be completed in actual request
         if ($force === true) {
