@@ -215,6 +215,19 @@ trait HasAdminCasts
     protected function makeCastable()
     {
         foreach ($this->getFields() as $key => $field) {
+            if ($this->hasFieldParam($key, 'locale')) {
+                $this->addMultiCast($key, LocalizedJsonCast::class.':');
+            }
+
+            if (
+                $this->isFieldType($key, ['select', 'file', 'time'])
+                && !$this->hasFieldParam($key, 'belongsToMany')
+                && $this->hasFieldParam($key, 'multiple', true)
+            ) {
+                $this->addMultiCast($key, MultipleJsonCast::class.':');
+            }
+
+            //Encryption must be in this exact order, after all multiplies will be performed.
             if ($this->hasFieldParam($key, 'encrypted')) {
                 //Custom encryption types fields
                 if ( ($encryptedValue = $this->getFieldParam($key, 'encrypted')) && is_string($encryptedValue) ){
@@ -229,18 +242,6 @@ trait HasAdminCasts
                 }
             }
 
-            if ($this->hasFieldParam($key, 'locale')) {
-                $this->addMultiCast($key, LocalizedJsonCast::class.':');
-            }
-
-            if ( $isMultipleSelect = (
-                    $this->isFieldType($key, ['select'])
-                    && !$this->hasFieldParam($key, 'belongsToMany')
-                    && $this->hasFieldParam($key, 'multiple', true)
-            ) ) {
-                $this->addMultiCast($key, MultipleJsonCast::class.':');
-            }
-
             if ( $this->isFieldType($key, ['file']) ) {
                 $this->addMultiCast($key, AdminFileCast::class);
             } else if ( $this->isFieldType($key, ['time', 'date', 'datetime', 'timestamp']) ) {
@@ -248,10 +249,7 @@ trait HasAdminCasts
             }
 
             //Add cast attribute for fields with multiple select
-            if (
-                $isMultipleSelect
-                || $this->isFieldType($key, 'json')
-             ) {
+            if ( $this->isFieldType($key, 'json') ) {
                 $this->addMultiCast($key, 'json');
             } elseif ($this->isFieldType($key, 'checkbox')) {
                 $this->addMultiCast($key, 'boolean');
