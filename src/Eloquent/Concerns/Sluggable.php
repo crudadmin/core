@@ -564,7 +564,8 @@ trait Sluggable
     {
         if ($this->hasLocalizedSlug()) {
             //Cast model slug to propert type
-            $slug = $this->getValue('slug');
+            $slug = $this->getRawOriginal('slug');
+
             $slug = is_array($slug) ? $slug : (array) json_decode($slug);
 
             $lang = Localization::get();
