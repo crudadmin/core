@@ -158,6 +158,16 @@ class AdminFile implements JsonSerializable
         if ( is_string($diskName) ) {
             return $diskName;
         }
+
+        //Save on local disk
+        else if ( $diskName === false ){
+            return AdminCore::getUploadsStorageName();
+        }
+
+        //Save on remote disk
+        else if ( $diskName === true ) {
+            return $this->getStorage();
+        }
     }
 
     /**
