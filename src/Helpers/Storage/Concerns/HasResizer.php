@@ -357,7 +357,26 @@ trait HasResizer
      */
     public static function getPublicCacheDirectory()
     {
-        return (self::isCacheInRootFolder() ? '' : self::UPLOADS_DIRECTORY.'/').self::CACHE_DIRECTORY;
+        $uploadsPrefix = self::isCacheFolderSymlinked()
+                            ? ''
+                            : self::UPLOADS_DIRECTORY.'/';
+
+        return $uploadsPrefix.self::CACHE_DIRECTORY;
+    }
+
+    /**
+     * Helper for cache storage path
+     *
+     * @return  string
+     */
+    public static function getLocalCacheStoragePath()
+    {
+        //If cache path is remote, does not return local path.
+        if ( !self::isCacheFolderSymlinked() ) {
+            return;
+        }
+
+        return AdminCore::getDiskByName(config('admin.resizer.storage'))->path(self::CACHE_DIRECTORY);
     }
 
     /**
@@ -365,9 +384,13 @@ trait HasResizer
      *
      * @return  bool
      */
-    public static function isCacheInRootFolder()
+    public static function isCacheFolderSymlinked()
     {
-        return is_string(config('admin.resizer.storage'));
+        $resizerStorage = config('admin.resizer.storage');
+
+        return is_string($resizerStorage)
+            //TODO: support for other local storages.
+            && in_array($resizerStorage, ['crudadmin']);
     }
 
     private function canBeImageResized()

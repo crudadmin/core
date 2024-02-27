@@ -145,14 +145,14 @@ class AdminFile implements Arrayable, JsonSerializable
      *
      * @return  Illuminate\Filesystem\FilesystemAdapter
      */
-    public static function getCacheStorage()
+    public function getCacheStorage()
     {
-        if ( self::isExternalStorageResizer() ) {
+        if ( $this->isExternalStorageResizer() ) {
             return $this->getStorage();
         }
 
         //Custom disk name
-        if ( $diskName = self::getCacheStorageDiskName() ) {
+        if ( $diskName = $this->getCacheStorageDiskName() ) {
             return AdminCore::getDiskByName($diskName);
         }
 
@@ -162,7 +162,7 @@ class AdminFile implements Arrayable, JsonSerializable
     /**
      * Returns cache storage name
      */
-    public static function getCacheStorageDiskName()
+    public function getCacheStorageDiskName()
     {
         $diskName = config('admin.resizer.storage');
 
@@ -177,7 +177,7 @@ class AdminFile implements Arrayable, JsonSerializable
 
         //Save on remote disk
         else if ( $diskName === true ) {
-            return $this->getStorage();
+            return $this->disk;
         }
     }
 
@@ -223,7 +223,9 @@ class AdminFile implements Arrayable, JsonSerializable
         //     $this->createWebp(public_path($path));
         // }
 
-        if ( class_exists(\FrontendEditor::class)
+        if (
+            config('admin.frontend_editor')
+            && class_exists(\FrontendEditor::class)
             && $this->table && $this->fieldKey && $this->rowId
         ) {
             return \FrontendEditor::buildImageQuery($url, $this->resizeParams, $this->table, $this->fieldKey, $this->rowId);
