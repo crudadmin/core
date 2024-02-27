@@ -150,8 +150,8 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         //If we are using cache in root crudadmin directory
-        if ( AdminFile::isCacheInRootFolder() ) {
-            $paths[public_path(AdminFile::CACHE_DIRECTORY)] = AdminFile::getCacheStorage()->path(AdminFile::CACHE_DIRECTORY);
+        if ( $localCachePath = AdminFile::getLocalCacheStoragePath() ) {
+            $paths[public_path(AdminFile::CACHE_DIRECTORY)] = $localCachePath;
         }
 
         $this->app['config']->set(
