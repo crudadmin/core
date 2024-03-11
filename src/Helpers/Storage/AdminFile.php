@@ -58,6 +58,13 @@ class AdminFile implements Arrayable, JsonSerializable
     private $originalObject;
 
     /**
+     * Return full url addresses to array responses
+     *
+     * @var  bool
+     */
+    static $isApi = false;
+
+    /**
      * Create new admin file
      *
      * @param  string  $path
@@ -95,6 +102,10 @@ class AdminFile implements Arrayable, JsonSerializable
      */
     public function toArray()
     {
+        if ( self::$isApi === true ) {
+            return $this->url();
+        }
+
         return $this->filename;
     }
 
