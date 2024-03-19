@@ -7,20 +7,20 @@ class DataStore
     /*
      * Store data
      */
-    private $store = [];
+    private static $store = [];
 
     /**
      * Returns store data.
      * @param  string|null $key
      * @return array
      */
-    public function getStore($key = null)
+    public static function getStore($key = null)
     {
         if ($key) {
-            return isset($this->store[$key]) ? $this->store[$key] : null;
+            return isset(self::$store[$key]) ? self::$store[$key] : null;
         }
 
-        return $this->store;
+        return self::$store;
     }
 
     /**
@@ -30,10 +30,10 @@ class DataStore
      * @param  string $store
      * @return mixed
      */
-    public function get($key, $default = null, $store = 'global')
+    public static function get($key, $default = null, $store = 'global')
     {
-        if ($this->has($key, $store)) {
-            return $this->store[$store][$key];
+        if (self::has($key, $store)) {
+            return self::$store[$store][$key];
         } else {
             return $default;
         }
@@ -46,9 +46,9 @@ class DataStore
      * @param mixed $store
      * @return mixed
      */
-    public function set($key, $data, $store = 'global')
+    public static function set($key, $data, $store = 'global')
     {
-        return $this->store[$store][$key] = $data;
+        return self::$store[$store][$key] = $data;
     }
 
     /**
@@ -57,9 +57,9 @@ class DataStore
      * @param  string  $store
      * @return bool
      */
-    public function has($key, $store = 'global')
+    public static function has($key, $store = 'global')
     {
-        return isset($this->store[$store]) && array_key_exists($key, $this->store[$store]);
+        return isset(self::$store[$store]) && array_key_exists($key, self::$store[$store]);
     }
 
     /**
@@ -70,19 +70,19 @@ class DataStore
      * @param  string $store
      * @return mixed
      */
-    public function push($key, $data, $arrayKey = null, $store = 'global')
+    public static function push($key, $data, $arrayKey = null, $store = 'global')
     {
-        if (! isset($this->store[$store]) || ! array_key_exists($key, $this->store[$store]) || ! is_array($this->store[$store][$key])) {
-            $this->store[$store][$key] = [];
+        if (! isset(self::$store[$store]) || ! array_key_exists($key, self::$store[$store]) || ! is_array(self::$store[$store][$key])) {
+            self::$store[$store][$key] = [];
         }
 
         //Save unassociative value
         if ($arrayKey === null) {
-            return $this->store[$store][$key][] = $data;
+            return self::$store[$store][$key][] = $data;
         }
 
         //Save value with key
-        return $this->store[$store][$key][$arrayKey] = $data;
+        return self::$store[$store][$key][$arrayKey] = $data;
     }
 
     /**
@@ -92,10 +92,10 @@ class DataStore
      * @param  mixed  $store
      * @return mixed
      */
-    public function cache($key, $data, $store = 'global')
+    public static function cache($key, $data, $store = 'global')
     {
-        if ($this->has($key, $store)) {
-            return $this->get($key, null, $store);
+        if (self::has($key, $store)) {
+            return self::get($key, null, $store);
         }
 
         //If is passed data callable function
@@ -103,6 +103,6 @@ class DataStore
             $data = call_user_func($data);
         }
 
-        return $this->set($key, $data, $store);
+        return self::set($key, $data, $store);
     }
 }

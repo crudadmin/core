@@ -26,11 +26,6 @@ class AppServiceProvider extends ServiceProvider
             'facade' => Facades\AdminCore::class,
             'helper' => Helpers\AdminCore::class,
         ],
-        'admin.store' => [
-            'classname' => 'DataStore',
-            'facade' => Facades\DataStore::class,
-            'helper' => Helpers\DataStore::class,
-        ],
         'imagecompressor' => [
             'classname' => 'ImageCompressor',
             'facade' => Facades\ImageCompressor::class,
