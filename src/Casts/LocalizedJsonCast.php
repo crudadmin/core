@@ -4,6 +4,7 @@ namespace Admin\Core\Casts;
 
 use AdminCore;
 use Admin\Core\Casts\Concerns\MultiCast;
+use Admin\Core\Casts\Concerns\UncachableCast;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Support\Collection;
 use Localization;
@@ -12,7 +13,7 @@ class LocalizedJsonCast implements Castable
 {
     public static function castUsing(array $arguments)
     {
-        return new class($arguments) extends MultiCast
+        return new class($arguments) extends MultiCast implements UncachableCast
         {
             public function get($model, $key, $value, $attributes)
             {

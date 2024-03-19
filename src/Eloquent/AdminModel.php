@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
+use Admin\Core\Casts\Concerns\UncachableCast;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
 use Admin\Core\Eloquent\Concerns\FieldProperties;
@@ -322,5 +323,34 @@ class AdminModel extends Model
         }
 
         return $column;
+    }
+
+    /**
+     * Cast the given attribute using a custom cast class.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return mixed
+     */
+    protected function getClassCastableAttributeValue($key, $value)
+    {
+        if (isset($this->classCastCache[$key])) {
+            return $this->classCastCache[$key];
+        } else {
+            $caster = $this->resolveCasterClass($key);
+
+            $value = $caster instanceof CastsInboundAttributes
+                ? $value
+                : $caster->get($this, $key, $value, $this->attributes);
+
+            //CHANGED: added "$caster instanceof UncachableCast" to be able determine if cast value should be cached.
+            if ($caster instanceof CastsInboundAttributes || ! is_object($value) || $caster instanceof UncachableCast) {
+                unset($this->classCastCache[$key]);
+            } else {
+                $this->classCastCache[$key] = $value;
+            }
+
+            return $value;
+        }
     }
 }
