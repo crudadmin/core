@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Contracts;
 
-use DataStore as Store;
+use Admin\Core\Helpers\DataStore as Store;
 
 trait DataStore
 {
