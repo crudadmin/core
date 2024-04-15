@@ -257,12 +257,12 @@ trait Sluggable
      */
     public function sluggable()
     {
-        $array = $this->attributes;
+        $attributes = $this->attributes;
 
         $slugcolumn = $this->getProperty('sluggable');
 
         //Set slug
-        if (array_key_exists($slugcolumn, $array))
+        if (array_key_exists($slugcolumn, $attributes))
         {
             //If dynamic slugs are turned off
             if ( $this->slug_dynamic === false && $this->slug ) {
@@ -277,8 +277,8 @@ trait Sluggable
             }
 
             //If is available slug column value
-            else if ( mb_strlen($array[$slugcolumn], 'UTF-8') > 0 ) {
-                $slug = $this->makeSlug($array[$slugcolumn]);
+            else if ( mb_strlen($attributes[$slugcolumn], 'UTF-8') > 0 ) {
+                $slug = $this->makeSlug($attributes[$slugcolumn]);
 
                 //If slug has been changed, then save previous slug state
                 if (
