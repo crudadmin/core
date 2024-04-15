@@ -137,7 +137,7 @@ trait Sluggable
      * @param  string  $text
      * @return string
      */
-    private function setEmptySlugs($text)
+    private function normalizeSlugs($text, $wrap = false)
     {
         if ($text && $this->hasLocalizedSlug()) {
             //TODO: this statement is weird.
@@ -146,7 +146,11 @@ trait Sluggable
             }
 
             $text = (array) json_decode($text);
-        } elseif ($this->isValidSlug($text)) {
+
+            if ( is_array($text) ){
+                ksort($text);
+            }
+        } elseif ($this->isValidSlug($text) && $wrap === true) {
             $text = array_wrap($text);
         }
 
@@ -163,7 +167,7 @@ trait Sluggable
     {
         $slugs = [];
 
-        $text = $this->setEmptySlugs($text);
+        $text = $this->normalizeSlugs($text, true);
 
         //Bind translated slugs
         foreach ($text as $key => $value) {
@@ -259,38 +263,41 @@ trait Sluggable
     {
         $attributes = $this->attributes;
 
-        $slugcolumn = $this->getProperty('sluggable');
+        $slugColumn = $this->getProperty('sluggable');
 
-        //Set slug
-        if (array_key_exists($slugcolumn, $attributes))
-        {
-            //If dynamic slugs are turned off
-            if ( $this->slug_dynamic === false && $this->slug ) {
-                //If does exists row, and if has been changed
-                if (
-                    $this->exists
-                    && $this->isAllowedHistorySlugs()
-                    && ($original = $this->getOriginal('slug'))
-                    && $this->slug !== $original ) {
-                    $this->slugSnapshot($original);
-                }
+        $slugFromColumnValue = $attributes[$slugColumn] ?? '';
+        $currentSlugArray = $this->normalizeSlugs($attributes['slug'] ?? '');
+
+        $canAddToHistory = $this->exists && $this->isAllowedHistorySlugs();
+
+        //If dynamic slugs are turned off
+        if ( $this->slug_dynamic === false && $this->slug ) {
+            $prevManualSlug = $this->normalizeSlugs($this->getRawOriginal('slug'));
+
+            //If does exists row, and if has been changed
+            if (
+                $canAddToHistory
+                && $prevManualSlug
+                && $currentSlugArray != $prevManualSlug //If arrays are not the same. Or slug strings are not the same.
+            ) {
+                $this->slugSnapshot($prevManualSlug);
+            }
+        }
+
+        //If is available original column value from which we are generating slug
+        else if ( mb_strlen($slugFromColumnValue, 'UTF-8') > 0 ) {
+            $newlyGeneratedSlug = $this->makeSlug($slugFromColumnValue);
+            $newlyGeneratedSlugArray = $this->normalizeSlugs($newlyGeneratedSlug);
+
+            //If slug has been changed, then save previous slug state
+            if (
+                $canAddToHistory
+                && $currentSlugArray != $newlyGeneratedSlugArray
+            ) {
+                $this->slugSnapshot();
             }
 
-            //If is available slug column value
-            else if ( mb_strlen($attributes[$slugcolumn], 'UTF-8') > 0 ) {
-                $slug = $this->makeSlug($attributes[$slugcolumn]);
-
-                //If slug has been changed, then save previous slug state
-                if (
-                    $this->exists
-                    && $this->isAllowedHistorySlugs()
-                    && str_replace('": "', '":"', $attributes['slug'] ?? '') != $slug
-                ) {
-                    $this->slugSnapshot();
-                }
-
-                $this->attributes['slug'] = $slug;
-            }
+            $this->attributes['slug'] = $newlyGeneratedSlug;
         }
     }
 
@@ -564,7 +571,8 @@ trait Sluggable
     {
         if ($this->hasLocalizedSlug()) {
             //Cast model slug to propert type
-            $slug = $this->getValue('slug');
+            $slug = $this->getRawOriginal('slug');
+
             $slug = is_array($slug) ? $slug : (array) json_decode($slug);
 
             $lang = Localization::get();
