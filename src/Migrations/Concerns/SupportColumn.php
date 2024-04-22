@@ -2,26 +2,18 @@
 
 namespace Admin\Core\Migrations\Concerns;
 
-use Fields;
-use Illuminate\Support\Facades\DB;
-use Admin\Core\Eloquent\AdminModel;
-use Admin\Core\Migrations\Types\Type;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema;
 use Admin;
+use Admin\Core\Eloquent\AdminModel;
+use Admin\Core\Migrations\Concerns\SchemeSupport;
+use Admin\Core\Migrations\Types\Type;
+use Fields;
+use Illuminate\Database\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
 trait SupportColumn
 {
-    public function getTableColumn(AdminModel $model, $key)
-    {
-        $columns = Admin::cache('migrations.columns.doctrine.'.$model->getTable(), function() use ($model) {
-            return $model->getConnection()->getDoctrineSchemaManager()->listTableColumns(
-                $model->getTable()
-            );
-        });
-
-        return @$columns[$key];
-    }
+    use SchemeSupport;
 
     /**
      * Register all static columns.
@@ -131,14 +123,14 @@ trait SupportColumn
             //Check if column can be changed as nullable
             if ( $model->getSchema()->hasTable($model->getTable()) && $tableColumn = $this->getTableColumn($model, $key) ){
                 //If we want set column to null, we need check if there exists rows with null values
-                if ( !$this->isNullable($model, $key) !== $tableColumn->getNotNull() ) {
+                if ( $this->isNullable($model, $key) !== $tableColumn['nullable'] ) {
                     $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
 
                     if ( $nullableRows ) {
                         $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
-                    }
 
-                    return;
+                        return;
+                    }
                 }
             }
 

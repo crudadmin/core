@@ -9,36 +9,41 @@ use Illuminate\Database\DBAL\TimestampType;
 
 trait MigrationSupport
 {
+    /**
+     * Laravel < 11 fallback
+     *
+     * @return  bool
+     */
+    public function hasDoctrine()
+    {
+        return method_exists(app('db'), 'registerDoctrineType');
+    }
+
+    public function doctrineFallback($callback)
+    {
+        if ( !$this->hasDoctrine() ){
+            return;
+        }
+
+        $callback();
+    }
+
     public function registerMigrationSupport()
     {
-        $this->fixEnumType();
+        $this->doctrineFallback(function(){
+            $platform = DB::getDoctrineSchemaManager()->getDatabasePlatform();
 
-        $this->fixJsonType();
-        $this->fixTimestamp();
-    }
+            //Enums
+            $platform->registerDoctrineTypeMapping('enum', 'string');
 
-    private function fixTimestamp()
-    {
-        DBType::addType('timestamp', TimestampType::class);
-    }
+            //Timestamps
+            DBType::addType('timestamp', TimestampType::class);
 
-    /**
-     * DB doctrine fix for enum columns.
-     */
-    private function fixEnumType()
-    {
-        DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
-    }
-
-    /*
-     * Fix json columns in doctrine dbal
-     */
-    protected function fixJsonType()
-    {
-        //Add json support
-        if (! DBType::hasType('json')) {
-            DBType::addType('json', JsonArrayType::class);
-            DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('json', 'string');
-        }
+            //Add json support
+            if (! DBType::hasType('json')) {
+                DBType::addType('json', JsonArrayType::class);
+                $platform->registerDoctrineTypeMapping('json', 'string');
+            }
+        });
     }
 }

@@ -99,7 +99,7 @@ class BelongsToType extends Type
         }
 
         //We need change nullable, because is set to wrong state
-        else if ( !$builder->isNullable($model, $key) !== $tableColumn->getNotNull() ) {
+        else if ( $builder->isNullable($model, $key) !== $tableColumn['nullable'] ) {
             $this->registerAfterMigration($model, function () use ($model, $key, $builder) {
                 //We we want set realtion to null, we need check if there exists rows with null values
                 if ( $builder->isNullable($model, $key) === false ) {

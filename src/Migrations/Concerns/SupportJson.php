@@ -44,7 +44,7 @@ trait SupportJson
 
         //If is updating column and previous value is not json
         if ($update === true && $model->getSchema()->hasColumn($model->getTable(), $key)) {
-            $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
+            $type = $this->getColumnTypeName($model, $key);
 
             if (! in_array($type, ['json', 'json_array']) && $localized === true) {
                 $this->updateToJsonColumn($model, $key, $type);

@@ -31,7 +31,7 @@ class TimestampType extends Type
     {
         //Check for correct values
         if ($update === true) {
-            $type = $model->getConnection()->getDoctrineColumn($model->getTable(), $key)->getType()->getName();
+            $type = $this->getColumnTypeName($model, $key);
 
             //If previoius column has not been datetime and has some value
             if (
