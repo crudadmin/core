@@ -121,8 +121,6 @@ class MigrationBuilder extends Command
             $this->fireModelEvent($model, 'onTableCreate');
         }
 
-        $this->setTableFullText($model);
-
         $this->fireModelEvent($model, 'afterMigrate');
 
         //Checks if model has some extre migrations on create
@@ -173,6 +171,8 @@ class MigrationBuilder extends Command
 
             //Register static columns
             $this->registerStaticColumns($table, $model);
+
+            $this->setTableFullText($table, $model);
         });
 
         $this->line('<comment>Created table:</comment> '.$model->getTable());
@@ -251,6 +251,8 @@ class MigrationBuilder extends Command
             $this->registerStaticColumns($table, $model, true);
 
             $this->dropUnnecessaryColumns($table, $model);
+
+            $this->setTableFullText($table, $model);
         });
     }
 
@@ -274,8 +276,8 @@ class MigrationBuilder extends Command
                 if ($auto_drop === true || $this->confirm('Do you want drop this column? [y|N]')) {
                     //Drop foreign indexes for given column
                     foreach ($this->getModelForeignKeys($model) as $item) {
-                        if ( in_array($column, $item->getColumns()) ){
-                            $table->dropForeign($item->getName());
+                        if ( in_array($column, $item['columns']) ){
+                            $table->dropForeign($item['name']);
                         }
                     }
 

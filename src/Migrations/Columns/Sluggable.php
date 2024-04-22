@@ -53,18 +53,18 @@ class Sluggable extends Column
         }
 
         //Set locale slug or normal
-        if ($has_locale = $model->hasFieldParam($slugcolumn, 'locale', true)) {
+        if ($hasLocale = $model->hasFieldParam($slugcolumn, 'locale', true)) {
             $column = $this->setJsonColumn($table, $this->column, $model, $updating, true);
         } else {
             $column = $table->string($this->column, $model->getFieldLength($slugcolumn));
         }
 
         //If is creating new table or when slug index is missing
-        if (! $has_locale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index'))) {
+        if (! $hasLocale && ($updating === false || ! $this->hasIndex($model, $this->column, 'index'))) {
             $column->index();
         }
 
-        if ($has_locale && $updating === true && $this->hasIndex($model, $this->column, 'index')) {
+        if ($hasLocale && $updating === true && $this->hasIndex($model, $this->column, 'index')) {
             $this->dropIndex($model, $this->column, 'index');
         }
 

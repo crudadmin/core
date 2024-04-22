@@ -12,7 +12,7 @@ trait SupportFulltext
      * @param  AdminModel       $model
      * @return void
      */
-    protected function setTableFullText(AdminModel $model)
+    protected function setTableFullText($table, AdminModel $model)
     {
         $fullTextColumns = [];
 
@@ -32,10 +32,8 @@ trait SupportFulltext
 
         if ( isset($indexes[$indexName]) ){
             //If index does exists, but does not match with actual indexes columns set
-            if ( $indexes[$indexName]->getColumns() != $fullTextColumns ) {
-                $model->getConnection()->select(
-                    DB::raw('alter table `'.$model->getTable().'` drop index `'.$indexName.'`')
-                );
+            if ( $indexes[$indexName]['columns'] != $fullTextColumns ) {
+                $table->dropIndex($indexName);
             }
 
             //If index does exists, we can skip creating index
@@ -44,13 +42,6 @@ trait SupportFulltext
             }
         }
 
-        $columnsList = array_map(function($column){
-            return '`'.$column.'`';
-        }, $fullTextColumns);
-        $columnsList = implode(',', $columnsList);
-
-        DB::connection($model->getConnectionName())->statement(
-            'ALTER TABLE '.$model->getTable().' ADD FULLTEXT '.$indexName.'('.$columnsList.')'
-        );
+        $table->fullText($fullTextColumns, $indexName);
     }
 }

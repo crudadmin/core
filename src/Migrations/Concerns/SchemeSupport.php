@@ -14,17 +14,17 @@ trait SchemeSupport
                 $model->getTable()
             );
 
-            return collect($new)->groupBy('name')->map(function($row){
-                return $row[0];
-            })->toArray();
+            return collect($new)->keyBy('name')->toArray();
         });
 
-        return @$columns[$key];
+        return $columns[$key] ?? null;
     }
 
     public function getColumnTypeName(AdminModel $model, $key)
     {
-        return $this->getTableColumn($model, $key)['type_name'];
+        $column = $this->getTableColumn($model, $key);
+
+        return $column ? $column['type_name'] : null;
     }
 }
 

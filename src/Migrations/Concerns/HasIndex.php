@@ -54,9 +54,9 @@ trait HasIndex
      */
     protected function getModelIndexes(AdminModel $model)
     {
-        $schema = $model->getConnection()->getDoctrineSchemaManager();
+        $indexes = $model->getConnection()->getSchemaBuilder()->getIndexes($model->getTable());
 
-        return $schema->listTableIndexes($model->getTable());
+        return collect($indexes)->keyBy('name')->toArray();
     }
 
 
@@ -68,9 +68,9 @@ trait HasIndex
      */
     protected function getModelForeignKeys(AdminModel $model)
     {
-        $schema = $model->getConnection()->getDoctrineSchemaManager();
+        $keys = $model->getConnection()->getSchemaBuilder()->getForeignKeys($model->getTable());
 
-        return $schema->listTableForeignKeys($model->getTable());
+        return collect($keys)->keyBy('name')->toArray();
     }
 
     /*
