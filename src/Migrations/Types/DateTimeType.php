@@ -4,7 +4,6 @@ namespace Admin\Core\Migrations\Types;
 
 use Admin\Core\Eloquent\AdminModel;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 
 class DateTimeType extends Type
 {
@@ -69,7 +68,7 @@ class DateTimeType extends Type
                                 : $model->getSchema()->hasColumn($model->getTable(), $key);
 
             if ( $columnExists ) {
-                $column->default('CURRENT_TIMESTAMP');
+                $column->useCurrentOnUpdate();
             }
 
             //For new columns we want use this method, because previous methot throws error
