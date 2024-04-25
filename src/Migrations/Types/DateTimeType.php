@@ -68,7 +68,7 @@ class DateTimeType extends Type
                                 : $model->getSchema()->hasColumn($model->getTable(), $key);
 
             if ( $columnExists ) {
-                $column->useCurrentOnUpdate();
+                $column->useCurrent();
             }
 
             //For new columns we want use this method, because previous methot throws error

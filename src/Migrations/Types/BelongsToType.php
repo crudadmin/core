@@ -93,37 +93,46 @@ class BelongsToType extends Type
      */
     public function setNullable($column, AdminModel $model, string $key, MigrationBuilder $builder)
     {
-        //If table does not exsits. We can define nullable as regullary
-        if ( !$model->getSchema()->hasTable($model->getTable()) || !($tableColumn = $builder->getTableColumn($model, $key)) ){
-            $builder->setNullable($model, $key, $column);
-        }
+        $tableExists = $model->getSchema()->hasTable($model->getTable());
 
-        //We need change nullable, because is set to wrong state
-        else if ( $builder->isNullable($model, $key) !== $tableColumn['nullable'] ) {
-            $this->registerAfterMigration($model, function () use ($model, $key, $builder) {
-                //We we want set realtion to null, we need check if there exists rows with null values
-                if ( $builder->isNullable($model, $key) === false ) {
-                    $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
+        $tableColumn = $tableExists ? $builder->getTableColumn($model, $key) : null;
 
-                    if ( $nullableRows ) {
-                        $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
+        //When we are changing nullable need change nullable, because is set to wrong state
+        if ( $tableColumn ) {
+            //Set previously nullable state
+            $column->nullable($tableColumn['nullable']);
+
+            if ( $builder->isNullable($model, $key) !== $tableColumn['nullable'] ) {
+                $this->registerAfterMigration($model, function () use ($model, $key, $builder) {
+                    //We we want set realtion to null, we need check if there exists rows with null values
+                    if ( $builder->isNullable($model, $key) === false ) {
+                        $nullableRows = $model->withoutGlobalScopes()->whereNull($key)->count();
+
+                        if ( $nullableRows ) {
+                            $this->getCommand()->error('Column '.$key.' in table '.$model->getTable().' could not be set to nullable. Because there are some rows with NULL values');
+                        }
+
+                        return;
                     }
 
-                    return;
-                }
+                    $model->getSchema()->disableForeignKeyConstraints();
 
-                $model->getSchema()->disableForeignKeyConstraints();
+                    $model->getSchema()->table($model->getTable(), function (Blueprint $table) use ($model, $key, $builder) {
+                        $column = $this->registerColumn($table, $model, $key, true);
 
-                $model->getSchema()->table($model->getTable(), function (Blueprint $table) use ($model, $key, $builder) {
-                    $column = $this->registerColumn($table, $model, $key, true);
+                        $builder->setNullable($model, $key, $column);
 
-                    $builder->setNullable($model, $key, $column);
+                        $column->change();
+                    });
 
-                    $column->change();
-                });
+                    $model->getSchema()->enableForeignKeyConstraints();
+                }, false);
+            }
+        }
 
-                $model->getSchema()->enableForeignKeyConstraints();
-            }, false);
+        //If column does not exists. We can define nullable as usually
+        else {
+            $builder->setNullable($model, $key, $column);
         }
     }
 
