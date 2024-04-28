@@ -16,22 +16,44 @@ trait HasUploadableFilenames
     protected function setUploadableFilename()
     {
         $file = $this->fileOrPath;
+        $filename = null;
 
-        //If file exists and is not from server, when is from server make unique name
-        if (method_exists($file, 'getClientOriginalName')) {
-            $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        } else {
-            $pathinfo = @pathinfo(basename($file));
-            $filename = @$pathinfo['filename'] ?: uniqid();
+        //Get filename by options setter
+        if ( isset($this->options['filename']) ) {
+            $pathinfo = pathinfo($this->options['filename']);
+
+            $filename = ($pathinfo['filename'] ?? null) ?: $this->options['filename'];
 
             if ( $pathinfo['extension'] ?? null ){
                 $this->extension = $pathinfo['extension'];
             }
         }
 
-        //If extension is from request
-        if ( method_exists($file, 'getClientOriginalExtension') ) {
-            $this->extension = $file->getClientOriginalExtension();
+        //If file is uploaded
+        elseif ( $this->isUploadedFileType($file, 'upload') ) {
+            if ( method_exists($file, 'getClientOriginalName') ){
+                $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            }
+
+            //If extension is from request
+            if ( method_exists($file, 'getClientOriginalExtension') ) {
+                $this->extension = $file->getClientOriginalExtension();
+            }
+        }
+
+        //If file exists or is from external url
+        else if ( is_file($file) || $this->isUploadedFileType($file, 'url') ) {
+            $pathinfo = pathinfo(basename($file));
+            $filename = $pathinfo['filename'] ?? null;
+
+            if ( $pathinfo['extension'] ?? null ){
+                $this->extension = $pathinfo['extension'];
+            }
+        }
+
+        //If no filename has been quessted
+        if ( !$filename ){
+            $filename = str_random(20);
         }
 
         //Lowecase + remove all special characters

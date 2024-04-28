@@ -82,7 +82,7 @@ class AdminUploader
         $this->setUploadableFilename();
 
         //File input is file from request
-        if ($this->fileOrPath instanceof UploadedFile) {
+        if ( $this->isUploadedFileType($this->fileOrPath, 'upload') ) {
             //Try upload from request file (localy)
             if ( $this->uploadFileFromRequestLocaly() === false ) {
                 return false;
@@ -121,14 +121,17 @@ class AdminUploader
 
         $destinationPath = $this->getLocalFilePath();
 
+        $isUrl = $this->isUploadedFileType($file, 'url');
+
+        $fileData = $isUrl
+                        ? file_get_contents($file)
+                        : $file;
+
         //Copy file from server, or directory into uploads for field
-        $this->getLocalUploadsStorage()->put(
-            $destinationPath,
-            file_get_contents($file)
-        );
+        $this->getLocalUploadsStorage()->put($destinationPath, $fileData);
 
         //If file is url adress, we want verify extension type
-        if ( filter_var($file, FILTER_VALIDATE_URL) && !file_exists($file) ) {
+        if ( $isUrl && !file_exists($file) ) {
             $gussedExtension = $this->guessExtensionFromRemoteFile($destinationPath);
 
             if ( $gussedExtension != $this->extension ) {
@@ -287,5 +290,20 @@ class AdminUploader
     private function mergeExtensionName($filename, $extension)
     {
         return $extension ? ($filename.'.'.$extension) : $filename;
+    }
+
+    public function isUploadedFileType($fileOrData, $type)
+    {
+        //Url address
+        if ( $type == 'url' ) {
+            return filter_var($fileOrData, FILTER_VALIDATE_URL) ? true : false;
+        }
+
+        //Uploader request
+        else if ( 'upload' ) {
+            return $fileOrData instanceof UploadedFile;
+        }
+
+        return false;
     }
 }
