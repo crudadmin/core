@@ -5,6 +5,7 @@ namespace Admin\Core\Eloquent\Concerns;
 use Admin\Core\Casts\AdminFileCast;
 use Admin\Core\Casts\AdminMultiCast;
 use Admin\Core\Casts\DateableCast;
+use Admin\Core\Casts\GeometryCast;
 use Admin\Core\Casts\LocalizedJsonCast;
 use Admin\Core\Casts\MultipleJsonCast;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
@@ -217,6 +218,11 @@ trait HasAdminCasts
         foreach ($this->getFields() as $key => $field) {
             if ($this->hasFieldParam($key, 'locale')) {
                 $this->addMultiCast($key, LocalizedJsonCast::class.':');
+            }
+
+
+            if ($this->isFieldType($key, 'geometry')) {
+                $this->addMultiCast($key, GeometryCast::class);
             }
 
             if (
