@@ -22,6 +22,7 @@ trait FieldTypes
         Types\LongTextType::class,
         Types\IntegerType::class,
         Types\DecimalType::class,
+        Types\GeometryType::class,
         Types\DateTimeType::class,
         Types\TimestampType::class,
         Types\BooleanType::class,

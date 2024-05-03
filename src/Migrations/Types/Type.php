@@ -22,6 +22,11 @@ abstract class Type extends MigrationDefinition
     protected $hasColumn = true;
 
     /*
+     * Index postfix
+     */
+    protected $indexType = 'index';
+
+    /*
      * Returns if column is represented with existing column in databasse
      */
     public function hasColumn()
@@ -46,4 +51,14 @@ abstract class Type extends MigrationDefinition
      * @return Blueprint
      */
     abstract public function registerColumn(Blueprint $table, AdminModel $model, string $key, bool $update);
+
+    /**
+     * Returns index type
+     *
+     * @return  string
+     */
+    public function getIndexType()
+    {
+        return $this->indexType;
+    }
 }

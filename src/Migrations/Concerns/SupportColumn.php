@@ -81,7 +81,7 @@ trait SupportColumn
         $this->setNullable($model, $key, $column, $columnClass);
 
         //If field is index
-        $this->setIndex($table, $model, $key, $column);
+        $this->setIndex($table, $model, $key, $column, $columnClass);
 
         //Set default value of field
         $this->setDefault($model, $key, $column, $columnClass, $updating);
@@ -145,12 +145,14 @@ trait SupportColumn
      * @param  mixed $column
      * @return void
      */
-    private function setIndex($table, AdminModel $model, string $key, $column)
+    private function setIndex($table, AdminModel $model, string $key, $column, $columnClass)
     {
         if (! $model->hasFieldParam($key, 'index')) {
             return;
         }
 
+        $type = $columnClass->getIndexType();
+        $postfix = strtolower($type);
         $field = $model->getField($key);
 
         $indexes = collect(array_wrap($field['index']))->map(function($index){
@@ -166,17 +168,17 @@ trait SupportColumn
             //If index does exist already
             if (
                 ! $model->getSchema()->hasTable($model->getTable()) ||
-                ! $this->hasIndex($model, $columns, 'index')
+                ! $this->hasIndex($model, $columns, $postfix)
             ) {
+                $indexName = $this->getIndexName($model, $columns, $postfix);
+
                 if ( count($columns) == 1 ) {
-                    $column->index();
+                    $column->{$type}($indexName);
                 }
 
                 //Ability to create multi-columns indexes.
                 else {
-                    $indexName = $this->getIndexName($model, $columns, 'index');
-
-                    $table->index($columns, $indexName);
+                    $table->{$type}($columns, $indexName);
                 }
             }
         }
