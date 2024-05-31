@@ -163,15 +163,18 @@ trait Sluggable
      * @param  string $text
      * @return string
      */
-    public function makeSlug($text)
+    public function makeSlug($text, $prevSlug)
     {
-        $slugs = [];
-
         $text = $this->normalizeSlugs($text, true);
 
-        //Bind translated slugs
+        //Bind first level of translated slugs (without incrementing at the end, -1 etc..)
+        $slugs = [];
         foreach ($text as $key => $value) {
             $slugs[$key] = $this->toSlug($value);
+        }
+
+        if ( $this->slugBaseFormIsSame($slugs, $prevSlug) == true ){
+            return $prevSlug;
         }
 
         //Checks if some of localized slugs in database exists in other rows
@@ -211,10 +214,29 @@ trait Sluggable
         }
 
         //Generate new unique slug with increment
-        $unique_slug = $this->makeUnique($slugs, $row->first()->slug);
+        $uniqueSlug = $this->makeUnique($slugs, $row->first()->slug);
 
         //If slug exists, then generate unique slug
-        return $this->castSlug($unique_slug);
+        return $this->castSlug($uniqueSlug);
+    }
+
+    /**
+     * Remove increments from currently saved slugs in database
+     * If base form is same, we don't need to check incrementing for given row.
+     */
+    public function slugBaseFormIsSame($newSlug, $prevSlug)
+    {
+        $prevSlug = $this->normalizeSlugs($prevSlug, true);
+        foreach ($prevSlug as $key => $value) {
+            $parts = explode('-', $value);
+            $prevSlug[$key] = count($parts) > 1 && is_numeric($parts[count($parts) - 1]) ? implode('-', array_slice($parts, 0,  -1)) : $value;
+        }
+
+        //Sort arrays to have same key order (it's not necessary for comparing but better for debug)
+        ksort($newSlug);
+        ksort($prevSlug);
+
+        return $newSlug == $prevSlug;
     }
 
     /**
@@ -266,33 +288,34 @@ trait Sluggable
         $slugColumn = $this->getProperty('sluggable');
 
         $slugFromColumnValue = $attributes[$slugColumn] ?? '';
-        $currentSlugArray = $this->normalizeSlugs($attributes['slug'] ?? '');
+        $prevSlug = $this->getRawOriginal('slug');
+
+        $prevSlugNormalized = $this->normalizeSlugs($prevSlug);
+        $currentSlugNormalized = $this->normalizeSlugs($attributes['slug'] ?? '');
 
         $canAddToHistory = $this->exists && $this->isAllowedHistorySlugs();
 
         //If dynamic slugs are turned off
         if ( $this->slug_dynamic === false && $this->slug ) {
-            $prevManualSlug = $this->normalizeSlugs($this->getRawOriginal('slug'));
-
             //If does exists row, and if has been changed
             if (
                 $canAddToHistory
-                && $prevManualSlug
-                && $currentSlugArray != $prevManualSlug //If arrays are not the same. Or slug strings are not the same.
+                && $prevSlugNormalized
+                && $currentSlugNormalized != $prevSlugNormalized //If arrays are not the same. Or slug strings are not the same.
             ) {
-                $this->slugSnapshot($prevManualSlug);
+                $this->slugSnapshot($prevSlugNormalized);
             }
         }
 
         //If is available original column value from which we are generating slug
         else if ( mb_strlen($slugFromColumnValue, 'UTF-8') > 0 ) {
-            $newlyGeneratedSlug = $this->makeSlug($slugFromColumnValue);
+            $newlyGeneratedSlug = $this->makeSlug($slugFromColumnValue, $prevSlug);
             $newlyGeneratedSlugArray = $this->normalizeSlugs($newlyGeneratedSlug);
 
             //If slug has been changed, then save previous slug state
             if (
                 $canAddToHistory
-                && $currentSlugArray != $newlyGeneratedSlugArray
+                && $currentSlugNormalized != $newlyGeneratedSlugArray
             ) {
                 $this->slugSnapshot();
             }
