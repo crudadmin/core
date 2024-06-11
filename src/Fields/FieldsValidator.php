@@ -28,6 +28,13 @@ class FieldsValidator
     protected $merge = [];
 
     /**
+     * Which rules should be replaced
+     *
+     * @var  array
+     */
+    protected $replace = [];
+
+    /**
      * HTTP request
      *
      * @var  Illuminate\Http\Request
@@ -142,6 +149,19 @@ class FieldsValidator
     }
 
     /**
+     * Replace rules for another ones
+     *
+     * @param  array  $mergeFields
+     * @return  array
+     */
+    public function replace($replaceFields)
+    {
+        $this->replace = $this->mergeRules($this->replace, $replaceFields);
+
+        return $this;
+    }
+
+    /**
      * If array is given, return array
      * If laravel Request with custom rules is given, return his rules as array
      *
@@ -182,14 +202,21 @@ class FieldsValidator
             abort(401);
         }
 
+        $isAdminRequest = $class instanceof AdminModelRequest;
+
         //Use only fields
-        if ( method_exists($class, 'only') && $class instanceof AdminModelRequest ){
+        if ( method_exists($class, 'only') && $isAdminRequest ){
             $this->only($class->only());
         }
 
         //Merge additional fields
-        if ( method_exists($class, 'merge') && $class instanceof AdminModelRequest ){
+        if ( method_exists($class, 'merge') && $isAdminRequest ){
             $this->merge($class->merge());
+        }
+
+        //Merge additional fields
+        if ( method_exists($class, 'replace') && $isAdminRequest ){
+            $this->replace($class->replace());
         }
 
         //Use only validation fields + merge additional
@@ -263,6 +290,10 @@ class FieldsValidator
         //Merge given fields into request
         $rules = $this->mergeRules($rules, $this->merge);
 
+        //Replace rules fields
+        $rules = array_merge($rules, $this->replace);
+
+        //Additional mutation process
         $rules = $this->mutateRules($rules);
 
         return $rules;
