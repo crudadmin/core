@@ -226,7 +226,7 @@ trait HasAdminCasts
             }
 
             if (
-                $this->isFieldType($key, ['select', 'file', 'time'])
+                $this->isFieldType($key, ['select', 'file', 'date', 'time'])
                 && !$this->hasFieldParam($key, 'belongsToMany')
                 && $this->hasFieldParam($key, 'multiple', true)
             ) {
