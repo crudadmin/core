@@ -26,6 +26,7 @@ trait FieldTypes
         Types\DateTimeType::class,
         Types\TimestampType::class,
         Types\BooleanType::class,
+        Types\EnumType::class,
     ];
 
     /**
