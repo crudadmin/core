@@ -3,8 +3,9 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
-use Str;
+use Admin\Core\Eloquent\AdminPivot;
 use Cache;
+use Str;
 
 trait RelationsMapBuilder
 {
@@ -44,6 +45,26 @@ trait RelationsMapBuilder
                 return $model;
             });
         }
+    }
+
+    /**
+     * @overriden
+     * Create a new model instance for a related model.
+     *
+     * @param  string  $class
+     * @return mixed
+     */
+    protected function newRelatedInstance($class)
+    {
+        if ( !is_object($class) ) {
+            $class = new $class;
+        }
+
+        return tap($class, function ($instance) {
+            if (! $instance->getConnectionName()) {
+                $instance->setConnection($this->connection);
+            }
+        });
     }
 
     public function getCachedRelationsTree()
@@ -350,11 +371,38 @@ trait RelationsMapBuilder
                     ];
                 };
 
+                $pivotRelation = function($model) use ($fieldRelationModel, $properties) {
+                    return [
+                        'hasMany' => [
+                            $this->getAdminPivotClass($properties),
+                            $properties[6],
+                            $properties[2],
+                            $properties[7]
+                        ],
+                        'orderBy' => [
+                            $properties[3].'.id', 'asc'
+                        ],
+                    ];
+                };
+
                 $tree[$fieldKey] = $relation;
+
+                //Pivot support added
+                $tree[$fieldKey.'Pivot'] = $pivotRelation;
             }
         }
 
         return $tree;
+    }
+
+    private function getAdminPivotClass($properties)
+    {
+        $basePivotClass = class_exists(\Admin\Eloquent\AdminPivot::class) ? \Admin\Eloquent\AdminPivot::class : AdminPivot::class;
+        $pivotClass = AdminCore::getModelByTable($properties[3]) ?: new $basePivotClass;
+
+        $pivotClass->table = $properties[3];
+
+        return $pivotClass;
     }
 
     private function getRelationForms($parentModel, $relationSingular, $relationPlural = null)

@@ -353,4 +353,16 @@ class AdminModel extends Model
             return $value;
         }
     }
+
+    /**
+     * Push additional column which won't be deleted
+     *
+     * @param  string  $column
+     */
+    public function addSkipDroppingColumn($column)
+    {
+        $this->skipDropping[] = $column;
+
+        return $this;
+    }
 }

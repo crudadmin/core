@@ -6,6 +6,7 @@ use Admin\Core\Eloquent\AdminModel;
 use Admin\Core\Migrations\Concerns\SupportFulltext;
 use Fields;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Relations\Concerns\AsPivot;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
@@ -264,11 +265,16 @@ class MigrationBuilder extends Command
      */
     private function dropUnnecessaryColumns(Blueprint $table, AdminModel $model)
     {
+        if ( in_array(AsPivot::class, class_uses_recursive($model::class)) ){
+            $this->skipPivotColumnsDrop($model);
+        }
+
         $columnNames = $model->getColumnNames();
 
         //Removes unnecessary columns
         foreach ($model->getSchema()->getColumnListing($model->getTable()) as $column) {
             if (! in_array($column, $columnNames) && ! in_array($column, (array) $model->getProperty('skipDropping'))) {
+
                 $this->line('<comment>+ Unknown column:</comment> '.$column);
 
                 $auto_drop = $this->option('auto-drop', false);

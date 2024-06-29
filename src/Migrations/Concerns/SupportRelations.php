@@ -204,4 +204,24 @@ trait SupportRelations
 
         return $prefix.$table.'_'.$key;
     }
+
+    public function skipPivotColumnsDrop($pivotModel)
+    {
+        foreach (AdminCore::getAdminModels() as $model) {
+            foreach ($model->getFields() as $key => $fields) {
+                if ( !($fields['belongsToMany'] ?? false) ){
+                    continue;
+                }
+
+                $properties = $model->getRelationProperty($key, 'belongsToMany');
+
+                if ( $properties[3] != $pivotModel->getTable() ){
+                    continue;
+                }
+
+                $pivotModel->addSkipDroppingColumn($properties[6]);
+                $pivotModel->addSkipDroppingColumn($properties[7]);
+            }
+        }
+    }
 }
