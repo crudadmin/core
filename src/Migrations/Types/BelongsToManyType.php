@@ -60,7 +60,7 @@ class BelongsToManyType extends Type
             if (! $model->getSchema()->hasTable($properties[3])) {
                 //Create pivot table
                 $model->getSchema()->create($properties[3], function (Blueprint $table) use ($model, $properties, $key) {
-                    $this->buildBelongsToManyTable($table, $model, $properties, $key);
+                    $this->buildBasicPivotTable($table, $model, $properties, $key);
                 });
 
                 $this->getCommand()->line('<comment>Created table:</comment> '.$properties[3]);
@@ -73,10 +73,6 @@ class BelongsToManyType extends Type
                 }
             } else {
                 $this->getCommand()->line('<info>Checked table:</info> '.$properties[3]);
-
-                $model->getSchema()->table($properties[3], function (Blueprint $table) use ($model, $properties, $key) {
-                    $this->buildBelongsToManyTable($table, $model, $properties, $key, true);
-                });
 
                 if (! $model->getSchema()->hasColumn($properties[3], 'id')) {
                     $model->getSchema()->table($properties[3], function (Blueprint $table) use ($model, $properties) {
@@ -92,26 +88,18 @@ class BelongsToManyType extends Type
         return true;
     }
 
-    private function buildBelongsToManyTable($table, $model, $properties, $key, $update = false)
+    private function buildBasicPivotTable($table, $model, $properties, $key)
     {
-        if ( $update === false ) {
-            //Increment
-            $table->increments('id');
+        //Increment
+        $table->increments('id');
 
-            //Add integer reference for owner table
-            $table->integer($properties[6])->unsigned();
-            $table->foreign($properties[6], $this->makeShortForeignIndex($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
+        //Add integer reference for owner table
+        $table->integer($properties[6])->unsigned();
+        $table->foreign($properties[6], $this->makeShortForeignIndex($properties[3], $properties[6]))->references($model->getKeyName())->on($model->getTable());
 
-            //Add integer reference for belongs to table
-            $table->integer($properties[7])->unsigned();
-            $table->foreign($properties[7], $this->makeShortForeignIndex($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
-        }
-
-
-        $method = 'setBelongsToMany'.$key;
-        if ( method_exists($model, $method) === true ) {
-            $model->{$method}($table, $update, $properties);
-        }
+        //Add integer reference for belongs to table
+        $table->integer($properties[7])->unsigned();
+        $table->foreign($properties[7], $this->makeShortForeignIndex($properties[3], $properties[7]))->references($properties[2])->on($properties[0]);
     }
 
     /**
