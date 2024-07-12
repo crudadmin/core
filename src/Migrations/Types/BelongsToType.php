@@ -49,7 +49,7 @@ class BelongsToType extends Type
         }
 
         //If foreign key in table exists
-        $keyExists = 0;
+        $keyExists = false;
 
         //Check if actual table and key exists
         if ($tableExists = $model->getSchema()->hasTable($model->getTable())) {
@@ -57,7 +57,7 @@ class BelongsToType extends Type
         }
 
         //If table has not foreign column
-        if ($keyExists == 0) {
+        if ($keyExists == false) {
             //Checks if table has already inserted rows which won't allow insert foreign key without NULL value
             if ($tableExists === true && $model->withoutGlobalScopes()->count() > 0 && $model->hasFieldParam($key, 'required', true)) {
                 $this->checkForReferenceTable($model, $key, $properties[0]);

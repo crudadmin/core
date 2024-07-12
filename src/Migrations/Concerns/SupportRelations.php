@@ -106,13 +106,13 @@ trait SupportRelations
         if (count($referenceTableIds) > 0) {
             //Define ids for existing rows
             if ( method_exists($model, $relationRequiredEvent) === false ) {
-                $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> '.implode(', ', $referenceTableIds->toArray()));
+                $this->getCommand()->line('<comment>+ Here are some ids from '.$referenceTable.' table:</comment> N, '.implode(', ', $referenceTableIds->toArray()));
 
                 do {
                     $requestedId = $this->getCommand()->ask('Which id would you like define for existing rows?'.($isNullable ? ' (Press enter for skip)' : ''));
 
-                    if (! is_numeric($requestedId)) {
-                        if ( $isNullable === true ){
+                    if (! is_numeric($requestedId) ) {
+                        if ( $isNullable === true || $requestedId == 'N' ){
                             $this->getCommand()->line('Continuing without any preddefined value.');
 
                             break;
@@ -121,7 +121,7 @@ trait SupportRelations
                         continue;
                     }
 
-                    if ($referenceModel->where('id', $requestedId)->count() == 0) {
+                    if ($requestedId != 'N' && $referenceModel->where('id', $requestedId)->count() == 0) {
                         $this->getCommand()->line('<error>Id #'.$requestedId.' does not exists.</error>');
                         $requestedId = false;
                     }
@@ -135,7 +135,7 @@ trait SupportRelations
                 //Custom update event
                 if ( method_exists($model, $relationRequiredEvent) ) {
                     $this->fireModelEvent($model, $relationRequiredEvent);
-                } else {
+                } else if ( is_numeric($requestedId) ) {
                     DB::connection($model->getConnectionName())->table($model->getTable())->update([$key => $requestedId]);
                 }
             });
