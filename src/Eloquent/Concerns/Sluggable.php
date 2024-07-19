@@ -150,8 +150,8 @@ trait Sluggable
             if ( is_array($text) ){
                 ksort($text);
             }
-        } elseif ($this->isValidSlug($text) && $wrap === true) {
-            $text = array_wrap($text);
+        } elseif ($wrap === true) {
+            $text = array_wrap($this->isValidSlug($text) ? $text : []);
         }
 
         return $text;
@@ -227,6 +227,7 @@ trait Sluggable
     public function slugBaseFormIsSame($newSlug, $prevSlug)
     {
         $prevSlug = $this->normalizeSlugs($prevSlug, true);
+
         foreach ($prevSlug as $key => $value) {
             $parts = explode('-', $value);
             $prevSlug[$key] = count($parts) > 1 && is_numeric($parts[count($parts) - 1]) ? implode('-', array_slice($parts, 0,  -1)) : $value;
