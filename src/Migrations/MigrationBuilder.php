@@ -66,6 +66,11 @@ class MigrationBuilder extends Command
         $migrated = 0;
 
         foreach ($models as $model) {
+            //Skip models with no table
+            if ( $model->getProperty('skipMigration') === true ){
+                continue;
+            }
+
             $migration = function () use ($model) {
                 $this->generateMigration($model);
             };

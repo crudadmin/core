@@ -9,6 +9,7 @@ trait MigrationOutOfDate
 {
     /**
      * Check if AdminModel is up to date.
+     *
      * @param  object  $model
      * @param  closure  $migration
      * @return bool
