@@ -271,7 +271,17 @@ trait RelationsMapBuilder
                 $properties = $this->getRelationProperty($fieldKey, 'belongsTo');
 
 
-                $relation = function($model) use ($properties) {
+                $relation = function($model) use ($properties, $field) {
+                    if ( ($field['hasOne'] ?? false) === true ) {
+                        return [
+                            'hasOne' => [
+                                '$'.$properties[0], //Table relation class
+                                $properties[2],
+                                $properties[4],
+                            ]
+                        ];
+                    }
+
                     return [
                         'belongsTo' => [
                             '$'.$properties[0], //Table relation class
