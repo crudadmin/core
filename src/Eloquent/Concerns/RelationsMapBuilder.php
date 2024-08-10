@@ -3,7 +3,8 @@
 namespace Admin\Core\Eloquent\Concerns;
 
 use AdminCore;
-use Admin\Core\Eloquent\AdminPivot;
+use Admin\Eloquent\AdminPivot;
+use Admin\Core\Eloquent\AdminPivot as FrameworkAdminPivot;
 use Cache;
 use Str;
 
@@ -69,6 +70,7 @@ trait RelationsMapBuilder
 
     public function getCachedRelationsTree()
     {
+        //TODO:
         if ( $this->hasRelationsCache() ) {
             $cacheKey = 'relations.'.$this->getFieldsCacheModelKey();
 
@@ -407,10 +409,16 @@ trait RelationsMapBuilder
 
     private function getAdminPivotClass($properties)
     {
-        $basePivotClass = class_exists(\Admin\Eloquent\AdminPivot::class) ? \Admin\Eloquent\AdminPivot::class : AdminPivot::class;
+        $basePivotClass = class_exists(AdminPivot::class) ? AdminPivot::class : FrameworkAdminPivot::class;
         $pivotClass = AdminCore::getModelByTable($properties[3]) ?: new $basePivotClass;
 
         $pivotClass->table = $properties[3];
+
+        //Refresh fields for belongsTo cache relations fix
+        if ( $pivotClass instanceof AdminPivot ) {
+            $pivotClass->getFields(true);
+            $pivotClass->bootRelationships();
+        }
 
         return $pivotClass;
     }
