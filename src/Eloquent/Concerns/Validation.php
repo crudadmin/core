@@ -108,10 +108,15 @@ trait Validation
 
             //Add multiple validation support for files
             if (
-                $isMultiple = $this->hasFieldParam($origKey, 'array', true)
+                ($isMultiple = $this->hasFieldParam($origKey, 'array', true))
                 && $this->isFieldType($origKey, ['file', 'date', 'time'])
             ) {
                 $key = $key.'.*';
+            }
+
+            //Remove max check for multiple array fields.
+            if ( $isMultiple && isset($field['max']) ){
+                unset($field['max']);
             }
 
             //If field is not required
