@@ -35,6 +35,7 @@ class MigrationBuilder extends Command
         'migrations', 'jobs', 'failed_jobs', 'password_resets',
         'oauth_access_tokens', 'oauth_auth_codes', 'oauth_clients', 'oauth_personal_access_clients', 'oauth_refresh_tokens',
         'personal_access_tokens', 'cache', 'cache_locks', 'job_batches', 'password_reset_tokens', 'sessions',
+        'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring',
     ];
 
     public function __construct()
