@@ -67,6 +67,14 @@ class AdminCore
         return $this->get('booted', false);
     }
 
+    /*
+     * Returns if is admin models are loaded
+     */
+    public function isMigrating()
+    {
+        return $this->get('migrating', false);
+    }
+
     /**
      * Returns all admin models classes in registration order.
      * @return array

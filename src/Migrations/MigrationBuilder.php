@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
+use AdminCore;
 use Schema;
 
 class MigrationBuilder extends Command
@@ -64,6 +65,8 @@ class MigrationBuilder extends Command
      */
     protected function migrate($models)
     {
+        AdminCore::set('migrating', true);
+
         $migrated = 0;
 
         foreach ($models as $model) {
