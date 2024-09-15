@@ -57,6 +57,11 @@ class AdminFile implements Arrayable, JsonSerializable
      */
     private $originalObject;
 
+    /*
+     * Cached AdminModel
+     */
+    private $model;
+
     /**
      * Return full url addresses to array responses
      *
@@ -103,6 +108,15 @@ class AdminFile implements Arrayable, JsonSerializable
     public function toArray()
     {
         if ( self::$isApi === true ) {
+            //Set default resize on API response
+            if ( $this->fieldKey && $field = $this->getModel()->getField($this->fieldKey) ) {
+                if ( $resize = $field['resize'] ?? null ) {
+                    $params = explode(',', $resize);
+
+                    return $this->resize(...$params);
+                }
+            }
+
             return $this->url();
         }
 
@@ -361,7 +375,11 @@ class AdminFile implements Arrayable, JsonSerializable
      */
     public function getModel()
     {
-        return AdminCore::getModelByTable($this->table);
+        if ( $this->model ){
+            return $this->model;
+        }
+
+        return $this->model = AdminCore::getModelByTable($this->table);
     }
 
     /*
