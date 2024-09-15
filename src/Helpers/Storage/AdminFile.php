@@ -112,6 +112,14 @@ class AdminFile implements Arrayable, JsonSerializable
             if ( $this->fieldKey && $field = $this->getModel()->getField($this->fieldKey) ) {
                 if ( $resize = $field['resize'] ?? null ) {
                     $params = explode(',', $resize);
+                    $params = array_map(function($value){
+                        //Null values
+                        if ( strtolower($value ?: '') == 'null' ){
+                            return;
+                        }
+
+                        return $value ?: null;
+                    }, $params);
 
                     return $this->resize(...$params);
                 }
