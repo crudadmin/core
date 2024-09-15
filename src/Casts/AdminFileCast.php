@@ -2,11 +2,12 @@
 
 namespace Admin\Core\Casts;
 
+use Admin\Core\Casts\Concerns\AdminCast;
 use Admin\Core\Helpers\Storage\AdminFile;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
-class AdminFileCast implements CastsAttributes
+class AdminFileCast implements CastsAttributes, AdminCast
 {
     /**
      * Cast the given value.

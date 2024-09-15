@@ -2,11 +2,12 @@
 
 namespace Admin\Core\Casts;
 
+use Admin\Core\Casts\Concerns\AdminCast;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
-class DateableCast implements CastsAttributes
+class DateableCast implements CastsAttributes, AdminCast
 {
     /**
      * Cast the given value.

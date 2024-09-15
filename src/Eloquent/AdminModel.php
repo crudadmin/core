@@ -3,6 +3,7 @@
 namespace Admin\Core\Eloquent;
 
 use AdminCore;
+use Admin\Core\Casts\Concerns\AdminCast;
 use Admin\Core\Casts\Concerns\UncachableCast;
 use Admin\Core\Eloquent\Concerns\BootAdminModel;
 use Admin\Core\Eloquent\Concerns\FieldModules;
@@ -328,8 +329,9 @@ class AdminModel extends Model
     /**
      * Cast the given attribute using a custom cast class.
      *
-     * OVERIDED: added "$caster instanceof UncachableCast" to be able determine if cast value should be cached.
-     * This feature may be possible remove for laravel 11. instances.
+     * OVERIDED:
+     * 1. added "$caster instanceof UncachableCast" to be able determine if cast value should be cached. This feature may be possible to remove for laravel 11+ instances.
+     * 2. Ability to overide AdminCast class
      *
      * @param  string  $key
      * @param  mixed  $value
@@ -347,6 +349,11 @@ class AdminModel extends Model
             $value = $caster instanceof CastsInboundAttributes
                 ? $value
                 : $caster->get($this, $key, $value, $this->attributes);
+
+            // Ability to override Admin cast class
+            if ( $caster instanceof AdminCast && $this->hasGetMutator($key) ) {
+                $value = $this->mutateAttribute($key, $value);
+            }
 
             if ($caster instanceof CastsInboundAttributes ||
                 ! is_object($value)

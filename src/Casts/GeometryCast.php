@@ -2,10 +2,11 @@
 
 namespace Admin\Core\Casts;
 
+use Admin\Core\Casts\Concerns\AdminCast;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Collection;
 
-class GeometryCast implements CastsAttributes
+class GeometryCast implements CastsAttributes, AdminCast
 {
     /**
      * Cast the given value.
