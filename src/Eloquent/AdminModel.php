@@ -328,23 +328,29 @@ class AdminModel extends Model
     /**
      * Cast the given attribute using a custom cast class.
      *
+     * OVERIDED: added "$caster instanceof UncachableCast" to be able determine if cast value should be cached.
+     * This feature may be possible remove for laravel 11. instances.
+     *
      * @param  string  $key
      * @param  mixed  $value
      * @return mixed
      */
     protected function getClassCastableAttributeValue($key, $value)
     {
-        if (isset($this->classCastCache[$key])) {
+        $caster = $this->resolveCasterClass($key);
+
+        $objectCachingDisabled = $caster->withoutObjectCaching ?? false;
+
+        if (isset($this->classCastCache[$key]) && ! $objectCachingDisabled) {
             return $this->classCastCache[$key];
         } else {
-            $caster = $this->resolveCasterClass($key);
-
             $value = $caster instanceof CastsInboundAttributes
                 ? $value
                 : $caster->get($this, $key, $value, $this->attributes);
 
-            //CHANGED: added "$caster instanceof UncachableCast" to be able determine if cast value should be cached.
-            if ($caster instanceof CastsInboundAttributes || ! is_object($value) || $caster instanceof UncachableCast) {
+            if ($caster instanceof CastsInboundAttributes ||
+                ! is_object($value)
+                || ($objectCachingDisabled || $caster instanceof UncachableCast) ) {
                 unset($this->classCastCache[$key]);
             } else {
                 $this->classCastCache[$key] = $value;
