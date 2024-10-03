@@ -5,6 +5,7 @@ namespace Admin\Core\Eloquent\Concerns;
 use Admin\Core\Helpers\Storage\AdminFile;
 use Admin\Core\Helpers\Storage\AdminUploader;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Collection;
 use File;
 use Image;
 use ImageCompressor;
@@ -148,8 +149,10 @@ trait Uploadable
         $storage = $this->getFieldStorage($key);
 
         //Remove fixed thumbnails
-        if (($adminFile = $this->getValue($key)) && ! $this->hasFieldParam($key, 'multiple', true)) {
-            $files = array_wrap($adminFile);
+        if (($fieldValueFile = $this->getValue($key)) && ! $this->hasFieldParam($key, 'multiple', true)) {
+            //Parse from localization collection
+            $files = $fieldValueFile instanceof Collection ? $fieldValueFile->all() : $fieldValueFile;
+            $files = array_wrap($files);
 
             $isAllowedDeleting = $this->canPermanentlyDeleteFiles();
 
