@@ -118,6 +118,9 @@ class MigrationBuilder extends Command
      */
     protected function generateMigration($model)
     {
+        // Refresh all fields, becouse options may be cached wrongly
+        $model->getFields(null, true);
+
         $this->registerTable($model->getTable());
 
         $this->fireModelEvent($model, 'beforeMigrate');
