@@ -163,7 +163,7 @@ trait Sluggable
      * @param  string $text
      * @return string
      */
-    public function makeSlug($text, $prevSlug)
+    public function makeSlug($text, $prevSlug = null)
     {
         $text = $this->normalizeSlugs($text, true);
 
