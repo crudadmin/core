@@ -83,7 +83,7 @@ trait Validation
      */
     public function getValidationRules($row = null)
     {
-        $fields = $this->getFields($row);
+        $fields = $this->getFields($row, true);
 
         $data = [];
 
