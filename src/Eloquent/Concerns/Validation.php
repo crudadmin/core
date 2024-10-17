@@ -90,7 +90,7 @@ trait Validation
         if ( method_exists($this, 'getDefaultLanguage') ) {
             $defaultLanguage = $this->getDefaultLanguage() ?: Localization::getDefaultLanguage();
         } else {
-            $defaultLanguage = Localization::getDefaultLanguage();
+            $defaultLanguage = Localization::getFirstLanguage();
         }
 
         foreach ($fields as $key => $field) {
