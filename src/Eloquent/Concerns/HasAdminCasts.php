@@ -6,6 +6,7 @@ use Admin\Core\Casts\AdminFileCast;
 use Admin\Core\Casts\AdminMultiCast;
 use Admin\Core\Casts\DateableCast;
 use Admin\Core\Casts\GeometryCast;
+use Admin\Core\Casts\GutenbergCast;
 use Admin\Core\Casts\LocalizedJsonCast;
 use Admin\Core\Casts\MultipleJsonCast;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
@@ -263,6 +264,8 @@ trait HasAdminCasts
                 $this->addMultiCast($key, 'integer');
             } elseif ($this->isFieldType($key, 'decimal')) {
                 $this->addMultiCast($key, 'float');
+            } elseif ( $this->isFieldType($key, 'gutenberg') ) {
+                $this->addMultiCast($key, GutenbergCast::class);
             }
         }
 
