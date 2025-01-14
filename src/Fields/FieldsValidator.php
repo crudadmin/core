@@ -404,4 +404,23 @@ class FieldsValidator
             return array_slice(explode('.', $key), 0, 1)[0];
         }, $keys);
     }
+
+    /**
+     * Pushes missing default values into incoming request
+     */
+    public function addDefaultValues()
+    {
+        foreach ($this->model->getFields() as $key => $field) {
+            if (
+                is_null(($field['default'] ?? null)) == false
+                && $this->request->has($key) === false
+            ) {
+                $this->request->merge([
+                    $key => $field['default'],
+                ]);
+            }
+        }
+
+        return $this;
+    }
 }
