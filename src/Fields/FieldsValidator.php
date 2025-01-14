@@ -178,7 +178,7 @@ class FieldsValidator
             $toMerge = (new FieldToArray)->update($fieldRules);
 
             $rules[$key] = array_unique(array_filter(array_merge(
-                @$rules[$key] ?: [],
+                ($rules[$key] ?? null) ?: [],
                 $this->getModel()->fieldToString($toMerge)
             )));
         }
