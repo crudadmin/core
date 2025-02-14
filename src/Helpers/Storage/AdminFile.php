@@ -444,6 +444,18 @@ class AdminFile implements Arrayable, JsonSerializable
         return false;
     }
 
+    /*
+     * Move file to destination directory
+     */
+    public function move($destination)
+    {
+        if ($this->exists) {
+            return $this->getStorage()->move($this->path, $destination);
+        }
+
+        return false;
+    }
+
     /**
      * Return filesize in specific format.
      * @param  bolean $formated
