@@ -2,7 +2,7 @@
 
 namespace Admin\Core\Helpers\ImageCompressor;
 
-use Spatie\ImageOptimizer\OptimizerChain;
+use Admin\Core\Helpers\ImageCompressor\OptimizerChain;
 use Spatie\ImageOptimizer\Optimizers\Cwebp;
 use Spatie\ImageOptimizer\Optimizers\Gifsicle;
 use Spatie\ImageOptimizer\Optimizers\Jpegoptim;
